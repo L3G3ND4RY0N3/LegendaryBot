@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+import json
 
 class Autoroles(commands.Cog, name="Autoroles"):
     def __innit__(self, bot):
@@ -11,10 +12,30 @@ class Autoroles(commands.Cog, name="Autoroles"):
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
-        join_role1 = discord.utils.get(member.guild.roles, name="Member")
-        join_role2 = discord.utils.get(member.guild.roles, name="Advanced Member")
+        with open("modules/Autoroles/json/autoroles.json", "r") as f:
+            auto_role = json.load(f)
 
-        await member.add_roles(join_role1, join_role2)
+        join_role = discord.utils.get(member.guild.roles, name=auto_role[str(member.guild.id)])
+        
+        await member.add_roles(join_role)
+
+    @commands.command()
+    @commands.has_permissions(administrator=True)
+    async def joinrole(self, ctx, role: discord.Role):
+        with open("modules/Autoroles/json/autoroles.json", "r") as f:
+            auto_role = json.load(f)
+
+        auto_role[str(ctx.guild.id)] = str(role.name)
+
+        with open("modules/Autoroles/json/autoroles.json", "w") as f:
+            json.dump(auto_role, f, indent=4)
+
+        conf_embed = discord.Embed(color=discord.Color.green())
+        conf_embed.add_field(name="Success!", value=f"The automatic role for this guild/server has been set to {role.mention}.")
+        conf_embed.set_footer(text=f"Action taken by {ctx.author.name}.")
+        
+        await ctx.send(embed=conf_embed)
+
 
 async def setup(bot):
     await bot.add_cog(Autoroles(bot))
