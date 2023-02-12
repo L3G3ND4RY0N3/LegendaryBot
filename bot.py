@@ -20,11 +20,6 @@ bot_status = cycle(["Slapping Juratyp", "Preparing next Slap", "Searching for ne
 async def change_status():
     await bot.change_presence(activity=discord.Game(next(bot_status)))
 
-jura = 768786872184078357
-legend = 247342650917650434
-
-    
-
 @bot.event
 async def on_ready():
     print(f"{bot.user.name} Bot is up and running!")
@@ -40,30 +35,6 @@ async def load():
         if os.path.exists(os.path.join("modules", folder, "cog.py")):
             await bot.load_extension(f"modules.{folder}.cog")
                     
-
-@bot.tree.command(name="hello", description="The Bot says hello to you")
-async def hello(interaction: discord.Interaction):
-    await interaction.response.send_message(f"Hello {interaction.user.mention}! This is my first slash (/) command.")
-
-@bot.tree.command(name="say", description="Let the bot say something")
-@app_commands.describe(resp = "What do you want me to say?")
-async def say(interaction: discord.Interaction, resp: str):
-    await interaction.response.send_message(f"{interaction.user.name} said: `{resp}`")
-
-@bot.tree.command(name="slapjura", description="Gib Jura eine Schelle, weil er das verdient hat!")
-async def slapjura(interaction: discord.Interaction):
-    await interaction.response.send_message(f"{interaction.user.mention} gibt <@{jura}> eine krasse Schelle!")
-
-@bot.tree.command(name="slaplegend", description="Schlage L3G3ND")
-async def slaplegend(interaction: discord.Interaction):
-    await interaction.response.send_message(f"{interaction.user.mention} gibt <@{legend}> eine krasse Schelle!")
-
-@bot.tree.command(name="hug", description="Give someone a hug!")
-@app_commands.describe(user = "Who do you want to hug?")
-async def hug(interaction: discord.Interaction, user: discord.Member):
-    await interaction.response.send_message(f"{interaction.user.mention} gives {user.mention} a hug <3")
-
-    
 
 #keep_alive()
 
