@@ -11,8 +11,6 @@ class Autoroles(commands.Cog, name="Autoroles"):
     async def on_ready(self):
         print("Autoroles.py is ready!")    
 
-    #adds the autorole to new members, so far only one role per server. 
-    #TODO add more roles!
     @commands.Cog.listener()
     async def on_member_join(self, member):
         with open("modules/Autoroles/json/autoroles.json", "r") as f:
@@ -22,8 +20,6 @@ class Autoroles(commands.Cog, name="Autoroles"):
         role_ids = auto_role[str(member.guild.id)].keys()
         for key in role_ids:
             roles.append(member.guild.get_role(int(key)))
-
-        #join_role = discord.utils.get(member.guild.roles, name=auto_role[str(member.guild.id)])
         
         await member.add_roles(*roles)
 
