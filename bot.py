@@ -68,6 +68,3 @@ async def main():
         await bot.start(os.getenv('TOKEN'))
 
 asyncio.run(main())
-
-
-
