@@ -42,10 +42,14 @@ class Slap(commands.Cog, name="Slaps"):
     @app_commands.command(name="slap", description="Slap someone!")
     @app_commands.describe(user = "Who do you want to slap?")
     async def slap(self, interaction: discord.Interaction, user: discord.Member):
-        if user.id == 247342650917650434:
+        if user.id == 247342650917650434 and interaction.user.id != 247342650917650434:
             conf_embed = discord.Embed(color=discord.Color.red())
             conf_embed.add_field(name="Failure!", value=f"{interaction.user.mention}, you lack the permission to slap L3G3ND! Nice try though.")
             conf_embed.set_footer(text=f"Attempted by {interaction.user}.")
+            await interaction.response.send_message(embed=conf_embed)
+        conf_embed = discord.Embed(color=discord.Color.blue())
+        conf_embed.add_field(name="Slap!", value=f"{user.mention} was slapped by {interaction.user.mention}!.")
+        conf_embed.set_footer(text=f"Slap issued by {interaction.user}.")
         await interaction.response.send_message(embed=conf_embed)
 
 
