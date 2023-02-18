@@ -15,7 +15,7 @@ class Slap(commands.Cog, name="Slaps"):
     async def slapjura(self, interaction: discord.Interaction):
         jura = 768786872184078357
         conf_embed = discord.Embed(color=discord.Color.blue())
-        conf_embed.add_field(name="Slap!", value=f"<@{jura}> kriegt ne heftige Schelle!.")
+        conf_embed.add_field(name="Slap!", value=f"<@{jura}> kriegt ne heftige Schelle!")
         conf_embed.set_footer(text=f"Verteilt durch {interaction.user}.")
         await interaction.response.send_message(embed=conf_embed)
 
@@ -25,7 +25,7 @@ class Slap(commands.Cog, name="Slaps"):
     async def slaplegend(self, interaction: discord.Interaction):
         legend = 247342650917650434
         conf_embed = discord.Embed(color=discord.Color.blue())
-        conf_embed.add_field(name="Slap!", value=f"<@{legend}> kriegt ne heftige Schelle!.")
+        conf_embed.add_field(name="Slap!", value=f"<@{legend}> kriegt ne heftige Schelle!")
         conf_embed.set_footer(text=f"Verteilt durch {interaction.user}.")
         await interaction.response.send_message(embed=conf_embed)
 
