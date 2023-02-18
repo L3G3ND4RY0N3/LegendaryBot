@@ -37,7 +37,7 @@ async def load():
         if os.path.exists(os.path.join("modules", folder, "cog.py")):
             await bot.load_extension(f"modules.{folder}.cog")
 
-#Autoroles für Multiple Server aus Json File
+#Autoroles für Multiple Server aus Json File, non functionable!
 @bot.event
 async def on_guild_join(guild):
     with open("modules/Autoroles/json/autoroles.json", "r") as f:
@@ -50,7 +50,7 @@ async def on_guild_join(guild):
 
 #Wenn der Bot gekickt wird, löscht den Server aus der Json Datei
 @bot.event
-async def on_guild_remove(guild):
+async def on_guild_remove(guild: discord.Guild):
     with open("modules/Autoroles/json/autoroles.json", "r") as f:
         auto_role = json.load(f)
     
