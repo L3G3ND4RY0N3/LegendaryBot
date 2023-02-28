@@ -83,7 +83,7 @@ class Moderation(commands.Cog, name="Moderation"):
     @app_commands.checks.has_permissions(ban_members=True)
     async def ban(self, interaction: discord.Interaction, member: discord.Member, reason: str=None):
         try:
-            await member.kick()
+            await member.ban()
         except discord.Forbidden:
             conf_embed = discord.Embed(color=discord.Color.yellow())
             conf_embed.add_field(name="Failure!", value=f"I am missing the permissions to ban {member.mention}.")
@@ -101,7 +101,7 @@ class Moderation(commands.Cog, name="Moderation"):
 
 
     ####################################################################################################################################
-    ##################################################Error Handeling!##################################################################
+    ################################################# Error Handeling! #################################################################
     ####################################################################################################################################
 
 

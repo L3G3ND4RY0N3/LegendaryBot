@@ -42,7 +42,10 @@ class Autoroles(commands.Cog, name="Autoroles"):
         await ctx.send(embed=conf_embed)
 
 
-    #Slash Command um eine neue Autorole hinzuzufügen :D
+    ####################################################################################################################################
+    ##################################################### Add Command ##################################################################
+    ####################################################################################################################################
+
     @app_commands.command(name="add_autorole", description="Adds a role that is automatically assigned to a new member!")
     @app_commands.checks.has_permissions(administrator=True)
     @app_commands.describe(role = "Select the role")
@@ -66,7 +69,11 @@ class Autoroles(commands.Cog, name="Autoroles"):
         await interaction.response.send_message(embed=conf_embed)
 
 
-    #Slash Command to remove an Autorole :D
+    ####################################################################################################################################
+    ################################################### Remove Command #################################################################
+    ####################################################################################################################################
+
+
     @app_commands.command(name="remove_autorole", description="Removes the autorole that is automatically assigned to a new member!")
     @app_commands.checks.has_permissions(administrator=True)
     @app_commands.describe(role = "Select the role to remove")
@@ -82,7 +89,7 @@ class Autoroles(commands.Cog, name="Autoroles"):
                 json.dump(auto_role, f, indent=4)
 
             except KeyError:
-                await interaction.response.send_message("Rolle wurde nicht gefunden", ephemeral=True)          
+                await interaction.response.send_message("Role is not assigned as an autorole!", ephemeral=True)          
 
         conf_embed = discord.Embed(color=discord.Color.red())
         conf_embed.add_field(name="Success!", value=f"The automatic role {role.mention} for this guild/server has been removed.")
@@ -90,6 +97,42 @@ class Autoroles(commands.Cog, name="Autoroles"):
         
         await interaction.response.send_message(embed=conf_embed)
 
+
+    ####################################################################################################################################
+    ##################################################### List Command #################################################################
+    ####################################################################################################################################
+
+    @app_commands.command(name="list_autorole", description="Lists the autoroles for this server, e.g. all roles that are assigned to a joining member!")
+    @app_commands.checks.has_permissions(administrator=True)
+    async def list_join_role(self, interaction: discord.Interaction):
+        with open("modules/Autoroles/json/autoroles.json", "r") as f:
+            auto_role = json.load(f)
+
+            if str(interaction.guild.id) not in auto_role or list(auto_role[str(interaction.guild.id)].keys()) == []:
+                conf_embed = discord.Embed(color=discord.Color.red())
+                conf_embed.add_field(name="No Autroles!", value=f"This server has yet to add autoroles!")
+                conf_embed.set_footer(text=f"Action taken by {interaction.user}.")
+
+                await interaction.response.send_message(embed=conf_embed)
+            
+            roles = []
+            role_ids = auto_role[str(interaction.guild.id)].keys()
+            for key in role_ids:
+                roles.append(interaction.guild.get_role(int(key)))
+
+            mention_list = [r.mention for r in roles]
+
+            mention = ", ".join(mention_list)
+
+            conf_embed = discord.Embed(color=discord.Color.blue())
+            conf_embed.add_field(name="Autroles:", value=f"{mention}")
+            conf_embed.set_footer(text=f"Action taken by {interaction.user}.")
+
+            await interaction.response.send_message(embed=conf_embed)
+
+    ####################################################################################################################################
+    ################################################### Error Handeling ################################################################
+    ####################################################################################################################################
 
     @add_join_role.error
     async def join_role_error(self,interaction: discord.Interaction, error: app_commands.AppCommandError):
@@ -103,7 +146,15 @@ class Autoroles(commands.Cog, name="Autoroles"):
     async def remove_role_error(self,interaction: discord.Interaction, error: app_commands.AppCommandError):
         if isinstance(error, app_commands.MissingPermissions):
             conf_embed = discord.Embed(color=discord.Color.red())
-            conf_embed.add_field(name="Success!", value=f"{interaction.user.name}, you do not have the permissions to aremove autoroles! You need administrator permissions!")
+            conf_embed.add_field(name="Failure!", value=f"{interaction.user.name}, you do not have the permissions to remove autoroles! You need administrator permissions!")
+            conf_embed.set_footer(text=f"Action taken by {interaction.user}.")
+            await interaction.response.send_message(embed=conf_embed, ephemeral=True)
+
+    @list_join_role.error
+    async def list_role_error(self,interaction: discord.Interaction, error: app_commands.AppCommandError):
+        if isinstance(error, app_commands.MissingPermissions):
+            conf_embed = discord.Embed(color=discord.Color.red())
+            conf_embed.add_field(name="Failure!", value=f"{interaction.user.name}, you do not have the permissions to list autoroles! You need administrator permissions!")
             conf_embed.set_footer(text=f"Action taken by {interaction.user}.")
             await interaction.response.send_message(embed=conf_embed, ephemeral=True)
 
