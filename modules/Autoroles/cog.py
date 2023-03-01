@@ -23,6 +23,22 @@ class Autoroles(commands.Cog, name="Autoroles"):
         
         await member.add_roles(*roles)
 
+    @commands.Cog.listener()
+    async def on_guild_role_delete(self, role: discord.Role):
+        with open("modules/Autoroles/json/autoroles.json", "r+") as f:
+            auto_role = json.load(f)
+
+            try:
+                auto_role[str(role.guild.id)].pop(str(role.id))
+
+                f.seek(0)
+                f.truncate()
+                json.dump(auto_role, f, indent=4)
+
+            except KeyError:
+                print("Deleted Role was not an autorole")
+
+
     #Commando to add new autorole with normal prefix eg. $joinrole "roleidhere" (lame)
     @commands.command()
     @commands.has_permissions(administrator=True)
@@ -63,7 +79,7 @@ class Autoroles(commands.Cog, name="Autoroles"):
             json.dump(auto_role, f, indent=4)
 
         conf_embed = discord.Embed(color=discord.Color.green())
-        conf_embed.add_field(name="Success!", value=f"The automatic role for this guild/server has been set to {role.mention}.")
+        conf_embed.add_field(name="Success!", value=f"{role.mention} has been added as an autorole for this server!")
         conf_embed.set_footer(text=f"Action taken by {interaction.user}.")
         
         await interaction.response.send_message(embed=conf_embed)
@@ -89,7 +105,7 @@ class Autoroles(commands.Cog, name="Autoroles"):
                 json.dump(auto_role, f, indent=4)
 
             except KeyError:
-                await interaction.response.send_message("Role is not assigned as an autorole!", ephemeral=True)          
+                await interaction.response.send_message(f"{role} is not assigned as an autorole!", ephemeral=True)          
 
         conf_embed = discord.Embed(color=discord.Color.red())
         conf_embed.add_field(name="Success!", value=f"The automatic role {role.mention} for this guild/server has been removed.")
