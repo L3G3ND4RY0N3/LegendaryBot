@@ -40,22 +40,22 @@ class Autoroles(commands.Cog, name="Autoroles"):
 
 
     #Commando to add new autorole with normal prefix eg. $joinrole "roleidhere" (lame)
-    @commands.command()
-    @commands.has_permissions(administrator=True)
-    async def joinrole(self, ctx, role: discord.Role):
-        with open("modules/Autoroles/json/autoroles.json", "r") as f:
-            auto_role = json.load(f)
+    #@commands.command()
+    #@commands.has_permissions(administrator=True)
+    #async def joinrole(self, ctx, role: discord.Role):
+    #    with open("modules/Autoroles/json/autoroles.json", "r") as f:
+    #        auto_role = json.load(f)
 
-        auto_role[str(ctx.guild.id)] = str(role.name)
+    #    auto_role[str(ctx.guild.id)] = str(role.name)
 
-        with open("modules/Autoroles/json/autoroles.json", "w") as f:
-            json.dump(auto_role, f, indent=4)
+    #    with open("modules/Autoroles/json/autoroles.json", "w") as f:
+    #        json.dump(auto_role, f, indent=4)
 
-        conf_embed = discord.Embed(color=discord.Color.green())
-        conf_embed.add_field(name="Success!", value=f"The automatic role for this guild/server has been set to {role.mention}.")
-        conf_embed.set_footer(text=f"Action taken by {ctx.author.name}.")
+    #    conf_embed = discord.Embed(color=discord.Color.green())
+    #    conf_embed.add_field(name="Success!", value=f"The automatic role for this guild/server has been set to {role.mention}.")
+    #    conf_embed.set_footer(text=f"Action taken by {ctx.author.name}.")
         
-        await ctx.send(embed=conf_embed)
+    #    await ctx.send(embed=conf_embed)
 
 
     ####################################################################################################################################
