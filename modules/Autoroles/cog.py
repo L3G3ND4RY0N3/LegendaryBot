@@ -2,9 +2,10 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 import json
+from utils import jsonfunctions
 
 class Autoroles(commands.Cog, name="Autoroles"):
-    def __innit__(self, bot):
+    def __init__(self, bot):
         self.bot = bot
 
     @commands.Cog.listener() #ansatt bot.event!
@@ -66,17 +67,18 @@ class Autoroles(commands.Cog, name="Autoroles"):
     @app_commands.checks.has_permissions(administrator=True)
     @app_commands.describe(role = "Select the role")
     async def add_join_role(self, interaction: discord.Interaction, role: discord.Role):
-        with open("modules/Autoroles/json/autoroles.json", "r+") as f:
-            auto_role = json.load(f)
+        jsonfunctions.update("modules/Autoroles/json/autoroles.json",role.guild.id, role.id, role.name)
+        # with open("modules/Autoroles/json/autoroles.json", "r+") as f:
+        #     auto_role = json.load(f)
 
-            if str(role.guild.id) not in auto_role:
-                auto_role[str(role.guild.id)] = {}
+        #     if str(role.guild.id) not in auto_role:
+        #         auto_role[str(role.guild.id)] = {}
 
-            auto_role[str(role.guild.id)].update({str(role.id): str(role.name)})
+        #     auto_role[str(role.guild.id)].update({str(role.id): str(role.name)})
         
-            f.seek(0)
+        #     f.seek(0)
        
-            json.dump(auto_role, f, indent=4)
+        #     json.dump(auto_role, f, indent=4)
 
         conf_embed = discord.Embed(color=discord.Color.green())
         conf_embed.add_field(name="Success!", value=f"{role.mention} has been added as an autorole for this server!")

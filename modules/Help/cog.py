@@ -5,7 +5,7 @@ from discord.ui import View, Button
 import json
 
 class Help(commands.Cog, name="Help"):
-    def __innit__(self, bot):
+    def __init__(self, bot):
         self.bot = bot
 
     @commands.Cog.listener() #ansatt bot.event!

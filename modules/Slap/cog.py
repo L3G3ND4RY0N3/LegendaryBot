@@ -4,7 +4,7 @@ from discord import app_commands
 import json
 
 class Slap(commands.Cog, name="Slaps"):
-    def __innit__(self, bot):
+    def __init__(self, bot):
         self.bot = bot
 
     @commands.Cog.listener() #ansatt bot.event!

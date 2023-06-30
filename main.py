@@ -35,7 +35,7 @@ async def on_ready():
 async def load():
     for folder in os.listdir("modules"):
         if os.path.exists(os.path.join("modules", folder, "cog.py")):
-            await bot.load_extension(f"modules.{folder}.cog")
+            await bot.load_extension(f"modules.{folder}.cog", package=__package__)
 
 #Autoroles für Multiple Server aus Json File, non functionable!
 @bot.event
