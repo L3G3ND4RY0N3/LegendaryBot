@@ -13,14 +13,14 @@ class MessageCog(commands.Cog):
     async def on_ready(self):
         print("Messagefetcher.py is ready!")  
 
-    @app_commands.command(name="export_messages", description="Exportiere Nachrichten aus einem Channel in eine Excel Liste")
+    @app_commands.command(name="export_messages", description="Export messages from a channel using some filters and return them in a json file.")
     @app_commands.checks.has_permissions(administrator=True)
-    @app_commands.describe(channel = "Select a channel", cutoff_date="Select a date")
+    @app_commands.describe(channel = "Select a channel", cutoff_date="Select a date (format: yyyy-mm-dd), older messages won't be exported!", msg_filter="the filter, starting at the beginning of the message", filename="what the exported file should be named", msg_limit="the amount of messages (max 200)")
     async def export_messages(self, interaction: discord.Interaction, msg_filter: str, msg_limit:int, filename:str, channel: discord.TextChannel = None, cutoff_date: str = "1970-01-01"):
         try:
             cutoff_date = datetime.strptime(cutoff_date, '%Y-%m-%d')
         except ValueError:
-            await interaction.response.send_message('Das Datumsformat ist ungültig! Verwenden Sie das Format "YYYY-MM-DD".')
+            await interaction.response.send_message('Invalid date format! Please enter your date like this: "YYYY-MM-DD".')
             return
 
         if not channel:
@@ -42,13 +42,13 @@ class MessageCog(commands.Cog):
                     })
 
         if not messages:
-            await interaction.response.send_message('Es wurden keine passenden Nachrichten gefunden.')
+            await interaction.response.send_message('No messages found for these filter settings!')
         else:
             with open(f'modules/Messagefetcher/json/{filename}.json', 'w') as file:
                 json.dump(messages, file, indent=4)
 
             file = discord.File(f'modules/Messagefetcher/json/{filename}.json', filename=f"{filename}.json")
-            await interaction.response.send_message('Nachrichten exportiert!',file=file)
+            await interaction.response.send_message('Messages have been exported!',file=file)
 
 
     @export_messages.error

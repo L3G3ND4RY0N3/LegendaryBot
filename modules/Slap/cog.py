@@ -30,17 +30,17 @@ class Slap(commands.Cog, name="Slaps"):
 
         conf_embed = discord.Embed(color=discord.Color.blue())
         conf_embed.add_field(name="Slap!", value=f"<@{jura}> kriegt ne heftige Schelle! Das ist bereits die {amount}. Schelle, die er sich verdient hat!")
-        conf_embed.set_footer(text=f"Verteilt durch {interaction.user}.")
+        conf_embed.set_footer(text=f"Issued by {interaction.user}.")
         await interaction.response.send_message(embed=conf_embed)
 
     #Legendslap!
-    @app_commands.command(name="slaplegend", description="Schlage L3G3ND")
+    @app_commands.command(name="slaplegend", description="Slap L3G3ND!")
     @app_commands.checks.has_permissions(administrator=True)
     async def slaplegend(self, interaction: discord.Interaction):
         legend = 247342650917650434
         conf_embed = discord.Embed(color=discord.Color.blue())
-        conf_embed.add_field(name="Slap!", value=f"<@{legend}> kriegt ne heftige Schelle!")
-        conf_embed.set_footer(text=f"Verteilt durch {interaction.user}.")
+        conf_embed.add_field(name="Slap!", value=f"<@{legend}> gets slapped!")
+        conf_embed.set_footer(text=f"Issued by {interaction.user}.")
         await interaction.response.send_message(embed=conf_embed)
 
     #Hug a Person with Mention!
@@ -65,7 +65,7 @@ class Slap(commands.Cog, name="Slaps"):
 
         conf_embed = discord.Embed(color=discord.Color.green())
         conf_embed.add_field(name="Hugged!", value=f"{interaction.user.mention} gives {user.mention} a hug <3 This is the {amount}. hug given to {user.name}!")
-        conf_embed.set_footer(text=f"Verteilt durch {interaction.user}.")
+        conf_embed.set_footer(text=f"Hugged by {interaction.user}.")
         await interaction.response.send_message(embed=conf_embed)
 
     #Pat a Person with Mention!

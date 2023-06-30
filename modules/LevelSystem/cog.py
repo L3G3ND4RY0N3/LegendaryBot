@@ -5,7 +5,6 @@ import random
 import math
 import aiosqlite
 import datetime
-import json
 
 class LevelSystem(commands.Cog, name="Level System"):
     def __init__(self, bot):
@@ -95,7 +94,7 @@ class LevelSystem(commands.Cog, name="Level System"):
             async with db.execute("SELECT xp FROM users WHERE user_id = ?", (interaction.user.id,)) as cursor:
                 result = await cursor.fetchone()
                 if result is None:
-                    await interaction.response.send_message("Du bist noch nicht in der Datenbank", ephemeral=True)
+                    await interaction.response.send_message("You are not yet registered!", ephemeral=True)
                     return
         xp = result[0]
         lvl = self.get_level(xp)
