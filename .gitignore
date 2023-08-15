@@ -1,4 +1,5 @@
 .env
 **__pycache__
 level.db
-**.json
+*.json
+!help.json

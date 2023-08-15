@@ -1,0 +1,29 @@
+{
+    "Moderation Commands" : {
+        "kick [user] [reason]" : "Kicks a user from the discord. (Optional) Reason can be provided",
+        "ban [user] [reason]" : "Bans a user from the discord. (Optional) Reason can be provided",
+        "Delete_messages [num] [user] [reason]" : "Deletes the last number of messages in a channel. Can be narrowd down to a specific user."
+    },
+    "Autorole Commands" : {
+        "add_autorole [role]" : "Add a role that is automatically assigned to everyone on guild join.",
+        "remove_autorole [role]" : "Removes a role so that it will no longer be automatically assigned to everyone on guild join.",
+        "list_autorole" : "Lists all roles that are automatically assigned to everyone on guild join."
+    },
+    "Fun Commands" : {
+        "slap [user]" : "Give a user a slap. Counts for each user.",
+        "hug [user]" : "Give a user a hug. Counts for each user.",
+        "slapjura" : "Give Jura a slap. Counts for each user.",
+        "slaplegend" : "Just no!",
+        "pat [user]" : "Pat a user."
+    },
+    "Level Commands" : {
+        "rank" : "Shows your current experience and message count.",
+        "leaderboard": "Shows the top 10 with regards to their total XP."
+    },
+    "Other Commands" : {
+        "say [message]" : "Let the bot say something."
+    },
+    "Utility" : {
+        "export_messages [...]" : "Export messages from a channel using some filters and return them in a json with their content, date and title" 
+    }
+}
