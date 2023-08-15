@@ -113,7 +113,7 @@ class LevelSystem(commands.Cog, name="Level System"):
             ) as cursor:
                 async for user_id, xp, msg_count, vc_minutes in cursor:
                     lvl = self.get_level(xp)
-                    desc += f"**{counter}.** <@{user_id}> - **{xp}** XP - **{msg_count}** message{'s' if msg_count!=1 else ''} - **{vc_minutes} ** minute{'s' if vc_minutes!=1 else ''} in voice - Level **{lvl}**\n"
+                    desc += f"**{counter}.** <@{user_id}> - **{xp}** XP - **{msg_count}** message{'s' if msg_count!=1 else ''} - **{vc_minutes} ** minute{'s' if vc_minutes!=1 else ''} in voice - Level **{lvl}**\n **------------------------------------------------------------------**\n"
                     counter += 1
         
         confedembed = discord.Embed(title="Leaderboard", description=desc, color=discord.Color.blurple())
