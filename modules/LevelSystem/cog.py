@@ -91,15 +91,21 @@ class LevelSystem(commands.Cog, name="Level System"):
     @app_commands.command(name="rank", description="Check your current rank!")
     async def rank(self, interaction: discord.Interaction):
         async with aiosqlite.connect(self.DB) as db:
-            async with db.execute("SELECT xp FROM users WHERE user_id = ?", (interaction.user.id,)) as cursor:
+            async with db.execute(f"SELECT xp, vc_minutes, msg_count, user_id, (SELECT COUNT(*) + 1 FROM users AS t2 WHERE t2.xp > t1.xp), (SELECT COUNT(*) + 1 FROM users AS t2 WHERE t2.vc_minutes > t1.vc_minutes), (SELECT COUNT(*) + 1 FROM users AS t2 WHERE t2.msg_count > t1.msg_count) AS pos FROM users AS t1 WHERE user_id = ?", (interaction.user.id,)) as cursor:
                 result = await cursor.fetchone()
                 if result is None:
                     await interaction.response.send_message("You are not yet registered!", ephemeral=True)
                     return
+    
         xp = result[0]
+        vc_minutes = result[1]
+        msg_count = result[2]
+        xp_pos = result[4]
+        vc_pos = result[5]
+        msg_pos = result[6]
         lvl = self.get_level(xp)
 
-        await interaction.response.send_message(f"You have **{xp}** XP and reached level {lvl}!")
+        await interaction.response.send_message(f"You have **{xp}** XP ({xp_pos}. place), **{vc_minutes}** minute{'s' if vc_minutes!=1 else ''} in voice ({vc_pos}. place), written **{msg_count}** message{'s' if msg_count!=1 else ''} ({msg_pos}. place) and reached level {lvl}!")
 
     ########################## Leaderboard Command #######################################################
 
