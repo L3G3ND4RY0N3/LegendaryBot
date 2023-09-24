@@ -3,3 +3,4 @@
 level.db
 *.json
 !help.json
+*.db

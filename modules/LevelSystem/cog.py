@@ -1,5 +1,5 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 from discord import app_commands
 import random
 import math
@@ -11,6 +11,15 @@ class LevelSystem(commands.Cog, name="Level System"):
         self.bot = bot
         self.DB = "level.db"
         self.starttime = {}
+        self.update_member_points.start()
+        self.check_members_in_voice.start()
+
+
+    def cog_unload(self):
+        self.update_member_points.cancel()
+
+    def cog_unload(self):
+        self.check_members_in_voice.cancel()
 
     @commands.Cog.listener() #ansatt bot.event!
     async def on_ready(self):
@@ -33,6 +42,58 @@ class LevelSystem(commands.Cog, name="Level System"):
             #    """
             #) To ALTER Table to add new column!######################################
 
+    ##################################### Tasks #################################################################
+
+    @tasks.loop(minutes=3)
+    async def check_members_in_voice(self):
+        guilds = self.bot.guilds
+        vc_channels = []
+        for guild in guilds:
+            for vc_channel in guild.voice_channels:
+                vc_channels.append(vc_channel)
+        vc_channels_count = len(vc_channels)
+        new_user_count = 0
+        for channel in vc_channels:
+            for member in channel.members:
+                if member.id not in self.starttime.keys():
+                    new_user_count+=1
+                    self.starttime[member.id] = datetime.datetime.now()
+        print(f"Checked {vc_channels_count} voice channels and added {new_user_count} users!") #TODO: future log entry
+
+    @check_members_in_voice.before_loop
+    async def before_check_members_in_voice_task(self):
+        print("Check user loop is waiting for the bot to load...") #TODO: future log entry
+        await self.bot.wait_until_ready()
+
+
+    @tasks.loop(minutes=5)
+    async def update_member_points(self):
+        if not bool(self.starttime):
+            print("No members in voice!") #TODO: futere log entry
+            return
+        user_count = len(self.starttime.keys())
+        for key in self.starttime:
+            update_time = datetime.datetime.now()
+            member_id = int(key)
+            duration = update_time - self.starttime[member_id]
+            minutes = int(duration.total_seconds() / 60)
+            # Award currency for unmuted time
+            currency = minutes*20
+            async with aiosqlite.connect(self.DB) as conn:
+                async with conn.execute("UPDATE users SET vc_minutes = vc_minutes + ?, xp = xp + ? WHERE user_id = ?", (minutes, currency, member_id)):
+                    await conn.commit()
+            self.starttime[key] = update_time
+        print(f"Updated {user_count} users!") #TODO: future log entry!
+
+
+    @update_member_points.before_loop
+    async def before_update_member_points_task(self):
+        print("Update users loop is waiting for the bot to load...") #TODO: future log entry
+        await self.bot.wait_until_ready()
+
+
+    ################################## Level Method ###############################################################
+
     @staticmethod
     def get_level(xp):
         lvl = 1
@@ -42,6 +103,7 @@ class LevelSystem(commands.Cog, name="Level System"):
                 lvl += 1
             else:
                 return lvl
+            
             
     ########################## Message Tracker #######################################################
 
@@ -85,6 +147,7 @@ class LevelSystem(commands.Cog, name="Level System"):
         elif before.channel is not None and after.channel is not None and before.channel != after.channel:
             # User switched voice channels
             print(f"{member.name} switched from voice channel {before.channel.name} to {after.channel.name}")
+
 
     ########################## Rank Command #######################################################
 
