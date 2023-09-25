@@ -4,3 +4,5 @@ level.db
 *.json
 !help.json
 *.db
+.venv
+.keys
