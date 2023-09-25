@@ -2,6 +2,9 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 import json
+from utils import settings
+
+logger=settings.logging.getLogger("discord")
 
 class Slap(commands.Cog, name="Slaps"):
     def __init__(self, bot):
@@ -9,7 +12,7 @@ class Slap(commands.Cog, name="Slaps"):
 
     @commands.Cog.listener() #ansatt bot.event!
     async def on_ready(self):
-        print("Slap.py is ready!")    
+        logger.info("Slap.py is ready!")    
 
     #Juraslap!
     @app_commands.command(name="slapjura", description="Gib Jura eine Schelle, weil er das verdient hat!")

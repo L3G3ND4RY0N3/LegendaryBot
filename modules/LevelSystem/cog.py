@@ -5,14 +5,20 @@ import random
 import math
 import aiosqlite
 import datetime
+from utils import settings
+
+logger=settings.logging.getLogger("discord")
 
 class LevelSystem(commands.Cog, name="Level System"):
     def __init__(self, bot):
         self.bot = bot
         self.DB = "level.db"
-        self.starttime = {}
-        self.update_member_points.start()
-        self.check_members_in_voice.start()
+        self.starttime = {} # initiates a  dict for keeping "user": "starttime" with starttime being the time they joined a voice channel or got updated
+        self.guild_count = 0 # number of guilds the bot is in TODO: reverse assignment
+        self.vc_count = 0 # number of voice channels the bot has acces to TODO: reverse assignment
+        self.new_users = 0 # count of users who get added to the start time dict, when the bot is booted
+        self.update_member_points.start() # starts the update member task
+        self.check_members_in_voice.start() # starts the check for members in voice task
 
 
     def cog_unload(self):
@@ -23,7 +29,7 @@ class LevelSystem(commands.Cog, name="Level System"):
 
     @commands.Cog.listener() #ansatt bot.event!
     async def on_ready(self):
-        print("LevelSystem.py is ready!")    
+        logger.info("LevelSystem.py is ready!")    
         async with aiosqlite.connect(self.DB) as db:
             await db.execute(
                 """
@@ -42,6 +48,21 @@ class LevelSystem(commands.Cog, name="Level System"):
             #    """
             #) To ALTER Table to add new column!######################################
 
+    # when joining a new guild, check all voice channels to update the starttime dict!
+    @commands.Cog.listener()
+    async def on_guild_join(self, guild):
+        vc_count = len(guild.voice_channels)
+        self.guild_count += 1
+        new_user_count = 0
+        for vc in guild.voice_channels:
+             for member in vc.members:
+                if member.id not in self.starttime.keys():
+                    new_user_count+=1
+                    self.starttime[member.id] = datetime.datetime.now()
+        self.vc_count += vc_count
+        self.new_users += new_user_count
+        logger.info(f"Checked {vc_count} voice channels in {guild.name} and added {new_user_count} users!")
+
     ##################################### Tasks #################################################################
 
     @tasks.loop(minutes=1, count=2)
@@ -58,23 +79,26 @@ class LevelSystem(commands.Cog, name="Level System"):
                 if member.id not in self.starttime.keys():
                     new_user_count+=1
                     self.starttime[member.id] = datetime.datetime.now()
-        print(f"Checked {vc_channels_count} voice channels and added {new_user_count} users!") #TODO: future log entry
+        self.vc_count = vc_channels_count # TODO: buggy, for += it adds the vc_count giving double result! fix with .current_loop conditional?
+        self.guild_count = len(guilds)
+        self.new_users += new_user_count
+        logger.info(f"Checked {vc_channels_count} voice channels across {self.guild_count} servers and registered times for {new_user_count} users!") #TODO: future log entry
 
     @check_members_in_voice.before_loop
     async def before_check_members_in_voice_task(self):
-        print("Check user loop is waiting for the bot to load...") #TODO: future log entry
+        logger.info("Check user loop is waiting for the bot to load...") #TODO: future log entry
         await self.bot.wait_until_ready()
 
     @check_members_in_voice.after_loop
     async def after_chech_members_in_voice(self):
-        print("Checked all voice channels and added unregistered members!") #TODO: future log entry
-        print("Ending check member loop!")
+        logger.info(f"Checked {self.vc_count} voice channels across {self.guild_count} servers and added a total of {self.new_users} members!") #TODO: future log entry
+        logger.info("Ending check member loop!")
 
 
     @tasks.loop(minutes=5)
     async def update_member_points(self):
         if not bool(self.starttime):
-            print("No members in voice!") #TODO: futere log entry
+            logger.info("No members currently in a voice channel!") #TODO: futere log entry
             return
         user_count = len(self.starttime.keys())
         for key in self.starttime:
@@ -88,12 +112,12 @@ class LevelSystem(commands.Cog, name="Level System"):
                 async with conn.execute("UPDATE users SET vc_minutes = vc_minutes + ?, xp = xp + ? WHERE user_id = ?", (minutes, currency, member_id)):
                     await conn.commit()
             self.starttime[key] = update_time
-        print(f"Updated {user_count} users!") #TODO: future log entry!
+        logger.info(f"Updated points and times for {user_count} users!") #TODO: future log entry!
 
 
     @update_member_points.before_loop
     async def before_update_member_points_task(self):
-        print("Update users loop is waiting for the bot to load...") #TODO: future log entry
+        logger.info("Update users loop is waiting for the bot to load...") #TODO: future log entry
         await self.bot.wait_until_ready()
 
 
@@ -135,10 +159,10 @@ class LevelSystem(commands.Cog, name="Level System"):
             # User joined a voice channel
             start = datetime.datetime.now()
             self.starttime[member.id] = start
-            print(f"{member.name} joined voice channel {after.channel.name}")
+            logger.info(f"{member.name} joined voice channel {after.channel.name} in {member.guild.name}")
         elif before.channel is not None and after.channel is None:
             # User left a voice channel
-            print(f"{member.name} left voice channel {before.channel.name}")
+            logger.info(f"{member.name} left voice channel {before.channel.name} in {member.guild.name}")
             # Calculate voice activity duration
             end = datetime.datetime.now()
             duration = end - self.starttime.pop(member.id, end)
@@ -151,7 +175,7 @@ class LevelSystem(commands.Cog, name="Level System"):
                     await conn.commit()
         elif before.channel is not None and after.channel is not None and before.channel != after.channel:
             # User switched voice channels
-            print(f"{member.name} switched from voice channel {before.channel.name} to {after.channel.name}")
+            logger.info(f"{member.name} switched from voice channel {before.channel.name} to {after.channel.name} in {member.guild.name}")
 
 
     ########################## Rank Command #######################################################

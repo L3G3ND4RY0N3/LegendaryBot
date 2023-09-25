@@ -2,15 +2,17 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 import json
-from utils import jsonfunctions
+from utils import jsonfunctions, settings
 
+
+logger=settings.logging.getLogger("discord")
 class Autoroles(commands.Cog, name="Autoroles"):
     def __init__(self, bot):
         self.bot = bot
 
     @commands.Cog.listener() #ansatt bot.event!
     async def on_ready(self):
-        print("Autoroles.py is ready!")    
+        logger.info("Autoroles.py is ready!")    
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
@@ -37,7 +39,7 @@ class Autoroles(commands.Cog, name="Autoroles"):
                 json.dump(auto_role, f, indent=4)
 
             except KeyError:
-                print("Deleted Role was not an autorole")
+                logger.info(f"Deleted Role {role.name} was not an autorole")
 
 
     #Commando to add new autorole with normal prefix eg. $joinrole "roleidhere" (lame)

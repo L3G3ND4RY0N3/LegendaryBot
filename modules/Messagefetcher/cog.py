@@ -3,6 +3,9 @@ from discord.ext import commands
 from discord import app_commands
 from datetime import datetime
 import json
+from utils import settings
+
+logger=settings.logging.getLogger("discord")
 
 class MessageCog(commands.Cog):
     def __init__(self, bot):
@@ -10,7 +13,7 @@ class MessageCog(commands.Cog):
 
     @commands.Cog.listener() #ansatt bot.event!
     async def on_ready(self):
-        print("Messagefetcher.py is ready!")  
+        logger.info("Messagefetcher.py is ready!")
 
     @app_commands.command(name="export_messages", description="Export messages from a channel using some filters and return them in a json file.")
     @app_commands.checks.has_permissions(administrator=True)

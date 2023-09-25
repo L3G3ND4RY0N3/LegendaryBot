@@ -6,10 +6,12 @@ import os as os
 import asyncio
 from itertools import cycle
 import json
-#from keep_alive import keep_alive
+from utils import settings
 
 #Lädt das .env File mit dem Token!
 load_dotenv()
+
+logger=settings.logging.getLogger("discord")
 
 #Bot initialiseren und Status Zyklus festlegen
 bot = commands.Bot(command_prefix= "$", intents= discord.Intents.all())
@@ -23,13 +25,14 @@ async def change_status():
 #Nachrichten beim Starten des Bots, wie viele Slash Commands gefunden wurden und welche Module geladen sind.
 @bot.event
 async def on_ready():
-    print(f"{bot.user.name} Bot is up and running!")
+    logger.info(f"{bot.user.name} Bot is up and running and even logging!")
+    print(f"{bot.user.name} is running :)")
     change_status.start()
     try: 
         synced = await bot.tree.sync()
-        print(f"Synced {len(synced)} command(s)")
+        logger.info(f"Synced {len(synced)} command(s)")
     except Exception as e:
-        print(e)
+        logger.error(e)
 
 #Laden der Module aus den cog.py Files
 async def load():
@@ -58,8 +61,7 @@ async def on_guild_remove(guild: discord.Guild):
 
     with open("modules/Autoroles/json/autoroles.json", "w") as f:
         json.dump(auto_role, f, indent=4)
-                    
-#keep_alive()
+
 
 #Startet den Bot
 async def main():

@@ -1,6 +1,9 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
+from utils import settings
+
+logger=settings.logging.getLogger("discord")
 
 class Moderation(commands.Cog, name="Moderation"):
     def __init__(self, bot):
@@ -8,10 +11,7 @@ class Moderation(commands.Cog, name="Moderation"):
 
     @commands.Cog.listener() #ansatt bot.event!
     async def on_ready(self):
-        print("Moderation.py is ready!")    
-
-
-
+        logger.info("Moderation.py is ready!")    
 
     #Delete Messages Command
     @app_commands.command(name="delete_messages", description="Delete some messages in a channel or from a member!")

@@ -3,6 +3,9 @@ from discord.ext import commands
 from discord import app_commands, ButtonStyle
 from discord.ui import View, Button
 import json
+from utils import settings
+
+logger=settings.logging.getLogger("discord")
 
 class Help(commands.Cog, name="Help"):
     def __init__(self, bot):
@@ -10,7 +13,7 @@ class Help(commands.Cog, name="Help"):
 
     @commands.Cog.listener() #ansatt bot.event!
     async def on_ready(self):
-        print("Help.py is ready!")
+        logger.info("Help.py is ready!")
 
     def createHelpEmbed(self, pageNum=0, inline=False):
         with open("modules/Help/json/help.json", "r") as f:

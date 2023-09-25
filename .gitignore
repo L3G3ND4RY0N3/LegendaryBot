@@ -6,3 +6,4 @@ level.db
 *.db
 .venv
 .keys
+*.log

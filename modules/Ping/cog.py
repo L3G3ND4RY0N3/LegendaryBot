@@ -1,6 +1,9 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
+from utils import settings
+
+logger=settings.logging.getLogger("discord")
 
 class Ping(commands.Cog, name="Ping"):
     def __init__(self, bot):
@@ -8,7 +11,7 @@ class Ping(commands.Cog, name="Ping"):
 
     @commands.Cog.listener() #ansatt bot.event!
     async def on_ready(self):
-        print("Ping.py is ready!")    
+        logger.info("Ping.py is ready!")    
 
     @commands.command()
     async def ping(self, ctx):
