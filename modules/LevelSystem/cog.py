@@ -44,7 +44,7 @@ class LevelSystem(commands.Cog, name="Level System"):
 
     ##################################### Tasks #################################################################
 
-    @tasks.loop(minutes=3)
+    @tasks.loop(minutes=1, count=2)
     async def check_members_in_voice(self):
         guilds = self.bot.guilds
         vc_channels = []
@@ -64,6 +64,11 @@ class LevelSystem(commands.Cog, name="Level System"):
     async def before_check_members_in_voice_task(self):
         print("Check user loop is waiting for the bot to load...") #TODO: future log entry
         await self.bot.wait_until_ready()
+
+    @check_members_in_voice.after_loop
+    async def after_chech_members_in_voice(self):
+        print("Checked all voice channels and added unregistered members!") #TODO: future log entry
+        print("Ending check member loop!")
 
 
     @tasks.loop(minutes=5)
