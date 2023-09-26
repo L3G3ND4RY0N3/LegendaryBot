@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands, tasks
 from discord import app_commands
+from discord.app_commands import Choice
 import random
 import math
 import aiosqlite
@@ -61,7 +62,7 @@ class LevelSystem(commands.Cog, name="Level System"):
                     self.starttime[member.id] = datetime.datetime.now()
         self.vc_count += vc_count
         self.new_users += new_user_count
-        logger.info(f"Checked {vc_count} voice channels in {guild.name} and added {new_user_count} users!")
+        logger.info(f"Checked {vc_count} voice channel{'s' if vc_count!=1 else ''} in {guild.name} and added {new_user_count} user{'s' if new_user_count!=1 else ''}!")
 
     ##################################### Tasks #################################################################
 
@@ -82,23 +83,23 @@ class LevelSystem(commands.Cog, name="Level System"):
         self.vc_count = vc_channels_count # TODO: buggy, for += it adds the vc_count giving double result! fix with .current_loop conditional?
         self.guild_count = len(guilds)
         self.new_users += new_user_count
-        logger.info(f"Checked {vc_channels_count} voice channels across {self.guild_count} servers and registered times for {new_user_count} users!") #TODO: future log entry
+        logger.info(f"Checked {vc_channels_count} voice channel{'s' if vc_channels_count!=1 else ''} across {self.guild_count} server{'s' if self.guild_count!=1 else ''} and registered times for {new_user_count} user{'s' if new_user_count!=1 else ''}!") 
 
     @check_members_in_voice.before_loop
     async def before_check_members_in_voice_task(self):
-        logger.info("Check user loop is waiting for the bot to load...") #TODO: future log entry
+        logger.info("Check user loop is waiting for the bot to load...") 
         await self.bot.wait_until_ready()
 
     @check_members_in_voice.after_loop
     async def after_chech_members_in_voice(self):
-        logger.info(f"Checked {self.vc_count} voice channels across {self.guild_count} servers and added a total of {self.new_users} members!") #TODO: future log entry
+        logger.info(f"Checked {self.vc_count} voice channel{'s' if self.vc_count!=1 else ''} across {self.guild_count} server{'s' if self.guild_count!=1 else ''} and added a total of {self.new_users} member{'s' if self.new_users!=1 else ''}!")
         logger.info("Ending check member loop!")
 
 
     @tasks.loop(minutes=5)
     async def update_member_points(self):
         if not bool(self.starttime):
-            logger.info("No members currently in a voice channel!") #TODO: futere log entry
+            logger.info("No members currently in a voice channel!") 
             return
         user_count = len(self.starttime.keys())
         for key in self.starttime:
@@ -112,12 +113,12 @@ class LevelSystem(commands.Cog, name="Level System"):
                 async with conn.execute("UPDATE users SET vc_minutes = vc_minutes + ?, xp = xp + ? WHERE user_id = ?", (minutes, currency, member_id)):
                     await conn.commit()
             self.starttime[key] = update_time
-        logger.info(f"Updated points and times for {user_count} users!") #TODO: future log entry!
+        logger.info(f"Updated points and times for {user_count} user{'s' if user_count!=1 else ''}!") 
 
 
     @update_member_points.before_loop
     async def before_update_member_points_task(self):
-        logger.info("Update users loop is waiting for the bot to load...") #TODO: future log entry
+        logger.info("Update users loop is waiting for the bot to load...") 
         await self.bot.wait_until_ready()
 
 
@@ -181,9 +182,14 @@ class LevelSystem(commands.Cog, name="Level System"):
     ########################## Rank Command #######################################################
 
     @app_commands.command(name="rank", description="Check your current rank!")
-    async def rank(self, interaction: discord.Interaction):
+    @app_commands.describe(user="user you want to check the rank off, default is yourself")
+    async def rank(self, interaction: discord.Interaction, user: discord.User = None):
+        if user is None:
+            user_id = interaction.user.id
+        else:
+            user_id = user.id
         async with aiosqlite.connect(self.DB) as db:
-            async with db.execute(f"SELECT xp, vc_minutes, msg_count, user_id, (SELECT COUNT(*) + 1 FROM users AS t2 WHERE t2.xp > t1.xp), (SELECT COUNT(*) + 1 FROM users AS t2 WHERE t2.vc_minutes > t1.vc_minutes), (SELECT COUNT(*) + 1 FROM users AS t2 WHERE t2.msg_count > t1.msg_count) AS pos FROM users AS t1 WHERE user_id = ?", (interaction.user.id,)) as cursor:
+            async with db.execute(f"SELECT xp, vc_minutes, msg_count, user_id, (SELECT COUNT(*) + 1 FROM users AS t2 WHERE t2.xp > t1.xp), (SELECT COUNT(*) + 1 FROM users AS t2 WHERE t2.vc_minutes > t1.vc_minutes), (SELECT COUNT(*) + 1 FROM users AS t2 WHERE t2.msg_count > t1.msg_count) AS pos FROM users AS t1 WHERE user_id = ?", (user_id,)) as cursor:
                 result = await cursor.fetchone()
                 if result is None:
                     await interaction.response.send_message("You are not yet registered!", ephemeral=True)
@@ -197,12 +203,21 @@ class LevelSystem(commands.Cog, name="Level System"):
         msg_pos = result[6]
         lvl = self.get_level(xp)
 
-        await interaction.response.send_message(f"You have **{xp}** XP ({xp_pos}. place), **{vc_minutes}** minute{'s' if vc_minutes!=1 else ''} in voice ({vc_pos}. place), written **{msg_count}** message{'s' if msg_count!=1 else ''} ({msg_pos}. place) and reached level {lvl}!")
+        await interaction.response.send_message(f"{'You' if user == None else user.mention} {'have' if user == None else 'has'} **{xp}** XP ({xp_pos}. place), **{vc_minutes}** minute{'s' if vc_minutes!=1 else ''} in voice ({vc_pos}. place), written **{msg_count}** message{'s' if msg_count!=1 else ''} ({msg_pos}. place) and reached level {lvl}!")
 
     ########################## Leaderboard Command #######################################################
 
     @app_commands.command(name="leaderboard", description="Look at the leaderborad!")
+    # @app_commands.describe(stat="the stat for which you want the leaderboard to be ordered by")
+    # @app_commands.choices(stat = [
+    #     Choice(name = "message count", value = "msg_count"),
+    #     Choice(name = "minutes in voice", value = "vc_minutes")
+    # ])
     async def leaderboard(self, interaction: discord.Interaction):
+        # if stat == None:
+        #     order = 'xp'
+        # else:
+        #     order = stat
         desc=""
         counter = 1
         async with aiosqlite.connect(self.DB) as db:
