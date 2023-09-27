@@ -13,13 +13,13 @@ logger=settings.logging.getLogger("discord")
 class LevelSystem(commands.Cog, name="Level System"):
     def __init__(self, bot):
         self.bot = bot
-        self.DB = "level.db"
+        self.DB = "level.db" # TODO: have some sort of server dependent tracking either trough relational databases or something else.
         self.starttime = {} # initiates a  dict for keeping "user": "starttime" with starttime being the time they joined a voice channel or got updated
         self.guild_count = 0 # number of guilds the bot is in TODO: reverse assignment
         self.vc_count = 0 # number of voice channels the bot has acces to TODO: reverse assignment
         self.new_users = 0 # count of users who get added to the start time dict, when the bot is booted
-        self.update_member_points.start() # starts the update member task
-        self.check_members_in_voice.start() # starts the check for members in voice task
+        self.update_member_points.start() # starts the update_member_points task
+        self.check_members_in_voice.start() # starts the check_members_in_voice task
 
 
     def cog_unload(self):
@@ -134,6 +134,15 @@ class LevelSystem(commands.Cog, name="Level System"):
             else:
                 return lvl
             
+    ################################## time method #####################################################
+            
+    @staticmethod
+    def calc_time(time_in_minutes):
+        if time_in_minutes < 60:
+            return time_in_minutes
+        else:
+            return time_in_minutes//60
+
             
     ########################## Message Tracker #######################################################
 
@@ -208,31 +217,35 @@ class LevelSystem(commands.Cog, name="Level System"):
     ########################## Leaderboard Command #######################################################
 
     @app_commands.command(name="leaderboard", description="Look at the leaderborad!")
-    # @app_commands.describe(stat="the stat for which you want the leaderboard to be ordered by")
-    # @app_commands.choices(stat = [
-    #     Choice(name = "message count", value = "msg_count"),
-    #     Choice(name = "minutes in voice", value = "vc_minutes")
-    # ])
-    async def leaderboard(self, interaction: discord.Interaction):
-        # if stat == None:
-        #     order = 'xp'
-        # else:
-        #     order = stat
+    @app_commands.describe(stat="the stat for which you want the leaderboard to be ordered by")
+    @app_commands.choices(stat = [
+        Choice(name = "message count", value = "msg_count"),
+        Choice(name = "minutes in voice", value = "vc_minutes")
+    ])
+    async def leaderboard(self, interaction: discord.Interaction, stat: str = None):
+        if stat == None:
+            order = 'xp'
+        else:
+            order = stat
         desc=""
         counter = 1
+        con_string = f"SELECT user_id, xp, msg_count, vc_minutes FROM users WHERE {order} > 0 ORDER BY {order} DESC LIMIT 10"
         async with aiosqlite.connect(self.DB) as db:
             async with db.execute(
-                "SELECT user_id, xp, msg_count, vc_minutes FROM users WHERE msg_count > 0 ORDER BY xp DESC LIMIT 10"
+                con_string
             ) as cursor:
                 async for user_id, xp, msg_count, vc_minutes in cursor:
                     lvl = self.get_level(xp)
-                    desc += f"**{counter}.** <@{user_id}> - **{xp}** XP - **{msg_count}** message{'s' if msg_count!=1 else ''} - **{vc_minutes} ** minute{'s' if vc_minutes!=1 else ''} in voice - Level **{lvl}**\n **------------------------------------------------------------------**\n"
+                    time = self.calc_time(vc_minutes)
+                    user = discord.Client.get_user(self.bot,int(user_id))
+                    # TODO: Fix formatting of leaderboard
+                    desc += f"**{counter:<2}.** {user.mention:32} - **{xp:<9}** XP - **{msg_count:<5}** message{'s' if msg_count!=1 else ''} - **{time:<4} ** {'minute' if vc_minutes<60 else 'hour'}{'s' if vc_minutes!=1 else ''} in voice - Level **{lvl:<3}**\n **------------------------------------------------------------------**\n"
                     counter += 1
         
         confedembed = discord.Embed(title="Leaderboard", description=desc, color=discord.Color.blurple())
 
         confedembed.set_thumbnail(url=interaction.user.avatar.url)
-        confedembed.set_footer(text=f"Requested by {interaction.user.name}")
+        confedembed.set_footer(text=f"Requested by {interaction.user.name}, leaderboard sorted by {order}")
 
         await interaction.response.send_message(embed=confedembed)
 
