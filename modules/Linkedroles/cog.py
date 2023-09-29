@@ -343,21 +343,6 @@ class Linkedroles(commands.Cog, name="Linked Roles"):
                 conf_embed.set_footer(text=f"Action taken by {interaction.user}.")
 
                 await interaction.response.send_message(embed=conf_embed)
-            
-            # roles = []
-            # role_ids = data[guild_id].keys()
-            # for key in role_ids:
-            #     roles.append(interaction.guild.get_role(int(key)))
-
-            # lroles = []
-            # linked_roles_lists = list(data[guild_id].values())
-
-            # for l_r_list in linked_roles_lists:
-            #     for r in l_r_list:
-            #         lroles.append(interaction.guild.get_role(int(r)))
-
-            # mention_role_list = [r.mention for r in roles]
-            # mention_lroles_list = [r.mention for r in lroles]
 
             field = ""
 

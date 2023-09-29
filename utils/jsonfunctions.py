@@ -47,7 +47,7 @@ def update_linkedrole(filepath: str, guildid, key, value, retcode):
             return retcode
         
 # TODO: include enum! 0 = Success, 1 = No links on server, 2 = Role has no links 3 = No links between roles
-def remove_update_linkedrole(filepath: str, key, value):
+def remove_update_linkedrole(filepath: str, role, linked_role):
     with open("modules/Linkedroles/json/linkedroles.json", "r+") as f: 
             data = json.load(f)
 
