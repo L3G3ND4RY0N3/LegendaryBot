@@ -344,7 +344,7 @@ class Linkedroles(commands.Cog, name="Linked Roles"):
 
                 await interaction.response.send_message(embed=conf_embed)
 
-            field = ""
+            field = "**Role: Requirements** \n"
 
             for role_id, links in data[guild_id].items():
                 role = interaction.guild.get_role(int(role_id))
@@ -360,7 +360,7 @@ class Linkedroles(commands.Cog, name="Linked Roles"):
             #mention = ", ".join(mention_role_list)
 
             conf_embed = discord.Embed(color=discord.Color.blue())
-            conf_embed.add_field(name="Autroles:", value=f"{field}")
+            conf_embed.add_field(name="Links:", value=f"{field}")
             conf_embed.set_footer(text=f"Action taken by {interaction.user}.")
 
             await interaction.response.send_message(embed=conf_embed)
