@@ -244,6 +244,14 @@ class Linkedroles(commands.Cog, name="Linked Roles"):
     @app_commands.checks.has_permissions(administrator=True)
     @app_commands.describe(role = "Select the role to automatically add/remove", linked_role="Select the linked (required) role")
     async def add_linked_role(self, interaction: discord.Interaction, role: discord.Role, linked_role: discord.Role):
+        if role == linked_role:
+            conf_embed = discord.Embed(color=discord.Color.red())
+            conf_embed.add_field(name="FORBIDDEN!", value=f"{linked_role.mention} can not be a required role for {role.mention}, no circular logic please!")
+            conf_embed.set_footer(text=f"Action taken by {interaction.user}.")
+        
+            await interaction.response.send_message(embed=conf_embed)
+            return
+
         retcode = 0
         retcode = jsonfunctions.update_linkedrole("modules/Autoroles/json/autoroles.json",role.guild.id, role.id, linked_role.id, retcode)
 
@@ -349,11 +357,11 @@ class Linkedroles(commands.Cog, name="Linked Roles"):
             for role_id, links in data[guild_id].items():
                 role = interaction.guild.get_role(int(role_id))
                 field += f"{role.mention}"
-                field += ": "
+                field += "**:** "
                 for link in links:
                     l_r = interaction.guild.get_role(int(link))
                     field += f"{l_r.mention}"
-                    field += ", "
+                    field += "**,** "
                 field += "\n"
 
 
