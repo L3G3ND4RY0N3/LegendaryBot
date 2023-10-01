@@ -109,13 +109,13 @@ class Linkedroles(commands.Cog, name="Linked Roles"):
         # if roles where added
         if len(new_roles) > len(old_roles):
             added_roles = []
-            
+            #find roles that were added, list if multiple roles were added at the same time
             for role in new_roles:
                 if role not in old_roles:
                     added_roles.append(role)
-
+            #get the ids of added roles as strings for comparison
             added_roles_ids = [str(role.id) for role in added_roles]
-            
+            #list of required (linked) roles
             required_role_list = list(data[guild].values())
 
             # iterate over added_roles and check in which list of required roles they reside 
@@ -132,6 +132,7 @@ class Linkedroles(commands.Cog, name="Linked Roles"):
                     # try adding the role
                     try:
                         await after.add_roles(*add_r)
+                    # if "forbidden" exception is thrown
                     except discord.errors.Forbidden:
                         logger.info(f"Bot is missing permission to add roles in {after.guild.name}")
                         # grab all text channels
@@ -139,8 +140,9 @@ class Linkedroles(commands.Cog, name="Linked Roles"):
                         # bot as member of guild
                         botmem = after.guild.me
                         
-                        #find channel to complain to
+                        #find channel to complain to, send message in first found channel
                         for channel in channels:
+                            # if bot can send message in channel
                             if channel.permissions_for(botmem).send_messages:
                                 if after.top_role >= botmem.top_role:
                                     try:
@@ -162,13 +164,13 @@ class Linkedroles(commands.Cog, name="Linked Roles"):
         # if roles were removed
         else:
             removed_roles = []
-
+            #removed roles list
             for role in old_roles:
                 if role not in new_roles:
                     removed_roles.append(role)
-
+            # removed roles ids as strings
             removed_roles_ids = [str(role.id) for role in removed_roles]
-
+            # the remaining roles for checking if the member has some required roles left or none
             remaining_roles_ids = [str(role.id) for role in after.roles]
 
             required_role_list = list(data[guild].values())
@@ -236,6 +238,8 @@ class Linkedroles(commands.Cog, name="Linked Roles"):
     ####################################################################################################################################
     ##################################################### Add Command ##################################################################
     ####################################################################################################################################
+
+    #TODO: prevent circular links! e.g. role : linked_role, linked_role : role
 
     # Add command, takes a role, that is supposed to be added to a member, when they get another required linked_role
     # Gets stored in a json file with server_id = {role: [linked_role, linked_role2,...]}
@@ -306,7 +310,6 @@ class Linkedroles(commands.Cog, name="Linked Roles"):
 
             if linked_role_id in data[guild_id][role_id]:
                 if len(data[guild_id][role_id]) == 1:
-                    #data[guild_id][role_id].clear()
                     data[guild_id].pop(role_id)
                 else:
                     data[guild_id][role_id].remove(linked_role_id)
@@ -363,9 +366,6 @@ class Linkedroles(commands.Cog, name="Linked Roles"):
                     field += f"{l_r.mention}"
                     field += "**,** "
                 field += "\n"
-
-
-            #mention = ", ".join(mention_role_list)
 
             conf_embed = discord.Embed(color=discord.Color.blue())
             conf_embed.add_field(name="Links:", value=f"{field}")
