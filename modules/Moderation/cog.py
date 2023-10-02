@@ -66,7 +66,7 @@ class Moderation(commands.Cog, name="Moderation"):
 
         except discord.Forbidden:
             conf_embed = discord.Embed(color=discord.Color.yellow())
-            conf_embed.add_field(name="`:x:` **Failure!**", value=f"I am missing the permissions to delete messages ('manage messages').")
+            conf_embed.add_field(name="`❌` **Failure!**", value=f"I am missing the permissions to delete messages ('manage messages').")
             conf_embed.set_footer(text=f"Action attempted by {interaction.user}.")
             await interaction.response.send_message(embed=conf_embed, ephemeral=True)
             return
@@ -86,7 +86,7 @@ class Moderation(commands.Cog, name="Moderation"):
             await member.kick(reason=reason)
         except discord.Forbidden:
             conf_embed = discord.Embed(color=discord.Color.yellow())
-            conf_embed.add_field(name="`:x:` **Failure!**", value=f"I am missing the permissions to kick {member.mention}.")
+            conf_embed.add_field(name="`❌` **Failure!**", value=f"I am missing the permissions to kick {member.mention}.")
             conf_embed.set_footer(text=f"Action attempted by {interaction.user}.")
             await interaction.response.send_message(embed=conf_embed, ephemeral=True)
             return
@@ -123,7 +123,7 @@ class Moderation(commands.Cog, name="Moderation"):
             await member.ban(reason=reason)
         except discord.Forbidden:
             conf_embed = discord.Embed(color=discord.Color.yellow())
-            conf_embed.add_field(name="`:x:` **Failure!**", value=f"I am missing the permissions to ban {member.mention}.")
+            conf_embed.add_field(name="`❌` **Failure!**", value=f"I am missing the permissions to ban {member.mention}.")
             conf_embed.set_footer(text=f"Action attempted by {interaction.user}.")
             await interaction.response.send_message(embed=conf_embed, ephemeral=True)
             return
@@ -161,7 +161,7 @@ class Moderation(commands.Cog, name="Moderation"):
             await member.unban(ban_entry.user, reason=reason)
         except discord.Forbidden:
             conf_embed = discord.Embed(color=discord.Color.yellow())
-            conf_embed.add_field(name="`:x:` **Failure!**", value=f"I am missing the permissions to unban {member.mention}.")
+            conf_embed.add_field(name="`❌` **Failure!**", value=f"I am missing the permissions to unban {member.mention}.")
             conf_embed.set_footer(text=f"Action attempted by {interaction.user}.")
             await interaction.response.send_message(embed=conf_embed, ephemeral=True)
             return
@@ -214,27 +214,27 @@ class Moderation(commands.Cog, name="Moderation"):
                 warn_id = row[0]
                 
         warnUser_embed = discord.Embed(
-            title="`⚠️` Warn",
-            description=f"Du wurdest auf dem Server **{interaction.guild.name}** gewarnt.",
+            title="`⚠️` Warning",
+            description=f"You have received a warning in **{interaction.guild.name}**.",
             color=discord.Color.green(),
             timestamp=datetime.datetime.utcnow()
         )
         warnUser_embed.add_field(name="Moderator:", value=f"```{interaction.user}```", inline=False)
         warnUser_embed.add_field(name="Warn ID:", value=f"```{warn_id}```", inline=False)
-        warnUser_embed.add_field(name="Grund:", value=f"```{reason}```", inline=False)
+        warnUser_embed.add_field(name="Reason:", value=f"```{reason}```", inline=False)
         warnUser_embed.set_author(name=f"{interaction.guild.name}", icon_url=member.avatar)
         warnUser_embed.set_thumbnail(url=member.avatar)
         warnUser_embed.set_footer(text=f"{self.bot.user.name}#{self.bot.user.discriminator}", icon_url=self.bot.user.avatar)
         
         warn_embed = discord.Embed(
             title="`✅` Warn",
-            description=f"Du hast den User {member.mention} auf dem Server **{interaction.guild.name}** gewarnt.",
+            description=f"You have warned {member.mention} in **{interaction.guild.name}**.",
             color=discord.Color.green(),
             timestamp=datetime.datetime.utcnow()
         )
         warn_embed.add_field(name="Moderator:", value=f"```{interaction.user}```", inline=False)
         warn_embed.add_field(name="Warn ID:", value=f"```{warn_id}```", inline=False)
-        warn_embed.add_field(name="Grund:", value=f"```{reason}```", inline=False)
+        warn_embed.add_field(name="Reason:", value=f"```{reason}```", inline=False)
         warn_embed.set_author(name=f"{interaction.guild.name}", icon_url=interaction.user.avatar.url)
         warn_embed.set_thumbnail(url=member.avatar)
         warn_embed.set_footer(text=f"{self.bot.user.name}#{self.bot.user.discriminator}", icon_url=self.bot.user.avatar)
@@ -260,26 +260,26 @@ class Moderation(commands.Cog, name="Moderation"):
         
         unwarnUser_embed = discord.Embed(
             title="`🍀` Unwarn",
-            description=f"Ein Warn von dir vom Server **{interaction.guild.name}** wurde zurückgezogen.",
+            description=f"A warn in **{interaction.guild.name}** has been removed.",
             color=discord.Color.green(),
             timestamp=datetime.datetime.utcnow()
         )
         unwarnUser_embed.add_field(name="Moderator:", value=f"```{interaction.user}```", inline=False)
         unwarnUser_embed.add_field(name="Warn ID:", value=f"```{warn_id}```", inline=False)
-        unwarnUser_embed.add_field(name="Grund:", value=f"```{reason}```", inline=False)
+        unwarnUser_embed.add_field(name="Reason:", value=f"```{reason}```", inline=False)
         unwarnUser_embed.set_author(name=f"{interaction.guild.name}", icon_url=self.bot.user.avatar)
         unwarnUser_embed.set_thumbnail(url=interaction.guild.icon)
         unwarnUser_embed.set_footer(text=f"{self.bot.user.name}#{self.bot.user.discriminator}", icon_url=self.bot.user.avatar)
         
         unwarn_embed = discord.Embed(
             title=f"`✅` Unwarn",
-            description=f"Du hast den {member.mention} aus dem Server **{interaction.guild.name}** unwarned.",
+            description=f"You have removed a warning for {member.mention} in **{interaction.guild.name}**.",
             color=discord.Color.green(),
             timestamp=datetime.datetime.utcnow()
         )
         unwarn_embed.add_field(name="Moderator:", value=f"```{interaction.user}```", inline=False)
         unwarn_embed.add_field(name="Warn ID:", value=f"```{warn_id}```", inline=False)
-        unwarn_embed.add_field(name="Grund:", value=f"```{reason}```", inline=False)
+        unwarn_embed.add_field(name="Reason:", value=f"```{reason}```", inline=False)
         unwarn_embed.set_author(name=f"{interaction.guild.name}", icon_url=self.bot.user.avatar)
         unwarn_embed.set_thumbnail(url=member.avatar)
         unwarn_embed.set_footer(text=f"{self.bot.user.name}#{self.bot.user.discriminator}", icon_url=self.bot.user.avatar)
@@ -312,24 +312,24 @@ class Moderation(commands.Cog, name="Moderation"):
         
         unwarnUser_embed = discord.Embed(
             title="`🍀` Unwarn",
-            description=f"Ein Warn von dir vom Server **{interaction.guild.name}** wurde zurückgezogen.",
+            description=f"All your warnings in **{interaction.guild.name}** have been removed.",
             color=discord.Color.green(),
             timestamp=datetime.datetime.utcnow()
         )
         unwarnUser_embed.add_field(name="Moderator:", value=f"```{interaction.user}```", inline=False)
-        unwarnUser_embed.add_field(name="Grund:", value=f"```{reason}```", inline=False)
+        unwarnUser_embed.add_field(name="Reason:", value=f"```{reason}```", inline=False)
         unwarnUser_embed.set_author(name=f"{interaction.guild.name}", icon_url=self.bot.user.avatar)
         unwarnUser_embed.set_thumbnail(url=interaction.guild.icon)
         unwarnUser_embed.set_footer(text=f"{self.bot.user.name}#{self.bot.user.discriminator}", icon_url=self.bot.user.avatar)
         
         unwarn_embed = discord.Embed(
             title=f"`✅` Unwarn",
-            description=f"Du hast den {member.mention} aus dem Server **{interaction.guild.name}** unwarned.",
+            description=f"You have removed all warnings for {member.mention} in **{interaction.guild.name}**.",
             color=discord.Color.green(),
             timestamp=datetime.datetime.utcnow()
         )
         unwarn_embed.add_field(name="Moderator:", value=f"```{interaction.user}```", inline=False)
-        unwarn_embed.add_field(name="Grund:", value=f"```{reason}```", inline=False)
+        unwarn_embed.add_field(name="Reason:", value=f"```{reason}```", inline=False)
         unwarn_embed.set_author(name=f"{interaction.guild.name}", icon_url=self.bot.user.avatar)
         unwarn_embed.set_thumbnail(url=member.avatar)
         unwarn_embed.set_footer(text=f"{self.bot.user.name}#{self.bot.user.discriminator}", icon_url=self.bot.user.avatar)
@@ -363,9 +363,9 @@ class Moderation(commands.Cog, name="Moderation"):
                 for row in rows:
                     warn_id, mod_id, guild_id, user_id, warns, warn_reason, warn_time = row
                     warn_time = datetime.datetime.strptime(warn_time, '%Y-%m-%d %H:%M:%S')
-                    warns_info.append(f"**Warn-ID:** __{warn_id}__ | **Warn ausgestellt am:** {warn_time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+                    warns_info.append(f"**Warn-ID:** __{warn_id}__ | **Warn issued at:** {warn_time.strftime('%Y-%m-%d %H:%M:%S')}\n")
                     warns_info.append(f"**Moderator:** <@{mod_id}> | **Mod-ID**: __{mod_id}__\n")
-                    warns_info.append(f"**> Grund:**\n```{warn_reason}```")
+                    warns_info.append(f"**> Reason:**\n```{warn_reason}```")
                     warns_info.append("\n")
 
         if not warns_info:
@@ -376,8 +376,8 @@ class Moderation(commands.Cog, name="Moderation"):
             )
         else:
             warnings_embed = discord.Embed(
-                title=f"`⚠️` Warn Liste {member.name}#{member.discriminator}",
-                description=f"__**Liste der Warns**__",
+                title=f"`⚠️` Warning List for {member.name}#{member.discriminator}",
+                description=f"__**List of Warnings**__",
                 color=discord.Color.green(),
                 timestamp=datetime.datetime.utcnow()
             )
@@ -407,7 +407,7 @@ class Moderation(commands.Cog, name="Moderation"):
     async def delete_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
         if isinstance(error, app_commands.MissingPermissions):
             conf_embed = discord.Embed(color=discord.Color.red())
-            conf_embed.add_field(name="`:x:` **Failure!**", value=f"{interaction.user}, you do not have the permissions to delete messages!")
+            conf_embed.add_field(name="`❌` **Failure!**", value=f"{interaction.user}, you do not have the permissions to delete messages!")
             conf_embed.set_footer(text=f"Action attempted by {interaction.user}.")
             await interaction.response.send_message(embed=conf_embed, ephemeral=True)
 
@@ -416,7 +416,7 @@ class Moderation(commands.Cog, name="Moderation"):
     async def kick_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
         if isinstance(error, app_commands.MissingPermissions):
             conf_embed = discord.Embed(color=discord.Color.red())
-            conf_embed.add_field(name="`:x:` **Failure!**", value=f"{interaction.user}, you do not have the permissions to kick a member!")
+            conf_embed.add_field(name="`❌` **Failure!**", value=f"{interaction.user}, you do not have the permissions to kick a member!")
             conf_embed.set_footer(text=f"Action attempted by {interaction.user}.")
             await interaction.response.send_message(embed=conf_embed, ephemeral=True)
 
@@ -426,7 +426,7 @@ class Moderation(commands.Cog, name="Moderation"):
     async def ban_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
         if isinstance(error, app_commands.MissingPermissions):
             conf_embed = discord.Embed(color=discord.Color.red())
-            conf_embed.add_field(name="`:x:` **Failure!**", value=f"{interaction.user}, you do not have the permissions to ban a member!")
+            conf_embed.add_field(name="`❌` **Failure!**", value=f"{interaction.user}, you do not have the permissions to ban a member!")
             conf_embed.set_footer(text=f"Action attempted by {interaction.user}.")
             await interaction.response.send_message(embed=conf_embed, ephemeral=True)
 
@@ -436,7 +436,7 @@ class Moderation(commands.Cog, name="Moderation"):
     async def unban_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
         if isinstance(error, app_commands.MissingPermissions):
             conf_embed = discord.Embed(color=discord.Color.red())
-            conf_embed.add_field(name="`:x:` **Failure!**", value=f"{interaction.user}, you do not have the permissions to unban a member!")
+            conf_embed.add_field(name="`❌` **Failure!**", value=f"{interaction.user}, you do not have the permissions to unban a member!")
             conf_embed.set_footer(text=f"Action attempted by {interaction.user}.")
             await interaction.response.send_message(embed=conf_embed, ephemeral=True)
 
@@ -446,7 +446,7 @@ class Moderation(commands.Cog, name="Moderation"):
     async def warn_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
         if isinstance(error, app_commands.MissingPermissions):
             conf_embed = discord.Embed(color=discord.Color.red())
-            conf_embed.add_field(name="`:x:` **Failure!**", value=f"{interaction.user}, you do not have the permissions to warn a member!")
+            conf_embed.add_field(name="`❌` **Failure!**", value=f"{interaction.user}, you do not have the permissions to warn a member!")
             conf_embed.set_footer(text=f"Action attempted by {interaction.user}.")
             await interaction.response.send_message(embed=conf_embed, ephemeral=True)
 
@@ -456,7 +456,7 @@ class Moderation(commands.Cog, name="Moderation"):
     async def unwarn_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
         if isinstance(error, app_commands.MissingPermissions):
             conf_embed = discord.Embed(color=discord.Color.red())
-            conf_embed.add_field(name="`:x:` **Failure!**", value=f"{interaction.user}, you do not have the permissions to unwarn a member!")
+            conf_embed.add_field(name="`❌` **Failure!**", value=f"{interaction.user}, you do not have the permissions to unwarn a member!")
             conf_embed.set_footer(text=f"Action attempted by {interaction.user}.")
             await interaction.response.send_message(embed=conf_embed, ephemeral=True)
 
@@ -466,7 +466,7 @@ class Moderation(commands.Cog, name="Moderation"):
     async def unwarn_all_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
         if isinstance(error, app_commands.MissingPermissions):
             conf_embed = discord.Embed(color=discord.Color.red())
-            conf_embed.add_field(name="`:x:` **Failure!**", value=f"{interaction.user}, you do not have the permissions to remove all warnings from a member!")
+            conf_embed.add_field(name="`❌` **Failure!**", value=f"{interaction.user}, you do not have the permissions to remove all warnings from a member!")
             conf_embed.set_footer(text=f"Action attempted by {interaction.user}.")
             await interaction.response.send_message(embed=conf_embed, ephemeral=True)
 
@@ -476,7 +476,7 @@ class Moderation(commands.Cog, name="Moderation"):
     async def warnings_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
         if isinstance(error, app_commands.MissingPermissions):
             conf_embed = discord.Embed(color=discord.Color.red())
-            conf_embed.add_field(name="`:x:` **Failure!**", value=f"{interaction.user}, you do not have the permissions to list the warnings of a member!")
+            conf_embed.add_field(name="`❌` **Failure!**", value=f"{interaction.user}, you do not have the permissions to list the warnings of a member!")
             conf_embed.set_footer(text=f"Action attempted by {interaction.user}.")
             await interaction.response.send_message(embed=conf_embed, ephemeral=True)
 

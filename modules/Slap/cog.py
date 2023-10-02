@@ -32,7 +32,7 @@ class Slap(commands.Cog, name="Slaps"):
             json.dump(jura_data, f, indent=4)
 
         conf_embed = discord.Embed(color=discord.Color.blue())
-        conf_embed.add_field(name="Slap!", value=f"<@{jura}> kriegt ne heftige Schelle! Das ist bereits die {amount}. Schelle, die er sich verdient hat!")
+        conf_embed.add_field(name="`👋`**Slap!**", value=f"<@{jura}> kriegt ne heftige Schelle! Das ist bereits die {amount}. Schelle, die er sich verdient hat!")
         conf_embed.set_footer(text=f"Issued by {interaction.user}.")
         await interaction.response.send_message(embed=conf_embed)
 
@@ -67,7 +67,7 @@ class Slap(commands.Cog, name="Slaps"):
             json.dump(hug_data, f, indent=4)
 
         conf_embed = discord.Embed(color=discord.Color.green())
-        conf_embed.add_field(name="Hugged!", value=f"{interaction.user.mention} gives {user.mention} a hug <3 This is the {amount}. hug given to {user.name}!")
+        conf_embed.add_field(name="`❤`**Hugged!**", value=f"{interaction.user.mention} gives {user.mention} a hug <3 This is the {amount}. hug given to {user.name}!")
         conf_embed.set_footer(text=f"Hugged by {interaction.user}.")
         await interaction.response.send_message(embed=conf_embed)
 
@@ -92,7 +92,7 @@ class Slap(commands.Cog, name="Slaps"):
             json.dump(pat_data, f, indent=4)
 
         conf_embed = discord.Embed(color=discord.Color.green())
-        conf_embed.add_field(name="Pat!", value=f"{interaction.user.mention} pats {user.mention} because they like them! <3 This is the {amount}. pat given to {user.name}!")
+        conf_embed.add_field(name="`💞`**Pat!**", value=f"{interaction.user.mention} pats {user.mention} because they like them! <3 This is the {amount}. pat given to {user.name}!")
         conf_embed.set_footer(text=f"Patted by {interaction.user}.")
         await interaction.response.send_message(embed=conf_embed)
 
@@ -102,7 +102,7 @@ class Slap(commands.Cog, name="Slaps"):
     async def slap(self, interaction: discord.Interaction, user: discord.Member):
         if user.id == 247342650917650434 and interaction.user.id != 247342650917650434:
             conf_embed = discord.Embed(color=discord.Color.red())
-            conf_embed.add_field(name="Failure!", value=f"{interaction.user.mention}, you lack the permission to slap L3G3ND! Nice try though.")
+            conf_embed.add_field(name="`❌`**Failure!**", value=f"{interaction.user.mention}, you lack the permission to slap L3G3ND! Nice try though.")
             conf_embed.set_footer(text=f"Attempted by {interaction.user}.")
             await interaction.response.send_message(embed=conf_embed, ephemeral=True)
 
@@ -122,7 +122,7 @@ class Slap(commands.Cog, name="Slaps"):
             json.dump(slap_data, f, indent=4)
         
         conf_embed = discord.Embed(color=discord.Color.blue())
-        conf_embed.add_field(name="Slap!", value=f"{user.mention} was slapped by {interaction.user.mention}! This is the {amount}. slap!")
+        conf_embed.add_field(name="`👋`**Slap!**", value=f"{user.mention} was slapped by {interaction.user.mention}! This is the {amount}. slap!")
         conf_embed.set_footer(text=f"Slap issued by {interaction.user}.")
         await interaction.response.send_message(embed=conf_embed)
 
@@ -131,7 +131,7 @@ class Slap(commands.Cog, name="Slaps"):
     async def slaplegend_error(self,interaction: discord.Interaction, error: app_commands.AppCommandError):
         if isinstance(error, app_commands.MissingPermissions):
             conf_embed = discord.Embed(color=discord.Color.red())
-            conf_embed.add_field(name="Failure!", value=f"{interaction.user}, you do not have the permissions to slap L3G3ND! You need administrator permissions!")
+            conf_embed.add_field(name="`❌`**Failure!**", value=f"{interaction.user}, you do not have the permissions to slap L3G3ND! You need administrator permissions!")
             conf_embed.set_footer(text=f"Action attempted by {interaction.user}.")
             await interaction.response.send_message(embed=conf_embed, ephemeral=True)
 

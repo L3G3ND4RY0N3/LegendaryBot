@@ -250,7 +250,7 @@ class Linkedroles(commands.Cog, name="Linked Roles"):
     async def add_linked_role(self, interaction: discord.Interaction, role: discord.Role, linked_role: discord.Role):
         if role == linked_role:
             conf_embed = discord.Embed(color=discord.Color.red())
-            conf_embed.add_field(name="FORBIDDEN!", value=f"{linked_role.mention} can not be a required role for {role.mention}, no circular logic please!")
+            conf_embed.add_field(name="`❌`**FORBIDDEN!**", value=f"{linked_role.mention} can not be a required role for {role.mention}, no circular logic please!")
             conf_embed.set_footer(text=f"Action taken by {interaction.user}.")
         
             await interaction.response.send_message(embed=conf_embed)
@@ -261,14 +261,14 @@ class Linkedroles(commands.Cog, name="Linked Roles"):
 
         if retcode > 0:
             conf_embed = discord.Embed(color=discord.Color.yellow())
-            conf_embed.add_field(name="MISTAKE!", value=f"{linked_role.mention} is already a required role for {role.mention} for this server!")
+            conf_embed.add_field(name="`⚠️`**MISTAKE!**", value=f"{linked_role.mention} is already a required role for {role.mention} for this server!")
             conf_embed.set_footer(text=f"Action taken by {interaction.user}.")
         
             await interaction.response.send_message(embed=conf_embed)
             return
 
         conf_embed = discord.Embed(color=discord.Color.green())
-        conf_embed.add_field(name="Success!", value=f"{role.mention} will now be added/removed when a member is assigned/revoked {linked_role.mention}!")
+        conf_embed.add_field(name="`✅`**Success!**", value=f"{role.mention} will now be added/removed when a member is assigned/revoked {linked_role.mention}!")
         conf_embed.set_footer(text=f"Action taken by {interaction.user}.")
         
         await interaction.response.send_message(embed=conf_embed)
@@ -294,7 +294,7 @@ class Linkedroles(commands.Cog, name="Linked Roles"):
                 data[guild_id] = {}
 
                 conf_embed = discord.Embed(color=discord.Color.yellow())
-                conf_embed.add_field(name="No linked Roles on server!", value=f"This server has no linked roles yet, no link to remove!")
+                conf_embed.add_field(name="`⚠️`**No linked Roles on server!**", value=f"This server has no linked roles yet, no link to remove!")
                 conf_embed.set_footer(text=f"Action taken by {interaction.user}.")
             
                 await interaction.response.send_message(embed=conf_embed)
@@ -302,7 +302,7 @@ class Linkedroles(commands.Cog, name="Linked Roles"):
             
             if role_id not in data[guild_id]:
                 conf_embed = discord.Embed(color=discord.Color.yellow())
-                conf_embed.add_field(name=f"Not a linked Role!", value=f"{role.mention} has no links yet!")
+                conf_embed.add_field(name=f"`⚠️`**Not a linked Role!**", value=f"{role.mention} has no links yet!")
                 conf_embed.set_footer(text=f"Action taken by {interaction.user}.")
             
                 await interaction.response.send_message(embed=conf_embed)
@@ -316,7 +316,7 @@ class Linkedroles(commands.Cog, name="Linked Roles"):
 
             else:
                 conf_embed = discord.Embed(color=discord.Color.yellow())
-                conf_embed.add_field(name=f"No link between roles!", value=f"{role.mention} has no link to {linked_role.mention}!")
+                conf_embed.add_field(name=f"`⚠️`**No link between roles!**", value=f"{role.mention} has no link to {linked_role.mention}!")
                 conf_embed.set_footer(text=f"Action taken by {interaction.user}.")
             
                 await interaction.response.send_message(embed=conf_embed)
@@ -328,7 +328,7 @@ class Linkedroles(commands.Cog, name="Linked Roles"):
             json.dump(data, f, indent=4)
 
             conf_embed = discord.Embed(color=discord.Color.green())
-            conf_embed.add_field(name="Link removed!", value=f"{role.mention} will no longer be added/removed when a member is assigned/revoked {linked_role.mention}!")
+            conf_embed.add_field(name="`✅`**Link removed!**", value=f"{role.mention} will no longer be added/removed when a member is assigned/revoked {linked_role.mention}!")
             conf_embed.set_footer(text=f"Action taken by {interaction.user}.")
             
             await interaction.response.send_message(embed=conf_embed)
@@ -350,7 +350,7 @@ class Linkedroles(commands.Cog, name="Linked Roles"):
 
             if guild_id not in data or list(data[guild_id].keys()) == []:
                 conf_embed = discord.Embed(color=discord.Color.red())
-                conf_embed.add_field(name="No links between roles!", value=f"This server has yet to add links to roles!")
+                conf_embed.add_field(name="`⚠️`**No links between roles!**", value=f"This server has yet to add links to roles!")
                 conf_embed.set_footer(text=f"Action taken by {interaction.user}.")
 
                 await interaction.response.send_message(embed=conf_embed)
@@ -368,7 +368,7 @@ class Linkedroles(commands.Cog, name="Linked Roles"):
                 field += "\n"
 
             conf_embed = discord.Embed(color=discord.Color.blue())
-            conf_embed.add_field(name="Links:", value=f"{field}")
+            conf_embed.add_field(name="`🔗`**Links:**", value=f"{field}")
             conf_embed.set_footer(text=f"Action taken by {interaction.user}.")
 
             await interaction.response.send_message(embed=conf_embed)
@@ -384,7 +384,7 @@ class Linkedroles(commands.Cog, name="Linked Roles"):
     async def linked_role_error(self,interaction: discord.Interaction, error: app_commands.AppCommandError):
         if isinstance(error, app_commands.MissingPermissions):
             conf_embed = discord.Embed(color=discord.Color.red())
-            conf_embed.add_field(name="Failure!!", value=f"{interaction.user}, you do not have the permissions to add new links to roles! You need administrator permissions!")
+            conf_embed.add_field(name="`❌`**Failure!**", value=f"{interaction.user}, you do not have the permissions to add new links to roles! You need administrator permissions!")
             conf_embed.set_footer(text=f"Action attempted by {interaction.user}.")
             await interaction.response.send_message(embed=conf_embed, ephemeral=True)
 
@@ -392,7 +392,7 @@ class Linkedroles(commands.Cog, name="Linked Roles"):
     async def remove_linked_role_error(self,interaction: discord.Interaction, error: app_commands.AppCommandError):
         if isinstance(error, app_commands.MissingPermissions):
             conf_embed = discord.Embed(color=discord.Color.red())
-            conf_embed.add_field(name="Failure!", value=f"{interaction.user.name}, you do not have the permissions to remove linked roles! You need administrator permissions!")
+            conf_embed.add_field(name="`❌`**Failure!**", value=f"{interaction.user.name}, you do not have the permissions to remove linked roles! You need administrator permissions!")
             conf_embed.set_footer(text=f"Action attempted by {interaction.user}.")
             await interaction.response.send_message(embed=conf_embed, ephemeral=True)
 
@@ -400,7 +400,7 @@ class Linkedroles(commands.Cog, name="Linked Roles"):
     async def list_linked_roles_error(self,interaction: discord.Interaction, error: app_commands.AppCommandError):
         if isinstance(error, app_commands.MissingPermissions):
             conf_embed = discord.Embed(color=discord.Color.red())
-            conf_embed.add_field(name="Failure!", value=f"{interaction.user.name}, you do not have the permissions to list linked roles! You need administrator permissions!")
+            conf_embed.add_field(name="`❌`**Failure!**", value=f"{interaction.user.name}, you do not have the permissions to list linked roles! You need administrator permissions!")
             conf_embed.set_footer(text=f"Action attempted by {interaction.user}.")
             await interaction.response.send_message(embed=conf_embed, ephemeral=True)
 

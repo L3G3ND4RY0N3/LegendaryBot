@@ -57,7 +57,7 @@ class MessageCog(commands.Cog):
     async def export_messages_error(self,interaction: discord.Interaction, error: app_commands.AppCommandError):
         if isinstance(error, app_commands.MissingPermissions):
             conf_embed = discord.Embed(color=discord.Color.red())
-            conf_embed.add_field(name="Failure!", value=f"{interaction.user.name}, you do not have the permissions to export messages! You need administrator permissions!")
+            conf_embed.add_field(name="`❌`**Failure**!", value=f"{interaction.user.name}, you do not have the permissions to export messages! You need administrator permissions!")
             conf_embed.set_footer(text=f"Action taken by {interaction.user}.")
             await interaction.response.send_message(embed=conf_embed, ephemeral=True)
 
