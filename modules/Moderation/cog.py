@@ -40,7 +40,8 @@ class Moderation(commands.Cog, name="Moderation"):
     ####################################################################################################################################
 
 
-    #Delete Messages Command
+    #Delete Messages Command TODO: fix bug if not enogh messages for member ir in channel, sends no embded
+    # TODO: Allow channel selection!
     @app_commands.command(name="delete_messages", description="Delete some messages in a channel or from a member!")
     @app_commands.describe(number="The number of messages you want to delete?")
     @app_commands.describe(member="Whose messages you want to delete")

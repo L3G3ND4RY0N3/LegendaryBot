@@ -3,7 +3,6 @@ from discord.ext import commands
 from discord import app_commands
 import json
 from utils import jsonfunctions, settings
-from typing import List
 
 
 logger=settings.logging.getLogger("discord")
@@ -329,6 +328,71 @@ class Linkedroles(commands.Cog, name="Linked Roles"):
 
             conf_embed = discord.Embed(color=discord.Color.green())
             conf_embed.add_field(name="`✅`**Link removed!**", value=f"{role.mention} will no longer be added/removed when a member is assigned/revoked {linked_role.mention}!")
+            conf_embed.set_footer(text=f"Action taken by {interaction.user}.")
+            
+            await interaction.response.send_message(embed=conf_embed)
+
+
+    ####################################################################################################################################
+    ################################################# Remove All Command ###############################################################
+    ####################################################################################################################################
+
+
+    # Remove command, takes a role, that is no longer supposed to be added to a member, when they get another required linked_role
+    # Removes the role from the json file with server_id = {role: [linked_role, linked_role2,...]}, if the list of the role is empty, it gets dropped: server:id = {}
+
+    @app_commands.command(name="remove_all_links_from_role", description="Removes the link from the role to the linked_role")
+    @app_commands.checks.has_permissions(administrator=True)
+    @app_commands.describe(role = "Select the role to no longer automatically add/remove")
+    async def remove_linked_role(self, interaction: discord.Interaction, role: discord.Role = None):
+        with open("modules/Linkedroles/json/linkedroles.json", "r+") as f: 
+            data = json.load(f)
+
+            guild_id = str(interaction.guild.id)
+
+            if role != None:
+
+                role_id = str(role.id)
+
+                if guild_id not in data or not data[guild_id]:
+                    data[guild_id] = {}
+
+                    conf_embed = discord.Embed(color=discord.Color.yellow())
+                    conf_embed.add_field(name="`⚠️`**No linked Roles on server!**", value=f"This server has no linked roles yet, no link to remove!")
+                    conf_embed.set_footer(text=f"Action taken by {interaction.user}.")
+                
+                    await interaction.response.send_message(embed=conf_embed)
+                    return
+                
+                elif role_id not in data[guild_id]:
+                    conf_embed = discord.Embed(color=discord.Color.yellow())
+                    conf_embed.add_field(name=f"`⚠️`**Not a linked Role!**", value=f"{role.mention} has no links yet!")
+                    conf_embed.set_footer(text=f"Action taken by {interaction.user}.")
+                
+                    await interaction.response.send_message(embed=conf_embed)
+                    return
+
+                else:
+                    data[guild_id].pop(role_id)
+
+                    conf_embed = discord.Embed(color=discord.Color.yellow())
+                    conf_embed.add_field(name=f"`✅`**Link removed!**", value=f"All links for {role.mention} have been removed!")
+                    conf_embed.set_footer(text=f"Action taken by {interaction.user}.")
+
+                    await interaction.response.send_message(embed=conf_embed)
+
+            
+
+            else:
+                data[guild_id] = {}
+        
+            f.seek(0)
+            f.truncate()
+       
+            json.dump(data, f, indent=4)
+
+            conf_embed = discord.Embed(color=discord.Color.green())
+            conf_embed.add_field(name="`✅`**Links removed!**", value=f"All links between roles have been removed!")
             conf_embed.set_footer(text=f"Action taken by {interaction.user}.")
             
             await interaction.response.send_message(embed=conf_embed)
