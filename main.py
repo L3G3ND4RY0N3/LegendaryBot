@@ -1,11 +1,9 @@
 import discord
-from discord import app_commands
 from discord.ext import commands, tasks
 from dotenv import load_dotenv
 import os as os
 import asyncio
 from itertools import cycle
-import json
 from utils import settings
 
 #Lädt das .env File mit dem Token!

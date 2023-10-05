@@ -104,7 +104,7 @@ class Autodelete(commands.Cog):
 
     @app_commands.command(name="add_autodelete_channel", description="Add autodelete mode to a channel")
     @app_commands.checks.has_permissions(administrator=True)
-    @app_commands.describe(time = "Set the time after which messages in the channel will be deleted!", 
+    @app_commands.describe(time = "Set the time **(in seconds!)** after which messages in the channel will be deleted!", 
                            channel="Select the channel to delete messages in", 
                            max_msg_count="Select the max amount of messages in the channel before deleting")
     async def autodelset(self, ctx:discord.Interaction, time: int, channel: discord.TextChannel, max_msg_count: int = None):
