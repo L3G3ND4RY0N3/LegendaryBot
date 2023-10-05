@@ -1,16 +1,18 @@
 import json
 
+# update json file for join roles and temp voice
 def update_autorole(filepath: str, guildid, key, value, retcode):
     with open(filepath, "r+") as f:
         data = json.load(f)
         guildid, key, value = str(guildid), str(key), str(value)
 
+        if guildid in data:
+            if key in data[guildid]:
+                retcode += 1
+                return retcode
+
         if guildid not in data:
             data[guildid] = {key: value}
-
-        if key in data[guildid]:
-            retcode += 1
-            return retcode
 
         data[guildid].update({key: value})
 
@@ -20,7 +22,7 @@ def update_autorole(filepath: str, guildid, key, value, retcode):
 
         return retcode
 
-
+# update json for linked roles
 def update_linkedrole(filepath: str, guildid, key, value, retcode):
     with open(filepath, "r+") as f:
         with open("modules/Linkedroles/json/linkedroles.json", "r+") as f: 

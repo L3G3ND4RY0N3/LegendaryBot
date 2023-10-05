@@ -30,7 +30,7 @@ class Autoroles(commands.Cog, name="Autoroles"):
             roles.append(member.guild.get_role(int(key)))
         
         try:
-            await member.add_roles(*roles)
+            await member.add_roles(*roles, reason="Join Role")
         except discord.errors.Forbidden:
             logger.info(f"Bot is missing permissions to manage roles in {member.guild.name}!")
 
