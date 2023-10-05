@@ -282,5 +282,45 @@ class Autodelete(commands.Cog):
             await ctx.response.send_message(embed=embed, file=file)
 
 
+    ####################################################################################################################################
+    ################################################# Error Handeling! #################################################################
+    ####################################################################################################################################
+
+    @autodelset.error
+    async def autodelset_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
+        if isinstance(error, app_commands.MissingPermissions):
+            conf_embed = discord.Embed(color=discord.Color.red())
+            conf_embed.add_field(name="`❌` **Failure!**", value=f"{interaction.user}, you do not have the permissions to add autodelete channels!")
+            conf_embed.set_footer(text=f"Action attempted by {interaction.user}.")
+            await interaction.response.send_message(embed=conf_embed, ephemeral=True)
+
+    
+    @autodelremove.error
+    async def autodelremove_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
+        if isinstance(error, app_commands.MissingPermissions):
+            conf_embed = discord.Embed(color=discord.Color.red())
+            conf_embed.add_field(name="`❌` **Failure!**", value=f"{interaction.user}, you do not have the permissions to remove autodelete channels!")
+            conf_embed.set_footer(text=f"Action attempted by {interaction.user}.")
+            await interaction.response.send_message(embed=conf_embed, ephemeral=True)
+
+    
+    @autodelremove_all.error
+    async def autodelremove_all_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
+        if isinstance(error, app_commands.MissingPermissions):
+            conf_embed = discord.Embed(color=discord.Color.red())
+            conf_embed.add_field(name="`❌` **Failure!**", value=f"{interaction.user}, you do not have the permissions to remove autodelete channels!")
+            conf_embed.set_footer(text=f"Action attempted by {interaction.user}.")
+            await interaction.response.send_message(embed=conf_embed, ephemeral=True)
+
+
+    @autodelcheck.error
+    async def autodelcheck_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
+        if isinstance(error, app_commands.MissingPermissions):
+            conf_embed = discord.Embed(color=discord.Color.red())
+            conf_embed.add_field(name="`❌` **Failure!**", value=f"{interaction.user}, you do not have the permissions to list autodelete channels!")
+            conf_embed.set_footer(text=f"Action attempted by {interaction.user}.")
+            await interaction.response.send_message(embed=conf_embed, ephemeral=True)
+
+
 async def setup(bot):
     await bot.add_cog(Autodelete(bot))
