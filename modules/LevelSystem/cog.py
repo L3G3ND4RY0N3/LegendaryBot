@@ -91,7 +91,7 @@ class LevelSystem(commands.Cog, name="Level System"):
         await self.bot.wait_until_ready()
 
     @check_members_in_voice.after_loop
-    async def after_chech_members_in_voice(self):
+    async def after_check_members_in_voice(self):
         logger.info(f"Checked {self.vc_count} voice channel{'s' if self.vc_count!=1 else ''} across {self.guild_count} server{'s' if self.guild_count!=1 else ''} and added a total of {self.new_users} member{'s' if self.new_users!=1 else ''}!")
         logger.info("Ending check member loop!")
 
