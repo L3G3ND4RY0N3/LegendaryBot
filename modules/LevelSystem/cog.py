@@ -238,9 +238,13 @@ class LevelSystem(commands.Cog, name="Level System"):
                     lvl = self.get_level(xp)
                     time = self.calc_time(vc_minutes)
                     user = discord.Client.get_user(self.bot,int(user_id))
-                    # TODO: Fix formatting of leaderboard
-                    desc += f"**{counter:<2}.** {user.mention:32} - **{xp:<9}** XP - **{msg_count:<5}** message{'s' if msg_count!=1 else ''} - **{time:<4} ** {'minute' if vc_minutes<60 else 'hour'}{'s' if vc_minutes!=1 else ''} in voice - Level **{lvl:<3}**\n **------------------------------------------------------------------**\n"
-                    counter += 1
+                    if user is not None:                        
+                        # TODO: Fix formatting of leaderboard
+                        desc += f"**{counter:<2}.** {user.mention:32} - **{xp:<9}** XP - **{msg_count:<5}** message{'s' if msg_count!=1 else ''} - **{time:<4} ** {'minute' if vc_minutes<60 else 'hour'}{'s' if vc_minutes!=1 else ''} in voice - Level **{lvl:<3}**\n **------------------------------------------------------------------**\n"
+                        counter += 1
+                    else:
+                        #TODO: delete user from db or set as inactive (and fetch new TOP 10?)
+                        continue
         
         confedembed = discord.Embed(title="Leaderboard", description=desc, color=discord.Color.blurple())
 
