@@ -78,3 +78,16 @@ def remove_update_linkedrole(filepath: str, role, linked_role):
         json.dump(data, f, indent=4)
 
         return 0
+
+
+#removes keys of nested dictionaries by their values and returns the new dict without the deleted k,v pairs
+def remove_key_with_value(dct, value):
+    new_dct = {}
+    for key, val in dct.items():
+        if isinstance(val, dict):
+            new_v = remove_key_with_value(val, value)
+            if new_v:
+                new_dct[key] = new_v
+        elif val != value:
+            new_dct[key] = val
+    return new_dct
