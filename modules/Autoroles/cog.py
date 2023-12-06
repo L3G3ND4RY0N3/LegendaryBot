@@ -19,13 +19,18 @@ class Autoroles(commands.Cog, name="Autoroles"):
     async def on_ready(self):
         logger.info("Autoroles.py is ready!")    
 
-    @commands.Cog.listener()
+    @commands.Cog.listener() #TODO: Add role deletion from json if role got deleted while bot was offline
     async def on_member_join(self, member):
         with open("modules/Autoroles/json/autoroles.json", "r") as f:
             auto_role = json.load(f)
 
+        guild_id = str(member.guild.id)
+
+        if guild_id not in auto_role or auto_role[guild_id] == {}:
+            return
+
         roles = []
-        role_ids = auto_role[str(member.guild.id)].keys()
+        role_ids = auto_role[guild_id].keys()
         for key in role_ids:
             roles.append(member.guild.get_role(int(key)))
         
