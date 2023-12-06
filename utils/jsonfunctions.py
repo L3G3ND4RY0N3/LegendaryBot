@@ -80,7 +80,7 @@ def remove_update_linkedrole(filepath: str, role, linked_role):
         return 0
 
 
-#removes keys of nested dictionaries by their values and returns the new dict without the deleted k,v pairs
+#removes keys of nested dictionaries by their values and returns the new dict without the deleted k,v pairs {tkey: {key: value}}
 def remove_key_with_value(dct, value):
     new_dct = {}
     for key, val in dct.items():
@@ -91,3 +91,32 @@ def remove_key_with_value(dct, value):
         elif val != value:
             new_dct[key] = val
     return new_dct
+
+#removes keys of nested dictionaries {tkey: {"key": {value}}}
+# def remove_key_from_nested_dict(dct, k):
+#     new_dct = {}
+#     for key in dct.items():
+#         if isinstance(key, dict):
+#             new_k = remove_key_with_value(key, k)
+#             if new_k:
+#                 new_dct[key] = new_k
+#         elif key != k:
+#             new_dct[key] = k
+#     return new_dct
+
+def remove_nested_keys(dct, k):
+    for key, value in dct.items():
+        if isinstance(value, dict):
+            if k in list(dct[key].keys()):
+                dct[key].pop(k)
+
+    return dct
+
+def get_superior_key_from_sub_key(dct, skey):
+    for key, value in dct.items():
+        if isinstance(value, dict):
+            if skey in list(dct[key].keys()):
+                return key
+
+# def del_temp_vc_id_from_json(path, id):
+#     return

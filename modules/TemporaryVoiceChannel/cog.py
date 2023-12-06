@@ -10,8 +10,13 @@ logger=settings.logging.getLogger("discord")
 class TemporaryVoice(commands.Cog, name="TemporaryVoice"):
     def __init__(self, bot):
         self.bot = bot
-        self.temporary_voice_channels = []
+        self.temporary_voice_channels = [] #integer list of all temporary voice channels
+        self.check_temp_creation_vc.start()
         self.check_temp_vc.start()
+
+    def cog_unload(self):
+        self.check_temp_creation_vc.cancel()
+
 
     def cog_unload(self):
         self.check_temp_vc.cancel()
@@ -25,7 +30,7 @@ class TemporaryVoice(commands.Cog, name="TemporaryVoice"):
     async def on_ready(self):
         logger.info("TemporaryVoice.py is ready!")   
 
-
+##########################################################################################################################################################################################
     @commands.Cog.listener()
     async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
         with open("modules/TemporaryVoiceChannel/json/tempcreationvc.json", "r") as f:
@@ -47,6 +52,8 @@ class TemporaryVoice(commands.Cog, name="TemporaryVoice"):
                 temp_channel = await after.channel.clone(name=temp_vc_channel_name) #clone creation channel
                 await member.move_to(temp_channel) #move member
                 self.temporary_voice_channels.append(temp_channel.id) #add temp channel to temp channel list
+
+                #add temp_vc to json file with {server_id: {vc_id:{"owner": owner_id, creation_channel: creation_vc_id}}}
                 with open("modules/TemporaryVoiceChannel/json/tempchannels.json", "r+") as f:
                     data = json.load(f)
 
@@ -58,7 +65,6 @@ class TemporaryVoice(commands.Cog, name="TemporaryVoice"):
                     f.seek(0)
 
                     json.dump(data, f, indent=4)
-
 
         
         if before.channel: #if member left a channel
@@ -76,8 +82,7 @@ class TemporaryVoice(commands.Cog, name="TemporaryVoice"):
 
                         json.dump(data, f, indent=4)
 
-
-
+##########################################################################################################################################################################################
     # delete the channel from the json, when it gets deleted not using the command
     @commands.Cog.listener()
     async def on_guild_channel_delete(self, channel):
@@ -109,7 +114,7 @@ class TemporaryVoice(commands.Cog, name="TemporaryVoice"):
             else:
                 logger.info(f"{channel.name} in {channel.guild.name} was not a temporary voice channel")
 
-
+##########################################################################################################################################################################################
     # Temp Voice Channels für Multiple Server from Json File
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild):
@@ -120,7 +125,7 @@ class TemporaryVoice(commands.Cog, name="TemporaryVoice"):
                     
         with open("modules/TemporaryVoiceChannel/json/tempcreationvc.json", "w") as f:
             json.dump(data, f, indent=4)
-
+##########################################################################################################################################################################################
     # Deletes the temporary voice channels for a server if the bot gets kicked or banned from the server (guild)
     @commands.Cog.listener()
     async def on_guild_remove(self, guild: discord.Guild):
@@ -140,7 +145,7 @@ class TemporaryVoice(commands.Cog, name="TemporaryVoice"):
     #Checks if the creation channels have been deleted after bot restart. If so, deletes the category and vc from the json file
 
     @tasks.loop(minutes=1, count=1)
-    async def check_temp_vc(self):
+    async def check_temp_creation_vc(self):
         with open("modules/TemporaryVoiceChannel/json/tempcreationvc.json", "r") as f:
             data = json.load(f)
         guilds = self.bot.guilds
@@ -173,17 +178,87 @@ class TemporaryVoice(commands.Cog, name="TemporaryVoice"):
                     json.dump(data, f, indent=4)
 
         vc_channels_count = len(vc_channels_ids)
+        logger.info(f"Checked {vc_channels_count} temporary voice creation channel{'s' if vc_channels_count!=1 else ''} across {guild_count} server{'s' if guild_count!=1 else ''} and registered {count_deleted} deleted temporary voice creation channels!") 
+
+
+    @check_temp_creation_vc.before_loop
+    async def before_check_temp_creation_vc_task(self):
+        logger.info("Check temp_creation_vc loop is waiting for the bot to load...") 
+        await self.bot.wait_until_ready()
+
+
+    @check_temp_creation_vc.after_loop
+    async def after_check_temp_creation_vc_task(self):
+        logger.info(f"Finished check temp_creation_vc loop!")
+        logger.info("Ending check temporary voice channel creation loop!")
+
+
+    ##########################################################################################################################################################################################
+    #Checks if temporary voice channels still exists on bot reboot and if they got deleted or empty deletes them from the server and json file, else adds them to self.temporary_voice_channels
+    ##########################################################################################################################################################################################
+
+    @tasks.loop(minutes=1, count=1)
+    async def check_temp_vc(self):
+        with open("modules/TemporaryVoiceChannel/json/tempchannels.json", "r") as f:
+            data = json.load(f)
+        guilds = self.bot.guilds
+        guild_count = len(guilds)
+        vc_channels_ids = []
+        count_deleted = 0
+        for guild in guilds:
+            guild_id = str(guild.id)
+            if guild_id not in data:
+                    continue
+            else:
+                for voice_channel in guild.voice_channels:
+                    vc_channels_ids.append(voice_channel.id)
+
+        temp_channel_ids = []
+
+        #Iterate over each key in data (server ids)
+        for key in data:
+            temp_channel_ids +=  list(data[key].keys()) #TODO: Add tuple with guild_id for later use!
+
+        #TODO: make function from json command! no code duplicates!
+
+        for temp_vc_id in temp_channel_ids: #check for every id in json list
+            if int(temp_vc_id) not in vc_channels_ids: #if id from json file is no longer present in the list of all vc_channel ids
+                with open("modules/TemporaryVoiceChannel/json/tempchannels.json", "r+") as f:
+                    data = json.load(f)
+                    data = jsonfunctions.remove_nested_keys(data, temp_vc_id)
+                    f.seek(0)
+                    f.truncate()
+                    count_deleted += 1
+                    json.dump(data, f, indent=4)
+
+            elif int(temp_vc_id) in vc_channels_ids: #if channel is still existent
+                vc = self.bot.get_channel(int(temp_vc_id))
+                if len(vc.members) == 0: #if empty delete from server and json file
+                    await vc.delete()
+                    with open("modules/TemporaryVoiceChannel/json/tempchannels.json", "r+") as f:
+                        data = json.load(f)
+                        data = jsonfunctions.remove_nested_keys(data, temp_vc_id)
+                        f.seek(0)
+                        f.truncate()
+                        count_deleted += 1
+                        json.dump(data, f, indent=4)
+
+                else:
+                    self.temporary_voice_channels.append(int(temp_vc_id))
+
+
+        vc_channels_count = len(vc_channels_ids)
         logger.info(f"Checked {vc_channels_count} temporary voice channel{'s' if vc_channels_count!=1 else ''} across {guild_count} server{'s' if guild_count!=1 else ''} and registered {count_deleted} deleted temporary voice channels!") 
 
 
     @check_temp_vc.before_loop
-    async def before_check_members_in_voice_task(self):
+    async def before_check_temp_vc_task(self):
         logger.info("Check temp_vc loop is waiting for the bot to load...") 
         await self.bot.wait_until_ready()
 
 
     @check_temp_vc.after_loop
-    async def after_check_members_in_voice(self):
+    async def after_check_temp_vc_task(self):
         logger.info(f"Finished check temp_vc loop!")
         logger.info("Ending check temporary voice channel loop!")
 
@@ -201,7 +276,16 @@ class TemporaryVoice(commands.Cog, name="TemporaryVoice"):
         
         if name == None:
             name = "➕join to create"
-        temp_vc = await category.create_voice_channel(name)
+        #TODO: add try catch!
+        try:
+            temp_vc = await category.create_voice_channel(name)
+        except discord.Forbidden:
+            conf_embed = discord.Embed(color=discord.Color.red())
+            conf_embed.add_field(name="`❌`**ERROR!**", value=f"**I am missing the permissions to create voice channels in {category.mention}!**")
+            conf_embed.set_footer(text=f"Action taken by {ctx.user}.")
+        
+            await ctx.response.send_message(embed=conf_embed)
+            return
 
         temp_vc_id, retcode = temp_vc.id, 0
 
@@ -267,8 +351,8 @@ class TemporaryVoice(commands.Cog, name="TemporaryVoice"):
     ##################################################### List Command #################################################################
     ####################################################################################################################################
 
-    @app_commands.command(name="list_temporary_voice_channels", description="Lists the temporary voice channels for this guild.")
-    async def list_join_role(self, interaction: discord.Interaction):
+    @app_commands.command(name="list_temporary_voice_channels", description="Lists the temporary voice creation channels for this guild.")
+    async def list_temporary_voice_channels(self, interaction: discord.Interaction):
         with open("modules/TemporaryVoiceChannel/json/tempcreationvc.json", "r") as f:
             data = json.load(f)
 
