@@ -22,6 +22,19 @@ class TemporaryVoice(commands.Cog, name="TemporaryVoice"):
         self.check_temp_vc.cancel()
 
 
+    #### static methods ######
+
+    @staticmethod
+    def remove_deleted_temp_vc_from_json(temp_vc_id):
+        with open("modules/TemporaryVoiceChannel/json/tempchannels.json", "r+") as f:
+            data = json.load(f)
+            data = jsonfunctions.remove_nested_keys(data, temp_vc_id)
+            f.seek(0)
+            f.truncate()
+            json.dump(data, f, indent=4)
+        return
+
+
     ####################################################################################################################################
     ######################################################### Listener #################################################################
     ####################################################################################################################################
@@ -223,25 +236,17 @@ class TemporaryVoice(commands.Cog, name="TemporaryVoice"):
 
         for temp_vc_id in temp_channel_ids: #check for every id in json list
             if int(temp_vc_id) not in vc_channels_ids: #if id from json file is no longer present in the list of all vc_channel ids
-                with open("modules/TemporaryVoiceChannel/json/tempchannels.json", "r+") as f:
-                    data = json.load(f)
-                    data = jsonfunctions.remove_nested_keys(data, temp_vc_id)
-                    f.seek(0)
-                    f.truncate()
-                    count_deleted += 1
-                    json.dump(data, f, indent=4)
+                self.remove_deleted_temp_vc_from_json(temp_vc_id)
+                count_deleted += 1
+                    
 
             elif int(temp_vc_id) in vc_channels_ids: #if channel is still existent
                 vc = self.bot.get_channel(int(temp_vc_id))
                 if len(vc.members) == 0: #if empty delete from server and json file
                     await vc.delete()
-                    with open("modules/TemporaryVoiceChannel/json/tempchannels.json", "r+") as f:
-                        data = json.load(f)
-                        data = jsonfunctions.remove_nested_keys(data, temp_vc_id)
-                        f.seek(0)
-                        f.truncate()
-                        count_deleted += 1
-                        json.dump(data, f, indent=4)
+                    self.remove_deleted_temp_vc_from_json(temp_vc_id)
+                    count_deleted += 1
+                        
 
                 else:
                     self.temporary_voice_channels.append(int(temp_vc_id))
