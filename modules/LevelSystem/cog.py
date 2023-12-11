@@ -212,7 +212,7 @@ class LevelSystem(commands.Cog, name="Level System"):
         msg_pos = result[6]
         lvl = self.get_level(xp)
 
-        await interaction.response.send_message(f"{'You' if user == None else user.mention} {'have' if user == None else 'has'} **{xp}** XP ({xp_pos}. place), **{vc_minutes}** minute{'s' if vc_minutes!=1 else ''} in voice ({vc_pos}. place), written **{msg_count}** message{'s' if msg_count!=1 else ''} ({msg_pos}. place) and reached level {lvl}!")
+        await interaction.response.send_message(f"{'You' if user is None else user.mention} {'have' if user is None else 'has'} **{xp}** XP ({xp_pos}. place), **{vc_minutes}** minute{'s' if vc_minutes!=1 else ''} in voice ({vc_pos}. place), written **{msg_count}** message{'s' if msg_count!=1 else ''} ({msg_pos}. place) and reached level {lvl}!")
 
     ########################## Leaderboard Command #######################################################
 
@@ -223,7 +223,7 @@ class LevelSystem(commands.Cog, name="Level System"):
         Choice(name = "minutes in voice", value = "vc_minutes")
     ])
     async def leaderboard(self, interaction: discord.Interaction, stat: str = None):
-        if stat == None:
+        if stat is None:
             order = 'xp'
         else:
             order = stat

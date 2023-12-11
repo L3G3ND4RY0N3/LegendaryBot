@@ -274,7 +274,7 @@ class TemporaryVoice(commands.Cog, name="TemporaryVoice"):
     async def add_temp_voice_channel(self, ctx:discord.Interaction, category:discord.CategoryChannel, name: str = None):
         guild_id, cat_id = ctx.guild.id, category.id
         
-        if name == None:
+        if name is None:
             name = "➕join to create"
         #TODO: add try catch!
         try:

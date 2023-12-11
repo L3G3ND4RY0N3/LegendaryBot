@@ -51,7 +51,7 @@ class Moderation(commands.Cog, name="Moderation"):
         try:
             delete_counter = 0
             async for message in interaction.channel.history():
-                if message.author == member or member == None:
+                if message.author == member or member is None:
                     await message.delete()
                     delete_counter += 1
                 if delete_counter == number:
