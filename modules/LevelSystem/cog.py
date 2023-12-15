@@ -169,10 +169,10 @@ class LevelSystem(commands.Cog, name="Level System"):
             # User joined a voice channel
             start = datetime.datetime.now()
             self.starttime[member.id] = start
-            logger.info(f"{member.name} joined voice channel {after.channel.name} in {member.guild.name}")
+            # logger.info(f"{member.name} joined voice channel {after.channel.name} in {member.guild.name}")
         elif before.channel is not None and after.channel is None:
             # User left a voice channel
-            logger.info(f"{member.name} left voice channel {before.channel.name} in {member.guild.name}")
+            # logger.info(f"{member.name} left voice channel {before.channel.name} in {member.guild.name}")
             # Calculate voice activity duration
             end = datetime.datetime.now()
             duration = end - self.starttime.pop(member.id, end)
@@ -183,9 +183,9 @@ class LevelSystem(commands.Cog, name="Level System"):
             async with aiosqlite.connect(self.DB) as conn:
                 async with conn.execute("UPDATE users SET vc_minutes = vc_minutes + ?, xp = xp + ? WHERE user_id = ?", (minutes, currency, member.id)):
                     await conn.commit()
-        elif before.channel is not None and after.channel is not None and before.channel != after.channel:
-            # User switched voice channels
-            logger.info(f"{member.name} switched from voice channel {before.channel.name} to {after.channel.name} in {member.guild.name}")
+        # elif before.channel is not None and after.channel is not None and before.channel != after.channel:
+        #     # User switched voice channels
+        #     logger.info(f"{member.name} switched from voice channel {before.channel.name} to {after.channel.name} in {member.guild.name}")
 
 
     ########################## Rank Command #######################################################
