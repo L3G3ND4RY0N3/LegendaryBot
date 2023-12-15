@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands, tasks
 from discord import app_commands
 from utils import settings, jsonfunctions
+import utils.views.tempvoicecustomizationview as tvv
 import json
 
 logger=settings.logging.getLogger("discord")
@@ -44,7 +45,7 @@ class TemporaryVoice(commands.Cog, name="TemporaryVoice"):
     @commands.Cog.listener() #ansatt bot.event!
     async def on_ready(self):
         logger.info("TemporaryVoice.py is ready!")
-        self.bot.add_view(temp_voice_custum_button(None, self.bot))   
+        self.bot.add_view(tvv.TempVoiceCustomView(None, self.bot))
 
 ##########################################################################################################################################################################################
     @commands.Cog.listener()
@@ -388,6 +389,30 @@ class TemporaryVoice(commands.Cog, name="TemporaryVoice"):
         conf_embed.set_footer(text=f"Action taken by {interaction.user}.")
 
         await interaction.response.send_message(embed=conf_embed)
+
+
+    ####################################################################################################################################
+    ################################################ Configuration Command #############################################################
+    ####################################################################################################################################
+
+    @app_commands.command(name="create_temp_vc_customization", description="Create a reactable message, where users can customize their temporary voice channels")
+    async def create_temp_vc_customization(self, interaction: discord.Interaction):
+        with open(TemporaryVoice.temp_creation_vc_file_path, "r") as f:
+            data = json.load(f)
+
+        if str(interaction.guild.id) not in data or list(data[str(interaction.guild.id)].keys()) == []: #TODO: create embed builder!
+                conf_embed = discord.Embed(color=discord.Color.red())
+                conf_embed.add_field(name="`⚠️`**No Temporary Voice Creation Channels!**", value=f"This server has yet to add a temporary voice creation channel!")
+                conf_embed.set_footer(text=f"Action taken by {interaction.user}.")
+
+                await interaction.response.send_message(embed=conf_embed)
+                return
+        
+        conf_embed= discord.Embed(color=discord.Color.blue())
+        conf_embed.add_field(name="`🔊`**Manage Temporary Voice Channels**", value=f"Configure your own temporary voice channel with the buttons below.")
+        await interaction.response.send_message(embed=conf_embed, view=tvv.TempVoiceCustomView(interaction, self.bot))
+
+        return
 
 
     ####################################################################################################################################
