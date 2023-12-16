@@ -396,6 +396,7 @@ class TemporaryVoice(commands.Cog, name="TemporaryVoice"):
     ####################################################################################################################################
 
     @app_commands.command(name="create_temp_vc_customization", description="Create a reactable message, where users can customize their temporary voice channels")
+    @app_commands.checks.has_permissions(administrator=True)
     async def create_temp_vc_customization(self, interaction: discord.Interaction):
         with open(TemporaryVoice.temp_creation_vc_file_path, "r") as f:
             data = json.load(f)
@@ -427,11 +428,21 @@ class TemporaryVoice(commands.Cog, name="TemporaryVoice"):
             conf_embed.set_footer(text=f"Action attempted by {interaction.user}.")
             await interaction.response.send_message(embed=conf_embed, ephemeral=True)
 
+
     @delete_temporary_voice_channel.error
     async def delete_temp_voice_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
         if isinstance(error, app_commands.MissingPermissions):
             conf_embed = discord.Embed(color=discord.Color.red())
             conf_embed.add_field(name="`❌` **Failure!**", value=f"{interaction.user}, you do not have the permissions to delete temporary voice channels!")
+            conf_embed.set_footer(text=f"Action attempted by {interaction.user}.")
+            await interaction.response.send_message(embed=conf_embed, ephemeral=True)
+
+
+    @create_temp_vc_customization.error
+    async def create_temp_vc_customization_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
+        if isinstance(error, app_commands.MissingPermissions):
+            conf_embed = discord.Embed(color=discord.Color.red())
+            conf_embed.add_field(name="`❌` **Failure!**", value=f"{interaction.user}, you do not have the permissions to create a customization menu!")
             conf_embed.set_footer(text=f"Action attempted by {interaction.user}.")
             await interaction.response.send_message(embed=conf_embed, ephemeral=True)
 
