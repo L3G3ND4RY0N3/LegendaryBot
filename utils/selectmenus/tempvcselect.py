@@ -127,31 +127,15 @@ class UnbanSelectMenu(discord.ui.UserSelect):
         data = tcv.TempVoiceCustomView.open_temp_vc_json() #get data
         success = tcv.TempVoiceCustomView.check_if_member_in_own_temp_vc(data, interaction) #see if user is still in own voice
 
-        if success != tcv.VoiceChannelStatus.InOwnVoice: #if not in own voice abort
+        if success == tcv.VoiceChannelStatus.NotInOwnVoice: #if not in own voice abort
             conf_embed = tcv.TempVoiceCustomView.warning_embed(interaction.user, success)
             await interaction.response.send_message(embed=conf_embed, ephemeral=True)
             return
         
         usr_channel = get_user_channel_from_interaction(interaction) #get channel object
 
-        try: #try get target channel
-            mem_channel = member.voice.channel
-        except AttributeError:
-            mem_channel = None
-
-        if mem_channel == usr_channel: #if target is in users channel, disconnect target
-            try:
-                await member.move_to(None)
-            except discord.Forbidden:
-                await interaction.response.send_message(embed=emb.warn_embed(f"I am unable to unban {member.mention} from your temporary voice channel!"), ephemeral=True)
-                return
-            
-        tvc_overwrite = discord.PermissionOverwrite() #create overwrites, so target cant rejoin
-        tvc_overwrite.connect = False
-        tvc_overwrite.send_messages = False
-
         try: #try setting the permissions
-            await usr_channel.set_permissions(member, overwrite=tvc_overwrite)
+            await usr_channel.set_permissions(member, overwrite=None)
         except Exception as e:
             logger.error(e)
             return 
