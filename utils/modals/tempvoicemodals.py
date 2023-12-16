@@ -14,8 +14,8 @@ class TempVoiceUserLimitModal(ui.Modal, title="Set user limit for your voice cha
         usr_channel = tvs.get_user_channel_from_interaction(interaction)
 
         try:
-            limit = int(self.usr_limit)
-        except ValueError:
+            limit = int(str(self.usr_limit))
+        except (TypeError, ValueError):
             conf_embed = emb.warn_embed(f"{interaction.user.mention}, please enter a valid integer!")
             await interaction.response.send_message(embed=conf_embed, ephemeral=True)
             return
@@ -41,10 +41,10 @@ class TempVoiceRenameModal(ui.Modal, title="Set a new name for your channel"):
     async def on_submit(self, interaction: Interaction):
         usr_channel = tvs.get_user_channel_from_interaction(interaction)
 
-        name = self.name
+        name = str(self.name)
 
         try: #try edit the limit of the channel
-            await usr_channel.edit(name=name)
+            await usr_channel.edit(name=name) #TODO: Add profanity filter!
         except Exception as e:
             logger.error(e)
             return 
