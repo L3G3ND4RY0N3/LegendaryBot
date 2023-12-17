@@ -15,11 +15,13 @@ class TempVoiceUserLimitModal(ui.Modal, title="Set user limit for your voice cha
 
         try:
             limit = int(str(self.usr_limit))
+            if limit > 99 or limit < 0:
+                raise ValueError
         except (TypeError, ValueError):
-            conf_embed = emb.warn_embed(f"{interaction.user.mention}, please enter a valid integer!")
+            conf_embed = emb.warn_embed(f"{interaction.user.mention}, please enter a valid integer between 0 and 99!")
             await interaction.response.send_message(embed=conf_embed, ephemeral=True)
             return
-
+        
         try: #try edit the limit of the channel
             await usr_channel.edit(user_limit=limit)
         except Exception as e:
