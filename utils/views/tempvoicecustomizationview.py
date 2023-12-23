@@ -21,12 +21,10 @@ class TempVoiceCustomView(discord.ui.View):
     @staticmethod #TODO: Small refactoring via creating an embed builder module!
     def warning_embed(user, uservcstate): #user and users voice state, either not in voice or alone
         if uservcstate == VoiceChannelStatus.NotInOwnVoice:
-            conf_embed = discord.Embed(color=discord.Color.red())
-            conf_embed.add_field(name="`⚠️` **Failure!**", value=f"{user.mention}, you must be in your own temporary voice channel!")
+            conf_embed = emb.warn_embed(f"{user.mention}, you must be in your own temporary voice channel!")
             return conf_embed
         else:
-            conf_embed = discord.Embed(color=discord.Color.red())
-            conf_embed.add_field(name="`⚠️` **Failure!**", value=f"{user.mention}, you can't kick someone if you are alone in your voice channel!")
+            conf_embed = emb.warn_embed(f"{user.mention}, you can't kick someone if you are alone in your voice channel!")
             return conf_embed
     
 
@@ -86,8 +84,15 @@ class TempVoiceCustomView(discord.ui.View):
             conf_embed = self.warning_embed(interaction.user, success)
             await interaction.response.send_message(embed=conf_embed, ephemeral=True)
             return
+        # try get the channel in which the user is
+        try:
+            usr_channel = tvs.get_user_channel_from_interaction(interaction)
+        except AttributeError:
+            return
+        # return a list of all members in the channel
+        members = usr_channel.members
 
-        await interaction.response.send_message("Choose a member to kick from your temporary voice channel:", ephemeral=True, view=tvk.KickSelectionView())
+        await interaction.response.send_message("Choose a member to kick from your temporary voice channel:", ephemeral=True, view=tvk.KickSelectionView(members))
 
         return
     
@@ -127,8 +132,20 @@ class TempVoiceCustomView(discord.ui.View):
             conf_embed = self.warning_embed(interaction.user, success)
             await interaction.response.send_message(embed=conf_embed, ephemeral=True)
             return
+        
+        usr_channel = tvs.get_user_channel_from_interaction(interaction)
+        overwrites = usr_channel.overwrites
+        banned_members = []
+        for key in overwrites:
+            if isinstance(key, discord.Member):
+                banned_members.append(key)
 
-        await interaction.response.send_message("Choose a member to unban from your temporary voice channel:", ephemeral=True, view=tvk.UnbanSelectionView())
+        if len(banned_members) < 1:
+            conf_embed = emb.warn_embed(f"{interaction.user.mention}, there is no one banned in your channel!")
+            await interaction.response.send_message(embed=conf_embed, ephemeral=True)
+            return
+
+        await interaction.response.send_message("Choose a member to unban from your temporary voice channel:", ephemeral=True, view=tvk.UnbanSelectionView(banned_members))
 
         return
     
@@ -254,7 +271,6 @@ class TempVoiceCustomView(discord.ui.View):
         await interaction.response.send_modal(tvm.TempVoiceRenameModal())
 
         return
-    
     
 class VoiceChannelStatus(Enum):
     NotInOwnVoice = "NotInOwnVoice"

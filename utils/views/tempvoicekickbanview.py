@@ -6,9 +6,9 @@ logger=settings.logging.getLogger("discord")
 
 
 class KickSelectionView(discord.ui.View):
-    def __init__(self):
+    def __init__(self, members):
         super().__init__(timeout=None)
-        self.add_item(ts.KickSelectMenu())
+        self.add_item(ts.KickSelectMenu(members))
 
 
 class BanSelectionView(discord.ui.View):
@@ -18,6 +18,6 @@ class BanSelectionView(discord.ui.View):
 
 
 class UnbanSelectionView(discord.ui.View):
-    def __init__(self):
+    def __init__(self, banned_members):
         super().__init__(timeout=None)
-        self.add_item(ts.UnbanSelectMenu())
+        self.add_item(ts.UnbanSelectMenu(banned_members))

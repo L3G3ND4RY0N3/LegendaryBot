@@ -401,7 +401,7 @@ class TemporaryVoice(commands.Cog, name="TemporaryVoice"):
         with open(TemporaryVoice.temp_creation_vc_file_path, "r") as f:
             data = json.load(f)
 
-        if str(interaction.guild.id) not in data or list(data[str(interaction.guild.id)].keys()) == []: #TODO: create embed builder!
+        if str(interaction.guild.id) not in data or list(data[str(interaction.guild.id)].keys()) == []: #TODO: use embed builder!
                 conf_embed = discord.Embed(color=discord.Color.red())
                 conf_embed.add_field(name="`⚠️`**No Temporary Voice Creation Channels!**", value=f"This server has yet to add a temporary voice creation channel!")
                 conf_embed.set_footer(text=f"Action taken by {interaction.user}.")

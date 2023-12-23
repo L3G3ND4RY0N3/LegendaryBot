@@ -13,21 +13,35 @@ def get_user_channel_from_interaction(interaction: discord.Interaction):
         return channel 
 
 
+def get_options(members, case):
+    options = []
+    for member in members:
+        if case == "kick":
+            options.append(discord.SelectOption(label=member.name, value=member.id, emoji="🚫"))
+        else:
+            options.append(discord.SelectOption(label=member.name, value=member.id, emoji="✅"))
+    return options
+
+
+#TODO: check if member has a higher role than kicking member or banning
+
 ########################################################################################################################################################
 ######################################k kick select
 ########################################################################################################################################################
 
-class KickSelectMenu(discord.ui.UserSelect):
-    def __init__(self):
-        super().__init__(placeholder="Choose a member to kick from your temporary voice channel:", min_values=1)
+class KickSelectMenu(discord.ui.Select):
+    def __init__(self, members): 
+        super().__init__(placeholder="Choose a member to kick from your temporary voice channel:", min_values=1, options=get_options(members, "kick"))
 
 
     async def callback(self, interaction):
         #TODO: select.disabled = True # make select diabled after kicking one member
-        member = self.values[0]
+        member_id = self.values[0]
+        member = interaction.guild.get_member(int(member_id))
+        user_mem = interaction.guild.get_member(interaction.user.id)
 
-        if member.id == interaction.user.id:
-            await interaction.response.send_message(embed=emb.warn_embed(f"{member.mention}, you are unable to kick yourself!!"), ephemeral=True)
+        if member.id == user_mem.id:
+            await interaction.response.send_message(embed=emb.warn_embed(f"{member.mention}, you are unable to kick yourself!"), ephemeral=True)
             return
         
         data = tcv.TempVoiceCustomView.open_temp_vc_json() #get data
@@ -36,6 +50,10 @@ class KickSelectMenu(discord.ui.UserSelect):
         if success != tcv.VoiceChannelStatus.InOwnVoice: #if not in own voice abort
             conf_embed = tcv.TempVoiceCustomView.warning_embed(interaction.user, success)
             await interaction.response.send_message(embed=conf_embed, ephemeral=True)
+            return
+        
+        if member.top_role >= user_mem.top_role:
+            await interaction.response.send_message(embed=emb.warn_embed(f"{user_mem.mention}, you are unable to kick this member as they have too much power!"), ephemeral=True)
             return
         
         usr_channel = get_user_channel_from_interaction(interaction) #get the channel object TODO:refactor
@@ -68,8 +86,9 @@ class BanSelectMenu(discord.ui.UserSelect):
 
     async def callback(self, interaction):
         member = self.values[0]
+        user_mem = interaction.guild.get_member(interaction.user.id)
 
-        if member.id == interaction.user.id:
+        if member.id == user_mem.id:
             await interaction.response.send_message(embed=emb.warn_embed(f"{member.mention}, you are unable to ban yourself!!"), ephemeral=True)
             return
         
@@ -79,6 +98,10 @@ class BanSelectMenu(discord.ui.UserSelect):
         if success == tcv.VoiceChannelStatus.NotInOwnVoice: #if not in own voice abort
             conf_embed = tcv.TempVoiceCustomView.warning_embed(interaction.user, success)
             await interaction.response.send_message(embed=conf_embed, ephemeral=True)
+            return
+        
+        if member.top_role >= user_mem.top_role:
+            await interaction.response.send_message(embed=emb.warn_embed(f"{user_mem.mention}, you are unable to ban this member as they have too much power!"), ephemeral=True)
             return
         
         usr_channel = get_user_channel_from_interaction(interaction) #get channel object
@@ -113,12 +136,13 @@ class BanSelectMenu(discord.ui.UserSelect):
 ######################################### unban select
 ########################################################################################################################################################
 
-class UnbanSelectMenu(discord.ui.UserSelect):
-    def __init__(self):
-        super().__init__(placeholder="Choose a member to unban from your temporary voice channel:", min_values=1)
+class UnbanSelectMenu(discord.ui.Select):
+    def __init__(self, banned_members):
+        super().__init__(placeholder="Choose a member to unban from your temporary voice channel:", min_values=1, options=get_options(banned_members, "unban"))
 
     async def callback(self, interaction):
-        member = self.values[0]
+        member_id = self.values[0]
+        member = interaction.guild.get_member(int(member_id))
 
         if member.id == interaction.user.id:
             await interaction.response.send_message(embed=emb.warn_embed(f"{member.mention}, you are unable to unban yourself!!"), ephemeral=True)
