@@ -105,6 +105,12 @@ class BanSelectMenu(discord.ui.UserSelect):
             return
         
         usr_channel = get_user_channel_from_interaction(interaction) #get channel object
+        #get the existing overwrites and check if the targeted member is already banned
+        overwrites = usr_channel.overwrites 
+
+        if member in overwrites:
+            await interaction.response.send_message(embed=emb.warn_embed(f"{member.mention} is already banned from your temporary voice channel!"), ephemeral=True)
+            return
 
         try: #try get target channel
             mem_channel = member.voice.channel
