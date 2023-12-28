@@ -103,7 +103,7 @@ class TemporaryVoice(commands.Cog, name="TemporaryVoice"):
     # delete the channel from the json, when it gets deleted not using the command
     @commands.Cog.listener()
     async def on_guild_channel_delete(self, channel):
-        if type(channel) == discord.TextChannel: #if deleted channel was a text channel exit
+        if type(channel) is discord.TextChannel: #if deleted channel was a text channel exit
             return
         
         guild_id, channel_id, cat_id = str(channel.guild.id), str(channel.id), str(channel.category.id)
