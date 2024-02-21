@@ -7,3 +7,7 @@ temp_creation_vc_json = "modules/TemporaryVoiceChannel/json/tempcreationvc.json"
 
 ##################### auto role paths
 join_roles_json = "modules/Autoroles/json/autoroles.json"
+
+
+##################### guild logging
+guild_log_json = "tables/guildchannels.json"

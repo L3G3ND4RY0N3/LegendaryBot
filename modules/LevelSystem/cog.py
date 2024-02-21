@@ -70,7 +70,7 @@ class LevelSystem(commands.Cog, name="Level System"):
     async def check_members_in_voice(self):
         guilds = self.bot.guilds
         vc_channels = []
-        for guild in guilds:
+        for guild in guilds: #TODO: here and in on_message, on_voice_state_update guild_id match against activity_ids, then the starttime dict should only hold members in guilds with active tracking
             for vc_channel in guild.voice_channels:
                 vc_channels.append(vc_channel)
         vc_channels_count = len(vc_channels)
