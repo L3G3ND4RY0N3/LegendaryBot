@@ -34,7 +34,7 @@ def load_json_to_activity_id_list():
     
     for key in data:
         try:
-            if data[key]["activity tracker"] != 0:
+            if data[key]["activity"] != 0:
                 activity_ids.append(int(key))
         except KeyError as e:
             logger.error(f"Key error for {key} or activity tracker!")
@@ -56,7 +56,7 @@ def initialise_guild_setup(guild_id: str):
             return retcode
 
         else: #else add the guild with basic settings
-            data[guild_id] = {"error channel": 0, "log channel": 0, "welcome channel": 0, "boost channel" : 0, "activity tracker": 0}
+            data[guild_id] = {"error": 0, "log": 0, "welcome": 0, "boost" : 0, "activity": 0}
         
         f.seek(0)
         json.dump(data, f, indent=4)

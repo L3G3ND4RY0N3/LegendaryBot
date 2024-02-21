@@ -63,13 +63,8 @@ class GuildSetup(commands.Cog, name="Guild Setup"):
         guild_id = ctx.guild.id
 
         if guild_id not in guildjsonfunctions.ids:
-            conf_embed = emb.warn_embed("That did not work!")
+            retcode = guildjsonfunctions.initialise_guild_setup(str(guild_id))
         
-            await ctx.response.send_message(embed=conf_embed)
-            return
-        
-        retcode = guildjsonfunctions.initialise_guild_setup(str(guild_id))
-
         if retcode < 0:
             conf_embed = emb.warn_embed("That did not work!")
         
