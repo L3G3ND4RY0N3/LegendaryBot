@@ -7,7 +7,7 @@ import json
 
 logger=settings.logging.getLogger("discord")
 
-class TemporaryVoice(commands.Cog, name="TemporaryVoice"):
+class TemporaryVoice(commands.GroupCog, name="temporaryvoice"):
     temp_vc_file_path = "modules/TemporaryVoiceChannel/json/tempchannels.json"
     temp_creation_vc_file_path = "modules/TemporaryVoiceChannel/json/tempcreationvc.json"
     def __init__(self, bot):

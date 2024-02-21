@@ -18,7 +18,7 @@ class TempVoiceCustomView(discord.ui.View):
 
 
     ######################## warning embed builder
-    @staticmethod #TODO: Small refactoring via creating an embed builder module!
+    @staticmethod
     def warning_embed(user, uservcstate): #user and users voice state, either not in voice or alone
         if uservcstate == VoiceChannelStatus.NotInOwnVoice:
             conf_embed = emb.warn_embed(f"{user.mention}, you must be in your own temporary voice channel!")
