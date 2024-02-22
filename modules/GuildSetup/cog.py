@@ -62,6 +62,7 @@ class GuildSetup(commands.Cog, name="Guild Setup"):
     async def guild_setup(self, ctx:discord.Interaction):
         guild_id = ctx.guild.id
 
+        retcode = 0
         if guild_id not in guildjsonfunctions.ids:
             retcode = guildjsonfunctions.initialise_guild_setup(str(guild_id))
         
