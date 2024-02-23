@@ -49,10 +49,30 @@ class GuildSetupView(discord.ui.View):
         await interaction.response.edit_message(content="Bye!", embed=None, view=None)
 
         return
+    
+
+    ############# deaktivieren der jeweiligen Funktionalität 
+    @discord.ui.button(label="Deactivate", style=discord.ButtonStyle.red, custom_id='Deactivate_Guild_Setup', emoji="🛑", row=1)
+    async def guild_setup_activate(self, interaction: discord.Interaction, button:discord.ui.Button):
+        try: # if for some reason anything fails, log the exception and still send an embed
+            returncode = gjf.update_guild_channel(str(interaction.guild.id), 0, self.channel)
+        except Exception as e:
+            logger.exception(f"{e}")
+            returncode = -1
+
+        if returncode < 0:
+            embed = emb.warn_embed(f"There was an error deactivating the {self.channel} feature.")
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            return
+
+        embed = emb.success_embed(f"Successfully deactivatet the {self.channel} module for this guild!")
+        await interaction.response.send_message(embed=embed)
+
+        return
 
 
-    ############## aktivieren der jeweiligen Funktionalität, TODO: neue Viewklasse mit Selectionmenü für Kanal, oder simple Aktivierung, wenn Activity
-    # @discord.ui.button(label="Activate", style=discord.ButtonStyle.green, custom_id='Activate_Guild_Setup', emoji="🔰", row=1)
+    # ############## aktivieren der jeweiligen Funktionalität, TODO: neue Viewklasse mit Selectionmenü für Kanal, oder simple Aktivierung, wenn Activity
+    # @discord.ui.button(label="Activate", style=discord.ButtonStyle.green, custom_id='Activate_Guild_Setup', emoji="✅", row=1)
     # async def guild_setup_activate(self, interaction: discord.Interaction, button:discord.ui.Button):
 
     #     await interaction.response.edit_message()

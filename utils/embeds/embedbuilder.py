@@ -40,31 +40,31 @@ def createSettingEmbed(guild: discord.Guild , pageNum=0, inline=False):
         channel = guild.get_channel(guild_data.get(pageTitle, 0))
     match pageTitle: #will be prone to breaking if I fuck with the json...
         case "error":
-            embed.add_field(name=f"Error channel: {status}", value="", inline=inline)
+            embed.add_field(name=f"{pageTitle.title()} channel: {status}", value="", inline=inline)
             if channel is not None:
                 embed.add_field(name="Current channel:", value=f"{channel.mention}")
             embed.add_field(name="Info", value="Set a channel where the bot will show error messages to you. The default is none.", inline=inline)
             embed.set_footer(text=f"Page {pageNum+1} of {len(list(guild_data))}")
         case "log":
-            embed.add_field(name=f"Log channel: {status}", value="", inline=inline)
+            embed.add_field(name=f"{pageTitle.title()} channel: {status}", value="", inline=inline)
             if channel is not None:
                 embed.add_field(name="Current channel:", value=f"{channel.mention}")
             embed.add_field(name="Info", value="Set a channel where the bot will log events from the guild like edited/deleted messages. The default is none.", inline=inline)
             embed.set_footer(text=f"Page {pageNum+1} of {len(list(guild_data))}")
         case "welcome":
-            embed.add_field(name=f"Welcome channel: {status}", value="", inline=inline)
+            embed.add_field(name=f"{pageTitle.title()} channel: {status}", value="", inline=inline)
             if channel is not None:
                 embed.add_field(name="Current channel:", value=f"{channel.mention}")
             embed.add_field(name="Info", value="Set a channel where the bot will show error messages to you. The default is none.", inline=inline)
             embed.set_footer(text=f"Page {pageNum+1} of {len(list(guild_data))}")
         case "boost":
-            embed.add_field(name=f"Boost channel: {status}", value="", inline=inline)
+            embed.add_field(name=f"{pageTitle.title()} channel: {status}", value="", inline=inline)
             if channel is not None:
                 embed.add_field(name="Current channel:", value=f"{channel.mention}")
             embed.add_field(name="Info", value="Set a channel where the bot will send thank you messages to server booster. The default is none.", inline=inline)
             embed.set_footer(text=f"Page {pageNum+1} of {len(list(guild_data))}")
         case "activity":
-            embed.add_field(name=f"Activity tracker: {status}", value="", inline=inline)
+            embed.add_field(name=f"{pageTitle.title()} tracker: {status}", value="", inline=inline)
             embed.add_field(name="Info", value="Activate the activity tracker, tracking the times of members in voice and written messages. Deactivated by default.", inline=inline)
             embed.set_footer(text=f"Page {pageNum+1} of {len(list(guild_data))}")
     return embed

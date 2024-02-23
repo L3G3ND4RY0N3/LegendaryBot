@@ -38,6 +38,7 @@ def load_json_to_activity_id_list():
                 activity_ids.append(int(key))
         except KeyError as e:
             logger.error(f"Key error for {key} or activity tracker!")
+            logger.exception(f"{e}")
             continue
 
 #endregion
@@ -95,8 +96,11 @@ def update_guild_channel(guild_id: str, channel_id: int, channel: str):
         else: #else modify the specific channel
             try:
                 data[str(guild_id)][channel] = channel_id
-            except KeyError:
+            except KeyError as e:
                 logger.error(f"Key error for {guild_id} or {channel}!")
+                logger.exception(f"{e}")
+                retcode = -1
+                return retcode
         
         f.seek(0)
         json.dump(data, f, indent=4)
