@@ -4,15 +4,17 @@ from utils import filepaths as fp
 from utils.embeds import embedbuilder as emb
 import utils.settings as settings
 from utils import guildjsonfunctions as gjf
+from utils.views import guildsetupselectview as gssv
 
 logger=settings.logging.getLogger("discord")
 
 class GuildSetupView(discord.ui.View):
-    def __init__(self, interaction, bot, currentPage, channel):
+    def __init__(self, interaction: discord.Interaction, bot, currentPage, channel):
         self.interaction = interaction
         self.bot = bot
         self.currentPage = currentPage
         self.channel = channel
+        self.guid_id = interaction.guild.id
         super().__init__(timeout=180)
 
 
@@ -53,28 +55,45 @@ class GuildSetupView(discord.ui.View):
 
     ############# deaktivieren der jeweiligen Funktionalität 
     @discord.ui.button(label="Deactivate", style=discord.ButtonStyle.red, custom_id='Deactivate_Guild_Setup', emoji="🛑", row=1)
-    async def guild_setup_activate(self, interaction: discord.Interaction, button:discord.ui.Button):
-        try: # if for some reason anything fails, log the exception and still send an embed
-            returncode = gjf.update_guild_channel(str(interaction.guild.id), 0, self.channel)
+    async def guild_setup_deactivate(self, interaction: discord.Interaction, button:discord.ui.Button):
+        guild_id = str(interaction.guild.id)
+        returncode = 0
+        # check the status of the given channel, if inactive, deactivate the button
+        try:
+        # if for some reason anything fails, log the exception and still send an embed
+            # check if activity or channels are updated
+            if self.channel != "activity":
+                returncode = gjf.update_guild_channel(guild_id, 0, self.channel)
+            else:
+                returncode = gjf.update_activity_tracker(guild_id, 0)
         except Exception as e:
             logger.exception(f"{e}")
             returncode = -1
-
+        # TODO: add error to error channel, if setup
         if returncode < 0:
             embed = emb.warn_embed(f"There was an error deactivating the {self.channel} feature.")
             await interaction.response.send_message(embed=embed, ephemeral=True)
             return
 
-        embed = emb.success_embed(f"Successfully deactivatet the {self.channel} module for this guild!")
-        await interaction.response.send_message(embed=embed)
+        embed = emb.success_embed(f"Successfully deactivated the {self.channel} module for this guild!")
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
         return
 
-
-    # ############## aktivieren der jeweiligen Funktionalität, TODO: neue Viewklasse mit Selectionmenü für Kanal, oder simple Aktivierung, wenn Activity
-    # @discord.ui.button(label="Activate", style=discord.ButtonStyle.green, custom_id='Activate_Guild_Setup', emoji="✅", row=1)
-    # async def guild_setup_activate(self, interaction: discord.Interaction, button:discord.ui.Button):
-
-    #     await interaction.response.edit_message()
-
-    #     return
+    
+    ############## aktivieren der jeweiligen Funktionalität, 
+    @discord.ui.button(label="Activate/Update", style=discord.ButtonStyle.green, custom_id='Activate_Guild_Setup', emoji="✅", row=1)
+    async def guild_setup_activate(self, interaction: discord.Interaction, button:discord.ui.Button):
+        retcode = 0
+        if self.channel.lower() != "activity":
+            await interaction.response.send_message(f"Choose a channel for the {self.channel} module: ", view=gssv.GuildSetupSelectView(self.channel), ephemeral=True)
+            return
+        else:
+            retcode = gjf.update_activity_tracker(str(interaction.guild.id), 1)
+            if retcode < 0:
+                embed = emb.warn_embed(f"There was an error activating the {self.channel} feature.")
+                await interaction.response.send_message(embed=embed, ephemeral=True)
+                return
+            embed = emb.success_embed(f"Successfully activated the {self.channel} module for this guild!")
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            return

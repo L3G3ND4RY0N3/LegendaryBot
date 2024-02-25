@@ -32,12 +32,16 @@ def createSettingEmbed(guild: discord.Guild , pageNum=0, inline=False):
         guild_data = data[guild_id]
     except KeyError as e:
         logger.error(f"Keyerror for key {guild_id} in guild logging setup embedbuilder.")
+        logger.exception(f"{e}")
     pageNum = pageNum % len(list(guild_data))
     pageTitle = list(guild_data.keys())[pageNum]
     embed=discord.Embed(color=discord.Color.blurple(), title=pageTitle)
     status = get_channel_status(pageTitle, guild_data)
-    if pageTitle != "activity":
+    
+    # if not looking at activity page, where no channel is set, get the channel to display in embed, else set channel to 'None'
+    if pageTitle != "activity": 
         channel = guild.get_channel(guild_data.get(pageTitle, 0))
+
     match pageTitle: #will be prone to breaking if I fuck with the json...
         case "error":
             embed.add_field(name=f"{pageTitle.title()} channel: {status}", value="", inline=inline)

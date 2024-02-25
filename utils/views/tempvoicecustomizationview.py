@@ -257,7 +257,7 @@ class TempVoiceCustomView(discord.ui.View):
 
 
     @discord.ui.button(label="Rename", style=discord.ButtonStyle.gray, custom_id='temp_vc_button_rename', emoji="✏")
-    async def rename_temp_vc(self, interaction, button:discord.ui.Button):
+    async def rename_temp_vc(self, interaction: discord.Interaction, button:discord.ui.Button):
         data = self.open_temp_vc_json()
 
         #TODO: create method for success call
