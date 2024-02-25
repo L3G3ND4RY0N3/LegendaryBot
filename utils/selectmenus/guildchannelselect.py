@@ -20,13 +20,13 @@ class GuildSetupChannelSelect(discord.ui.ChannelSelect):
         try:
             returncode = gjf.update_guild_channel(guild_id, channel_id, self.channel_name)
         except Exception as e:
-            logger.error(f"Error setting the channel for the {self.channel_name} module in {channel.guild.name} with id {guild_id}")
+            logger.error(f"**Error setting the channel for the {self.channel_name} module in {channel.guild.name} with id {guild_id}**")
             logger.exception(f"{e}")
 
         if returncode < 0:
-            embed = emb.warn_embed(f"There was an error activating the {self.channel_name} feature.")
+            embed = emb.warn_embed(f"**There was an error activating the {self.channel_name} feature.**")
             await interaction.response.send_message(embed=embed, ephemeral=True)
             return
 
-        embed = emb.success_embed(f"Successfully activated the {self.channel_name} module in {channel.mention} for this guild!")
+        embed = emb.success_embed(f"**Successfully activated the {self.channel_name} module in {channel.mention} for this guild!**")
         await interaction.response.send_message(embed=embed, ephemeral=True)

@@ -1,12 +1,13 @@
 import json
 from utils import filepaths as fp
 from utils import settings
+from constants import enums as en
 
 logger=settings.logging.getLogger("discord")
 
 
 # set allowed channels, as they are in the JSON file:
-allowed_channels = ["error", "log", "welcome", "boost"]
+allowed_channels = [en.GuildChannelTypes.ERROR.value, en.GuildChannelTypes.LOG.value, en.GuildChannelTypes.WELCOME.value, en.GuildChannelTypes.BOOST.value]
 
 
 #region "Properties"
@@ -38,7 +39,7 @@ def load_json_to_activity_id_list():
     
     for key in data:
         try:
-            if data[key]["activity"] != 0:
+            if data[key][en.GuildChannelTypes.ACTIVITY.value] != 0:
                 activity_ids.append(int(key))
         except KeyError as e:
             logger.error(f"Key error for {key} or activity tracker!")
@@ -62,7 +63,7 @@ def initialise_guild_setup(guild_id: str):
             return retcode
 
         else: #else add the guild with basic settings
-            data[guild_id] = {"error": 0, "log": 0, "welcome": 0, "boost" : 0, "activity": 0}
+            data[guild_id] = {en.GuildChannelTypes.ERROR.value: 0, en.GuildChannelTypes.LOG.value: 0, en.GuildChannelTypes.WELCOME.value: 0, en.GuildChannelTypes.BOOST.value : 0, en.GuildChannelTypes.ACTIVITY.value: 0}
         
         f.seek(0)
         json.dump(data, f, indent=4)
@@ -141,9 +142,9 @@ def update_activity_tracker(guild_id: str, status: int) -> int:
             try:
                 if status == 1:
                 # hard coded activity
-                    data[guild_id]["activity"] = 1
+                    data[guild_id][en.GuildChannelTypes.ACTIVITY.value] = 1
                 else:
-                    data[guild_id]["activity"] = 0
+                    data[guild_id][en.GuildChannelTypes.ACTIVITY.value] = 0
             except KeyError as e:
                 logger.error(f"Key error for {guild_id} or activity!")
                 logger.exception(f"{e}")
