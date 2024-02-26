@@ -38,3 +38,4 @@ def test_check_status_guild2(guild_id2, fpath):
 
 def test_check_status_guild_not_found(fpath):
     assert check_guild_channel_status("12345", gct.ACTIVITY.value, fpath) == -1
+    assert check_guild_channel_status("12345", gct.ERROR.value, fpath) == -1
