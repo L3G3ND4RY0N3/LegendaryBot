@@ -91,8 +91,8 @@ def remove_guild_setup(guild_id: str):
 
 
 ####### check channel status to disable buttons, returns a negative returncode, when operation fails
-def check_guild_channel_status(guild_id: str, channel: str) -> int:
-    with open(fp.guild_log_json, "r") as f:
+def check_guild_channel_status(guild_id: str, channel: str, path=fp.guild_log_json) -> int:
+    with open(path, "r") as f:
         data = json.load(f)
     #if the guild is not in the data send an error code
     if guild_id not in data: 
@@ -106,10 +106,10 @@ def check_guild_channel_status(guild_id: str, channel: str) -> int:
 
 
 ####### called to update the json for a specific channel
-def update_guild_channel(guild_id: str, channel_id: int, channel: str) -> int:
+def update_guild_channel(guild_id: str, channel_id: int, channel: str, path=fp.guild_log_json) -> int:
     if channel.lower() not in allowed_channels:
         return -1
-    with open(fp.guild_log_json, "r+") as f:
+    with open(path, "r+") as f:
         data = json.load(f)
         #if the guild is not in the data send an error code
         if guild_id not in data: 
@@ -129,10 +129,10 @@ def update_guild_channel(guild_id: str, channel_id: int, channel: str) -> int:
 
 
 # functiong ONLY for activating the activity feature!
-def update_activity_tracker(guild_id: str, status: int) -> int:
+def update_activity_tracker(guild_id: str, status: int, path=fp.guild_log_json) -> int:
     if status not in [0, 1]:
         return -1
-    with open(fp.guild_log_json, "r+") as f:
+    with open(path, "r+") as f:
         data = json.load(f)
         #if the guild is not in the data send an error code
         if guild_id not in data: 
@@ -155,3 +155,6 @@ def update_activity_tracker(guild_id: str, status: int) -> int:
     return 0
 
 #endregion
+
+def add(num: int, num2: int) -> int:
+    return num + num2
