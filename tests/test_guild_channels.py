@@ -1,4 +1,6 @@
 import pytest
+import sys
+sys.path.append('../')
 from utils.guildjsonfunctions import check_guild_channel_status
 from constants.enums import GuildChannelTypes as gct
 
