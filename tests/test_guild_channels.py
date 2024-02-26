@@ -1,6 +1,7 @@
 import pytest
-from constants.enums import GuildChannelTypes as gct
 from utils.guildjsonfunctions import check_guild_channel_status
+from constants.enums import GuildChannelTypes as gct
+
 
 
 @pytest.fixture()
