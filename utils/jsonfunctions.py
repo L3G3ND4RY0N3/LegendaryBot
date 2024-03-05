@@ -43,7 +43,7 @@ def update_linkedrole(filepath: str, guildid, key, value, retcode):
             data[guild_id][role_id].append(linked_role_id)
         
             f.seek(0)
-       
+            
             json.dump(data, f, indent=4)
 
             return retcode

@@ -9,6 +9,32 @@ logger=settings.logging.getLogger("discord")
 # set allowed channels, as they are in the JSON file:
 allowed_channels = [en.GuildChannelTypes.ERROR.value, en.GuildChannelTypes.LOG.value, en.GuildChannelTypes.WELCOME.value, en.GuildChannelTypes.BOOST.value]
 
+#region common functions
+def is_valid_channel(channel: str) -> bool:
+    if channel in allowed_channels:
+        return True
+    return False
+
+
+# loading the json into a dict
+def load_json(path: str) -> dict:
+    with open(path, "r") as f:
+        return json.load(f)
+    
+
+def save_json(path: str, data: dict) -> None:
+    with open(path, "w") as f:
+        json.dump(data, f, indent=4)
+
+    
+def update_channel(data: dict, guild_id: str, channel: str, channel_id: int) -> None:
+    try:
+        data[guild_id][channel] = channel_id
+    except KeyError as e:
+        logger.error(f"Key error for {guild_id} or {channel}")
+        logger.exception(f"{e}")
+
+#endregion
 
 #region "Properties"
 #Property
@@ -53,47 +79,45 @@ def load_json_to_activity_id_list():
             
 #region "Init Functions"
 ######## called when a guild is joined or the /guild_setup command is called
-def initialise_guild_setup(guild_id: str):
-    retcode = 0
-    with open(fp.guild_log_json, "r+") as f:
-        data = json.load(f)
+def initialise_guild_setup(guild_id: str) -> None:
+    try:
+        data = load_json(fp.guild_log_json)
 
-        if guild_id in data: #if guild is already registered return, as this is just the basic setup with no modification intentions
-            retcode -1
-            return retcode
-
-        else: #else add the guild with basic settings
-            data[guild_id] = {en.GuildChannelTypes.ERROR.value: 0, en.GuildChannelTypes.LOG.value: 0, en.GuildChannelTypes.WELCOME.value: 0, en.GuildChannelTypes.BOOST.value : 0, en.GuildChannelTypes.ACTIVITY.value: 0}
-        
-        f.seek(0)
-        json.dump(data, f, indent=4)
-    return retcode
+        #if guild is already registered return, as this is just the basic setup with no modification intentions
+        if guild_id in data:
+            return
+        #else add the guild with basic settings
+        data[guild_id] = {en.GuildChannelTypes.ERROR.value: 0, en.GuildChannelTypes.LOG.value: 0, en.GuildChannelTypes.WELCOME.value: 0, en.GuildChannelTypes.BOOST.value : 0, en.GuildChannelTypes.ACTIVITY.value: 0}
+        save_json(fp.guild_log_json, data)
+        return
+    
+    except Exception as e:
+        logger.error(f"An error occured while trying to add a guild setup: {e}")
+        logger.exception(f"{e}")
 
 
 ####### called when the bot is removed from a guild
-def remove_guild_setup(guild_id: str):
-    retcode = 0
-    with open(fp.guild_log_json, "r+") as f:
-        data = json.load(f)
+def remove_guild_setup(guild_id: str) -> int:
+    try:
+        data = load_json(fp.guild_log_json)
 
         if guild_id not in data: #if guild had no setup in json return
-            retcode -1
-            return retcode
+            return -1
 
-        else: #else remove the guild from the json
-            data.pop(guild_id)
-        
-        f.truncate()
-        f.seek(0)
-        json.dump(data, f, indent=4)
-    return retcode
+        #else remove the guild from the json
+        data.pop(guild_id)
+        save_json(fp.guild_log_json, data)
+        return 0
+    except Exception as e:
+        logger.error(f"An error occured while trying to remove a guild setup: {e}")
+        logger.exception(f"{e}")
+        return -1
 #endregion
 
 
 ####### check channel status to disable buttons, returns a negative returncode, when operation fails
 def check_guild_channel_status(guild_id: str, channel: str, path=fp.guild_log_json) -> int:
-    with open(path, "r") as f:
-        data = json.load(f)
+    data = load_json(path)
     #if the guild is not in the data send an error code
     if guild_id not in data: 
         return -1
@@ -107,54 +131,43 @@ def check_guild_channel_status(guild_id: str, channel: str, path=fp.guild_log_js
 
 ####### called to update the json for a specific channel
 def update_guild_channel(guild_id: str, channel_id: int, channel: str, path=fp.guild_log_json) -> int:
-    if channel.lower() not in allowed_channels:
+    if not is_valid_channel(channel):
+        logger.error(f"Invalid channel: {channel}")
         return -1
-    with open(path, "r+") as f:
-        data = json.load(f)
+    try:
+        data = load_json(path)
         #if the guild is not in the data send an error code
         if guild_id not in data: 
             return -1
         #else modify the specific channel
-        else: 
-            try:
-                data[guild_id][channel] = channel_id
-            except KeyError as e:
-                logger.error(f"Key error for {guild_id} or {channel}!")
-                logger.exception(f"{e}")
-                return -1
-        f.seek(0)
-        f.truncate()
-        json.dump(data, f, indent=4)
-    return 0
+        update_channel(data, guild_id, channel, channel_id)
+        save_json(path, data)    
+        return 0
+
+    except Exception as e:
+        logger.error(f"An error occured: {e}")
+        logger.exception(f"{e}")
+        return -1
 
 
 # functiong ONLY for activating the activity feature!
 def update_activity_tracker(guild_id: str, status: int, path=fp.guild_log_json) -> int:
     if status not in [0, 1]:
+        logger.error(f"Invalid status: {status}")
         return -1
-    with open(path, "r+") as f:
-        data = json.load(f)
+    data = load_json(path)
+    try:
         #if the guild is not in the data send an error code
-        if guild_id not in data: 
+        if guild_id not in data:
             return -1
-        #else modify the specific channel
-        else: 
-            try:
-                if status == 1:
-                # hard coded activity
-                    data[guild_id][en.GuildChannelTypes.ACTIVITY.value] = 1
-                else:
-                    data[guild_id][en.GuildChannelTypes.ACTIVITY.value] = 0
-            except KeyError as e:
-                logger.error(f"Key error for {guild_id} or activity!")
-                logger.exception(f"{e}")
-                return -1
-        f.seek(0)
-        f.truncate()
-        json.dump(data, f, indent=4)
-    return 0
+        #else modify the Activity channel specifically
+        update_channel(data, guild_id, en.GuildChannelTypes.ACTIVITY.value, status)
+        save_json(path, data)
+        return 0
+            
+    except Exception as e:
+        logger.error(f"An error occured: {e}")
+        logger.exception(f"{e}")
+        return -1
 
 #endregion
-
-def add(num: int, num2: int) -> int:
-    return num + num2

@@ -65,7 +65,7 @@ class GuildSetup(commands.Cog, name="Guild Setup"):
 
         retcode = 0
         if guild_id not in guildjsonfunctions.ids:
-            retcode = guildjsonfunctions.initialise_guild_setup(str(guild_id))
+            guildjsonfunctions.initialise_guild_setup(str(guild_id))
             guildjsonfunctions.ids.append(guild_id)
         
         if retcode < 0:
@@ -75,35 +75,6 @@ class GuildSetup(commands.Cog, name="Guild Setup"):
             return
         
         currentPage = 0
-
-        # async def next_callback(interaction: discord.Interaction):
-        #     nonlocal currentPage, sent_msg
-        #     currentPage += 1
-        #     embed = emb.createSettingEmbed(ctx.guild, pageNum=currentPage)
-        #     channel = embed.fields[0].name
-        #     await interaction.response.edit_message(embed=embed, view=myview)
-
-        # async def prev_callback(interaction: discord.Interaction):
-        #     nonlocal currentPage, sent_msg
-        #     currentPage -= 1
-        #     embed = emb.createSettingEmbed(ctx.guild, pageNum=currentPage)
-        #     channel = embed.fields[0].name
-        #     await interaction.response.edit_message(embed=embed, view=myview)
-
-        # async def quit_callback(interaction: discord.Interaction):
-        #     await interaction.response.edit_message(content="Hope this helped!", embed=None, view=None)
-
-        # nextButton = Button(label=">", style=ButtonStyle.blurple)
-        # nextButton.callback = next_callback
-        # prevButton = Button(label="<", style=ButtonStyle.blurple)
-        # prevButton.callback = prev_callback
-        # quitbutton = Button(label="x", style=ButtonStyle.red)
-        # quitbutton.callback = quit_callback
-
-        # myview = View(timeout=180)
-        # myview.add_item(prevButton)
-        # myview.add_item(nextButton)
-        # myview.add_item(quitbutton)
         
         embed = emb.createSettingEmbed(ctx.guild, pageNum=currentPage)
         channel = embed.fields[0].name.split(" ")[0].lower()
