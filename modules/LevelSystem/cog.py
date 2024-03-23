@@ -6,7 +6,7 @@ import random
 import math
 import aiosqlite
 import datetime
-from utils import settings
+from utils import settings, guildjsonfunctions
 
 logger=settings.logging.getLogger("discord")
 
@@ -49,9 +49,12 @@ class LevelSystem(commands.Cog, name="Level System"):
             #    """
             #) To ALTER Table to add new column!######################################
 
+    # TODO: Remove, not possible with also deactivating/activating voice tracker via /guild_setup
     # when joining a new guild, check all voice channels to update the starttime dict!
     @commands.Cog.listener()
-    async def on_guild_join(self, guild):
+    async def on_guild_join(self, guild: discord.Guild):
+        if guild.id not in guildjsonfunctions.activity_ids:
+            return
         vc_count = len(guild.voice_channels)
         self.guild_count += 1
         new_user_count = 0
@@ -65,12 +68,14 @@ class LevelSystem(commands.Cog, name="Level System"):
         logger.info(f"Checked {vc_count} voice channel{'s' if vc_count!=1 else ''} in {guild.name} and added {new_user_count} user{'s' if new_user_count!=1 else ''}!")
 
     ##################################### Tasks #################################################################
-
+    #region TASKS
     @tasks.loop(minutes=1, count=2)
     async def check_members_in_voice(self):
         guilds = self.bot.guilds
         vc_channels = []
         for guild in guilds: #TODO: here and in on_message, on_voice_state_update guild_id match against activity_ids, then the starttime dict should only hold members in guilds with active tracking
+            if guild.id not in guildjsonfunctions.activity_ids:
+                continue
             for vc_channel in guild.voice_channels:
                 vc_channels.append(vc_channel)
         vc_channels_count = len(vc_channels)
@@ -120,8 +125,9 @@ class LevelSystem(commands.Cog, name="Level System"):
     async def before_update_member_points_task(self):
         logger.info("Update users loop is waiting for the bot to load...") 
         await self.bot.wait_until_ready()
+    #endregion
 
-
+    #region STATIC METHODS
     ################################## Level Method ###############################################################
 
     @staticmethod
@@ -142,13 +148,16 @@ class LevelSystem(commands.Cog, name="Level System"):
             return time_in_minutes
         else:
             return time_in_minutes//60
-
+    #endregion
             
+    #region EVENTS
     ########################## Message Tracker #######################################################
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         if message.author.bot:
+            return
+        if message.guild.id not in guildjsonfunctions.activity_ids:
             return
 
         xp = random.randint(5,15)
@@ -164,7 +173,9 @@ class LevelSystem(commands.Cog, name="Level System"):
     ########################## Voice Tracker #######################################################
 
     @commands.Cog.listener()
-    async def on_voice_state_update(self, member, before, after):
+    async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
+        if member.guild.id not in guildjsonfunctions.activity_ids:
+            return
         if before.channel is None and after.channel is not None:
             # User joined a voice channel
             start = datetime.datetime.now()
@@ -186,6 +197,7 @@ class LevelSystem(commands.Cog, name="Level System"):
         # elif before.channel is not None and after.channel is not None and before.channel != after.channel:
         #     # User switched voice channels
         #     logger.info(f"{member.name} switched from voice channel {before.channel.name} to {after.channel.name} in {member.guild.name}")
+    #endregion
 
 
     ########################## Rank Command #######################################################
