@@ -22,6 +22,7 @@ class GuildSetupChannelSelect(discord.ui.ChannelSelect):
         except Exception as e:
             logger.error(f"**Error setting the channel for the {self.channel_name} module in {channel.guild.name} with id {guild_id}**")
             logger.exception(f"{e}")
+            return
 
         if returncode < 0:
             embed = emb.warn_embed(f"**There was an error activating the {self.channel_name} feature.**")

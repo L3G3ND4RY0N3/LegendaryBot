@@ -1,11 +1,9 @@
 import discord
 from discord.ext import commands, tasks
-from discord import app_commands, ButtonStyle
-from utils import settings, filepaths, guildjsonfunctions 
+from discord import app_commands
+from utils import settings, guildjsonfunctions 
 from utils.embeds import embedbuilder as emb
-from discord.ui import View, Button
 from utils.views import guildsetupview as gsv
-import json
 
 logger=settings.logging.getLogger("discord")
 
@@ -22,32 +20,32 @@ class GuildSetup(commands.Cog, name="Guild Setup"):
 
 
     @commands.Cog.listener()
-    async def on_guild_join(self, guild: discord.Guild):
+    async def on_guild_join(self, guild: discord.Guild) -> None:
         guildjsonfunctions.initialise_guild_setup(str(guild.id))
         # if a system channel exist, send a small welcome message
         if guild.system_channel is not None:
             conf_embed = discord.Embed(color=discord.Color.blurple())
-            conf_embed.add_field(name="`❤` **Hello!**", value=f"Hi, {guild.name}. To set up my functions like logging and economy, please use the /setup command.")
+            conf_embed.add_field(name="`❤` **Hello!**", value=f"Hi, {guild.name}. To set up my functions like logging, welcome greetings and economy, please use the /setup command.")
             await guild.system_channel.send(embed=conf_embed)
 
     #region "tasks"
     ####################### tasks
     #######################################################################################
-    #loads the guild ids from the json into memory (list)
+    #loads the guild ids from the json into memory (set)
 
     @tasks.loop(minutes=1, count=1)
-    async def load_guilds_from_json(self):
+    async def load_guilds_from_json(self) -> None:
         guildjsonfunctions.load_json_to_guild_id_list()
 
     
     @load_guilds_from_json.before_loop
-    async def before_load_guilds_from_json(self):
+    async def before_load_guilds_from_json(self) -> None:
         logger.info("load_guilds_from_json loop is waiting for the bot to load...") 
         await self.bot.wait_until_ready()
 
 
     @load_guilds_from_json.after_loop
-    async def after_load_guilds_from_json(self):
+    async def after_load_guilds_from_json(self) -> None:
         logger.info(f"Finished load_guilds_from_json loop!")
         logger.info("Ending loading gulds from json loop!")
 
@@ -66,7 +64,7 @@ class GuildSetup(commands.Cog, name="Guild Setup"):
         retcode = 0
         if guild_id not in guildjsonfunctions.ids:
             guildjsonfunctions.initialise_guild_setup(str(guild_id))
-            guildjsonfunctions.ids.append(guild_id)
+            guildjsonfunctions.ids.add(guild_id)
         
         if retcode < 0:
             conf_embed = emb.warn_embed("That did not work!")
