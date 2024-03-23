@@ -38,35 +38,33 @@ def update_channel(data: dict, guild_id: str, channel: str, channel_id: int) -> 
 
 #region "Properties"
 #Property
-##### list to store the server ids with setups for quick access
-ids = []
+##### set to store the server ids with setups for quick access
+ids: set = set()
 
 
 #Loading the Property
 ##### loads the guild ids from the json into memory (list)
 def load_json_to_guild_id_list():
-    with open(fp.guild_log_json, "r") as f:
-        data = json.load(f)
+    data = load_json(fp.guild_log_json)
         
     for key in data:
-        ids.append(int(key))
+        ids.add(int(key))
 
 
-#Property
-##### list with guilds with active activity tracker
-activity_ids = []
+#Property set of INTS
+##### set with guild ids with active activity tracker
+activity_ids: set = set()
 
 
 #Loading the Property
 ##### loads the guild ids from the json into memory (list)
 def load_json_to_activity_id_list():
-    with open(fp.guild_log_json, "r") as f:
-        data = json.load(f)
+    data = load_json(fp.guild_log_json)
     
     for key in data:
         try:
             if data[key][en.GuildChannelTypes.ACTIVITY.value] != 0:
-                activity_ids.append(int(key))
+                activity_ids.add(int(key))
         except KeyError as e:
             logger.error(f"Key error for {key} or activity tracker!")
             logger.exception(f"{e}")
@@ -74,7 +72,6 @@ def load_json_to_activity_id_list():
 
 #endregion
             
-
 #region "Functions"
             
 #region "Init Functions"
@@ -169,5 +166,25 @@ def update_activity_tracker(guild_id: str, status: int, path=fp.guild_log_json) 
         logger.error(f"An error occured: {e}")
         logger.exception(f"{e}")
         return -1
+    
+
+# gets the channel id for the requested channel type of the guild or 0 if guild not found or not enabled for that channel
+# TODO: return data form check function
+def get_guild_channel(guild_id: str, channel: str, path=fp.guild_log_json) -> int|None:
+    """Checks the status of the specified channel in the json for the guild and returns thhe channel id, if found, if not None
+
+    Args:
+        guild_id (str): The id of the guild as a string for the json
+        channel (str): The channel type, as the enum requires (value)
+        path (str, optional): The file path of the json. Defaults to fp.guild_log_json.
+
+    Returns:
+        int: The channel id
+    """
+    if check_guild_channel_status(guild_id, channel) != 1:
+        return None
+    data = load_json(path)
+
+    return data[guild_id][channel]
 
 #endregion

@@ -3,29 +3,33 @@ import utils.settings as settings
 import utils.filepaths as fp
 import json
 from constants import enums as en
+import datetime as dt
 
 logger=settings.logging.getLogger("discord")
 
-def forbidden_embed(val):
+
+#region BASIC EMBEDS
+def forbidden_embed(val: str) -> discord.Embed:
     conf_embed = discord.Embed(color=discord.Color.red())
     conf_embed.add_field(name="`❌` **Failure!**", value=val)
     return conf_embed
 
 
-def warn_embed(val):
+def warn_embed(val: str) -> discord.Embed:
     conf_embed = discord.Embed(color=discord.Color.red())
     conf_embed.add_field(name="`⚠️` **Failure!**", value=val)
     return conf_embed
 
 
-def success_embed(val):
+def success_embed(val: str) -> discord.Embed:
     conf_embed = discord.Embed(color=discord.Color.green())
     conf_embed.add_field(name="`✅` **Success!**", value=val)
     return conf_embed
+#endregion
 
-
+#region SETUP EMBEDS
 ######## embed for the /settings command
-def createSettingEmbed(guild: discord.Guild , pageNum=0, inline=False):
+def createSettingEmbed(guild: discord.Guild , pageNum=0, inline=False) -> discord.Embed:
     with open(fp.guild_log_json, "r") as f:
         data = json.load(f)
     guild_id = str(guild.id)
@@ -81,8 +85,32 @@ def createSettingEmbed(guild: discord.Guild , pageNum=0, inline=False):
 
 
 ######### helper for the settings embed builder
-def get_channel_status(channel: str, data: dict):
+def get_channel_status(channel: str, data: dict) -> str:
     status = data.get(channel, 0)
     if status == 0:
         return "Inactive"
     return "Active"
+
+#endregion
+
+#region LOGGING EMBEDS
+
+### embeds for the logging module
+def log_del_message(message: discord.Message, member: discord.Member) -> discord.Embed:
+    """Creates an Embed for deleted messages
+
+    Args:
+        message (discord.Message): The Message that got deleted
+        member (discord.Member): The author (member) of the deleted message
+
+    Returns:
+        discord.Embed: The created embed that gets send to the log channel of the guild
+    """
+    time = dt.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    embed = discord.Embed(color=discord.Color.red(), title=member.name)
+    embed.set_thumbnail(url=member.avatar.url)
+    embed.add_field(name="", value=f"** Message sent by **{member.mention} ** deleted in **{message.channel.mention}")
+    embed.add_field(name="", value=message.content, inline=False)
+    embed.set_footer(text=f"Author ID: {member.id} | Message ID: {message.id}" + "\n" + f"Time: {time}")
+
+    return embed

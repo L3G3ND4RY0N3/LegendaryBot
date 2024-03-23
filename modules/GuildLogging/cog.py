@@ -1,8 +1,11 @@
 import discord
 from discord.ext import commands, tasks
 from discord import app_commands
-from utils import settings, filepaths, guildjsonfunctions
-import json
+from constants import enums as en
+from utils import settings
+from utils import guildjsonfunctions as gjf
+from utils.embeds import embedbuilder as emb
+
 
 logger=settings.logging.getLogger("discord")
 
@@ -15,15 +18,22 @@ class GuildLogging(commands.Cog, name="Guild Logging"):
     async def on_ready(self):
         logger.info("GuildLogging.py is ready!")
 
-    #region "tasks"
-    ####################### tasks
-    #######################################################################################
-    #loads the guild ids from the json into memory (list)
+    #region TASKS
+    ####################### tasks #######################################################################################
 
-    @tasks.loop(minutes=1, count=1)
-    async def load_guilds_from_json(self):
-        guildjsonfunctions.load_json_to_activity_id_list()
-
+    #endregion
+        
+    #region EVENTS
+    @commands.Cog.listener()
+    async def on_message_delete(self, message: discord.Message) -> None:
+        channel_id = gjf.get_guild_channel(str(message.guild.id), en.GuildChannelTypes.LOG.value)
+        if not channel_id:
+            return
+        
+        channel = message.guild.get_channel(channel_id)      
+        embed = emb.log_del_message(message, message.author)
+        await channel.send(embed=embed)
+    
     #endregion
 
 async def setup(bot):
