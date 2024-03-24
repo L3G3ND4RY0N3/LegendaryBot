@@ -96,7 +96,9 @@ def get_channel_status(channel: str, data: dict) -> str:
 #region LOGGING EMBEDS
 
 ### embeds for the logging module
-def log_del_message(message: discord.Message, member: discord.Member) -> discord.Embed:
+
+#region MESSAGE ACTIONS
+def log_del_message_embed(message: discord.Message, member: discord.Member) -> tuple[discord.Embed, discord.File | None]:
     """Creates an Embed for deleted messages
 
     Args:
@@ -107,10 +109,63 @@ def log_del_message(message: discord.Message, member: discord.Member) -> discord
         discord.Embed: The created embed that gets send to the log channel of the guild
     """
     time = dt.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-    embed = discord.Embed(color=discord.Color.red(), title=member.name)
-    embed.set_thumbnail(url=member.avatar.url)
+    embed = discord.Embed(color=discord.Color.red())
     embed.add_field(name="", value=f"** Message sent by **{member.mention} ** deleted in **{message.channel.mention}")
     embed.add_field(name="", value=message.content, inline=False)
     embed.set_footer(text=f"Author ID: {member.id} | Message ID: {message.id}" + "\n" + f"Time: {time}")
+    embed, file = custom_set_author(embed, member)
+    return (embed, file)
 
-    return embed
+#endregion
+
+#region MEMBER ACTIONS
+def log_member_join_embed(member: discord.Member) -> tuple[discord.Embed, discord.File | None]:
+    """Creates an embed when a member joins a guild
+
+    Args:
+        member (discord.Member): The joining member
+    
+    Returns:
+        discord.Embed: The created embed
+    """
+    time = dt.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    member_account_age = calc_member_account_age(dt.datetime.now().date(), member.created_at.date())
+    embed = discord.Embed(color=discord.Color.green())
+    embed.add_field(name="", value=f"{member.mention} {member.name}")
+    embed.add_field(name="Account Age", value=f"{member_account_age}", inline=False)
+    embed.set_footer(text=f"Member ID: {member.id} | Time: {time}")
+    embed, file = custom_set_author(embed, member)
+    return (embed, file)
+#endregion
+
+#region UTILITIES
+# TODO: Auslagern?
+def calc_member_account_age(now: dt.date, member_created_at: dt.date) -> str:
+    """Calculates the account age of a member
+
+    Args:
+        now (dt.date): The current date
+        member_created_at (dt.date): The date of creation of the member account
+
+    Returns:
+        str: The string representation of the account age
+    """
+    dif = now - member_created_at
+    years = dif.days // 365
+    months = (dif.days % 365) // 30
+    days = (dif.days % 365) % 30
+    return f"{years} years, {months} months, {days} days"
+    
+
+def custom_set_author(emb: discord.Embed, member: discord.Member) -> tuple[discord.Embed, discord.File | None]:
+    if member.avatar:
+        emb.set_author(name=f"{member.name}", icon_url=member.avatar.url)
+        return (emb, None)
+    else:
+        file = discord.File(fp.discord_logo, filename=fp.discord_logo_name)
+        emb.set_author(name=f"{member.name}", icon_url=fp.attach(fp.discord_logo_name))
+        return (emb, file)
+#endregion
+
+#endregion
+    
