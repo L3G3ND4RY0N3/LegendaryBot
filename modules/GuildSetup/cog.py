@@ -9,7 +9,7 @@ logger=settings.logging.getLogger("discord")
 
 
 class GuildSetup(commands.Cog, name="Guild Setup"):
-    def __init__(self, bot):
+    def __init__(self, bot: discord.Client):
         self.bot = bot
         self.load_guilds_from_json.start()
 
@@ -51,7 +51,6 @@ class GuildSetup(commands.Cog, name="Guild Setup"):
 
     #endregion
         
-
     
     ################################ commands
     ###########################################################################################

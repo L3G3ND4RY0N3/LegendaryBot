@@ -11,7 +11,7 @@ from utils import settings, guildjsonfunctions
 logger=settings.logging.getLogger("discord")
 
 class LevelSystem(commands.Cog, name="Level System"):
-    def __init__(self, bot):
+    def __init__(self, bot: discord.Client):
         self.bot = bot
         self.DB = "level.db" # TODO: have some sort of server dependent tracking either trough relational databases or something else.
         self.starttime = {} # initiates a  dict for keeping "user": "starttime" with starttime being the time they joined a voice channel or got updated

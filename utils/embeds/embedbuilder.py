@@ -106,16 +106,37 @@ def log_del_message_embed(message: discord.Message, member: discord.Member) -> t
         member (discord.Member): The author (member) of the deleted message
 
     Returns:
-        discord.Embed: The created embed that gets send to the log channel of the guild
+        tuple[discord.Embed, discord.File | None]: The created embed that gets send to the log channel of the guild and the file for the discord icon, if the user has no pfp
     """
-    time = dt.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+
     embed = discord.Embed(color=discord.Color.red())
+    embed.timestamp = dt.datetime.now()
     embed.add_field(name="", value=f"** Message sent by **{member.mention} ** deleted in **{message.channel.mention}")
     embed.add_field(name="", value=message.content, inline=False)
-    embed.set_footer(text=f"Author ID: {member.id} | Message ID: {message.id}" + "\n" + f"Time: {time}")
+    embed.set_footer(text=f"Author ID: {member.id} | Message ID: {message.id}")
     embed, file = custom_set_author(embed, member)
     return (embed, file)
 
+
+def log_edit_message_embed(before: discord.Message, after:discord.Message, member: discord.Member) -> tuple[discord.Embed, discord.File | None]:
+    """Creates and Embed when a message is edited
+
+    Args:
+        message (discord.Message): The edited member
+        member (discord.Member): The member that send and edited the message
+
+    Returns:
+        tuple[discord.Embed, discord.File | None]: A tuple of the embed and the file of the discord icon, if the user has no pfp
+    """
+    
+    embed = discord.Embed(color=discord.Color.blue())
+    embed.timestamp = dt.datetime.now()
+    embed.add_field(name="", value=f"** Message edited in **{before.channel.mention} {after.jump_url}")
+    embed.add_field(name="Before Edit", value=before.content, inline=False)
+    embed.add_field(name="After Edit", value=after.content, inline=False)
+    embed.set_footer(text=f"Author ID: {member.id} | Message ID: {after.id}")
+    embed, file = custom_set_author(embed, member)
+    return (embed, file)
 #endregion
 
 #region MEMBER ACTIONS
@@ -126,15 +147,37 @@ def log_member_join_embed(member: discord.Member) -> tuple[discord.Embed, discor
         member (discord.Member): The joining member
     
     Returns:
-        discord.Embed: The created embed
+        tuple[discord.Embed, discord.File | None]: A tuple of the embed and the file of the discord icon, if the user has no pfp
     """
-    time = dt.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     member_account_age = calc_member_account_age(dt.datetime.now().date(), member.created_at.date())
     embed = discord.Embed(color=discord.Color.green())
+    embed.timestamp = dt.datetime.now()
     embed.add_field(name="", value=f"{member.mention} {member.name}")
     embed.add_field(name="Account Age", value=f"{member_account_age}", inline=False)
-    embed.set_footer(text=f"Member ID: {member.id} | Time: {time}")
-    embed, file = custom_set_author(embed, member)
+    embed.set_footer(text=f"Member ID: {member.id}")
+    embed, file = custom_set_author(embed, member, "Member Joined")
+    return (embed, file)
+
+
+def log_member_leave_embed(member: discord.Member) -> tuple[discord.Embed, discord.File | None]:
+    """Creates an embed when a member leaves a guild
+
+    Args:
+        member (discord.Member): The leaving member
+    
+    Returns:
+        tuple[discord.Embed, discord.File | None]: A tuple of the embed and the file of the discord icon, if the user has no pfp
+    """
+
+    member_account_age = calc_member_account_age(dt.datetime.now().date(), member.created_at.date())
+    member_guild_age = calc_member_account_age(dt.datetime.now().date(), member.joined_at.date())
+    embed = discord.Embed(color=discord.Color.red())
+    embed.timestamp = dt.datetime.now()
+    embed.add_field(name="", value=f"{member.mention} {member.name}")
+    embed.add_field(name="Account Age", value=f"{member_account_age}", inline=False)
+    embed.add_field(name="Guild Membership", value=f"{member_guild_age}", inline=False)
+    embed.set_footer(text=f"Member ID: {member.id}")
+    embed, file = custom_set_author(embed, member, "Member Left")
     return (embed, file)
 #endregion
 
@@ -150,6 +193,8 @@ def calc_member_account_age(now: dt.date, member_created_at: dt.date) -> str:
     Returns:
         str: The string representation of the account age
     """
+    if not member_created_at:
+        return "0 days"
     dif = now - member_created_at
     years = dif.days // 365
     months = (dif.days % 365) // 30
@@ -157,13 +202,24 @@ def calc_member_account_age(now: dt.date, member_created_at: dt.date) -> str:
     return f"{years} years, {months} months, {days} days"
     
 
-def custom_set_author(emb: discord.Embed, member: discord.Member) -> tuple[discord.Embed, discord.File | None]:
+def custom_set_author(emb: discord.Embed, member: discord.Member, action: str = None) -> tuple[discord.Embed, discord.File | None]:
+    """Modifys an embed by setting an author field and setting a default pfp if the member has none
+
+    Args:
+        emb (discord.Embed): The embed that gets modified
+        member (discord.Member): The member that iss the author in the embed field
+        action (str): The action of the member, default is None
+
+    Returns:
+        tuple[discord.Embed, discord.File | None]: The embed and the file for the default pfp, if the member did not have custom pfp
+    """
+    name_field = action if action else member.name
     if member.avatar:
-        emb.set_author(name=f"{member.name}", icon_url=member.avatar.url)
+        emb.set_author(name=f"{name_field}", icon_url=member.avatar.url)
         return (emb, None)
     else:
         file = discord.File(fp.discord_logo, filename=fp.discord_logo_name)
-        emb.set_author(name=f"{member.name}", icon_url=fp.attach(fp.discord_logo_name))
+        emb.set_author(name=f"{name_field}", icon_url=fp.attach(fp.discord_logo_name))
         return (emb, file)
 #endregion
 
