@@ -30,10 +30,14 @@ class GuildLogging(commands.Cog, name="Guild Logging"):
     # also fires if messages isnt cached when deleted
     @commands.Cog.listener()
     async def on_message_delete(self, message: discord.Message) -> None:
+        if message.author.bot:
+            return
         await self.log_event_from_message(message.guild, emb.log_del_message_embed(message, message.author))
 
     @commands.Cog.listener()
     async def on_message_edit(self, before: discord.Message, after: discord.Message) -> None:
+        if before.author.bot:
+            return
         await self.log_event_from_message(after.guild, emb.log_edit_message_embed(before, after, after.author))
 
     #endregion
@@ -62,6 +66,8 @@ class GuildLogging(commands.Cog, name="Guild Logging"):
         if not channel_id:
             return
         channel = guild.get_channel(channel_id)
+        if not channel:
+            return
         await cls.log_event(channel, embed_file_tuple[0], embed_file_tuple[1])
 
 
@@ -71,6 +77,8 @@ class GuildLogging(commands.Cog, name="Guild Logging"):
         if not channel_id:
             return
         channel = guild.get_channel(channel_id)
+        if not channel:
+            return
         await cls.log_event(channel, embed_file_tuple[0], embed_file_tuple[1])
     #endregion
 
