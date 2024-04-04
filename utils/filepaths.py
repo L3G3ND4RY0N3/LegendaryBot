@@ -1,3 +1,5 @@
+import os
+import json
 
 ##################### temp vc paths
 temp_vc_fp = "modules/TemporaryVoiceChannel/json/"
@@ -24,4 +26,15 @@ discord_logo_name="discord_logo.jpg"
 def attach(filename: str) -> str:
     return f"attachment://{filename}"
 #endregion
+#endregion
+
+#region CHECKS
+def json_exists(path: str) -> bool:
+    return os.path.isfile(path)
+
+def create_empty_json(path: str) -> None:
+    if not os.path.isfile(path):
+        empty_dict = {}
+        with open(path, "w") as f:
+            json.dump(empty_dict, f, indent=4)
 #endregion

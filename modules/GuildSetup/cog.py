@@ -4,6 +4,7 @@ from discord import app_commands
 from utils import settings, guildjsonfunctions 
 from utils.embeds import embedbuilder as emb
 from utils.views import guildsetupview as gsv
+from utils import filepaths as fp
 
 logger=settings.logging.getLogger("discord")
 
@@ -17,7 +18,7 @@ class GuildSetup(commands.Cog, name="Guild Setup"):
     @commands.Cog.listener() #ansatt bot.event!
     async def on_ready(self):
         logger.info("GuildLogging.py is ready!")
-
+        fp.create_empty_json(fp.guild_log_json)
 
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild) -> None:
@@ -50,7 +51,6 @@ class GuildSetup(commands.Cog, name="Guild Setup"):
         logger.info("Ending loading gulds from json loop!")
 
     #endregion
-        
     
     ################################ commands
     ###########################################################################################
