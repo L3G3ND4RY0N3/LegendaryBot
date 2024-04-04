@@ -159,6 +159,7 @@ def update_activity_tracker(guild_id: str, status: int, path=fp.guild_log_json) 
             return -1
         #else modify the Activity channel specifically
         update_channel(data, guild_id, en.GuildChannelTypes.ACTIVITY.value, status)
+        activity_ids.add(guild_id)
         save_json(path, data)
         return 0
             
