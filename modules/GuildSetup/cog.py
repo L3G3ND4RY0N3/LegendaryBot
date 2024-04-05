@@ -37,6 +37,7 @@ class GuildSetup(commands.Cog, name="Guild Setup"):
     @tasks.loop(minutes=1, count=1)
     async def load_guilds_from_json(self) -> None:
         guildjsonfunctions.load_json_to_guild_id_list()
+        guildjsonfunctions.load_json_to_activity_id_list()
 
     
     @load_guilds_from_json.before_loop

@@ -34,6 +34,14 @@ def update_channel(data: dict, guild_id: str, channel: str, channel_id: int) -> 
         logger.error(f"Key error for {guild_id} or {channel}")
         logger.exception(f"{e}")
 
+
+def update_channel_set(status: int, guild_id: int, id_set: set) -> None:
+    if status != 0:
+        id_set.add(guild_id)
+        return
+    id_set.remove(guild_id)
+    return
+
 #endregion
 
 #region "Properties"
@@ -138,6 +146,7 @@ def update_guild_channel(guild_id: str, channel_id: int, channel: str, path=fp.g
             return -1
         #else modify the specific channel
         update_channel(data, guild_id, channel, channel_id)
+        update_channel_set(channel_id, int(guild_id), ids)
         save_json(path, data)    
         return 0
 
@@ -159,7 +168,7 @@ def update_activity_tracker(guild_id: str, status: int, path=fp.guild_log_json) 
             return -1
         #else modify the Activity channel specifically
         update_channel(data, guild_id, en.GuildChannelTypes.ACTIVITY.value, status)
-        activity_ids.add(guild_id)
+        update_channel_set(status, int(guild_id), activity_ids)
         save_json(path, data)
         return 0
             
@@ -172,7 +181,7 @@ def update_activity_tracker(guild_id: str, status: int, path=fp.guild_log_json) 
 # gets the channel id for the requested channel type of the guild or 0 if guild not found or not enabled for that channel
 # TODO: return data form check function
 def get_guild_channel(guild_id: str, channel: str, path=fp.guild_log_json) -> int|None:
-    """Checks the status of the specified channel in the json for the guild and returns thhe channel id, if found, if not None
+    """Checks the status of the specified channel in the json for the guild and returns the channel id, if found, if not None
 
     Args:
         guild_id (str): The id of the guild as a string for the json
