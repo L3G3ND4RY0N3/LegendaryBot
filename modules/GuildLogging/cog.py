@@ -36,7 +36,7 @@ class GuildLogging(commands.Cog, name="Guild Logging"):
 
     @commands.Cog.listener()
     async def on_message_edit(self, before: discord.Message, after: discord.Message) -> None:
-        if before.author.bot:
+        if before.author.bot or before.content == after.content:
             return
         await self.log_event_from_message(after.guild, emb.log_edit_message_embed(before, after, after.author))
 
