@@ -59,7 +59,7 @@ class LevelSystem(commands.Cog, name="Level System"):
         self.guild_count += 1
         new_user_count = 0
         for vc in guild.voice_channels:
-             for member in vc.members:
+            for member in vc.members:
                 if member.id not in self.starttime.keys():
                     new_user_count+=1
                     self.starttime[member.id] = datetime.datetime.now()
