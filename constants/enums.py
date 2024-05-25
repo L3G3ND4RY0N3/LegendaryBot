@@ -21,3 +21,8 @@ class VoiceChannelStatus(Enum):
     NotInOwnVoice = "NotInOwnVoice"
     AloneInVoice = "AloneInVoice"
     InOwnVoice = "InOwnVoice"
+
+
+class LRRetCode(Enum):
+    SUCCESS = 0
+    FAIL_CIRCULAR = 1

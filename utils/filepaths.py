@@ -1,5 +1,6 @@
 import os
 import json
+from pathlib import Path
 
 ##################### temp vc paths
 temp_vc_fp = "modules/TemporaryVoiceChannel/json/"
@@ -7,8 +8,9 @@ temp_vc_json = "modules/TemporaryVoiceChannel/json/tempchannels.json"
 temp_creation_vc_json = "modules/TemporaryVoiceChannel/json/tempcreationvc.json"
 
 
-##################### auto role paths
+##################### role paths
 join_roles_json = "modules/Autoroles/json/autoroles.json"
+LINKED_ROLES_FILE: Path = Path("modules/Linkedroles/json/linkedroles.json")
 
 
 ##################### guild logging
