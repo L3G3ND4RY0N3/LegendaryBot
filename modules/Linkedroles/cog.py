@@ -1,5 +1,5 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 from discord import app_commands
 import json
 from utils import jsonfunctions, settings
@@ -13,7 +13,7 @@ from time import sleep
 logger=settings.logging.getLogger("discord")
 
 class LinkedRolesBot(commands.Cog, name="Linked Roles"):
-    def __init__(self, bot):
+    def __init__(self, bot: discord.Client):
         self.bot = bot
         self.file_open = True
         try:
@@ -49,6 +49,59 @@ class LinkedRolesBot(commands.Cog, name="Linked Roles"):
 
     #TODO: write check_all_members and check_all_roles
 
+    def check_all_roles(self):
+        for guild in self.bot.guilds:
+            if (guild.id not in set(self.guild_linked_roles)
+            or not self.guild_linked_roles[guild.id]
+            ):
+                continue
+            guild_roles = set([role.id for role in guild.roles])
+            guild_linked_roles = set(self.guild_linked_roles[guild.id]._linked_roles) | set(self.guild_linked_roles[guild.id]._reverse_linked_roles)
+            dif = guild_linked_roles - guild_roles
+            for role_id in dif:
+                self.guild_linked_roles[guild.id].remove_role(role_id)
+
+        self.write_json()
+        return
+    
+    async def check_all_members(self):
+        for guild in self.bot.guilds:
+            if (guild.id not in set(self.guild_linked_roles)
+            or not self.guild_linked_roles[guild.id]
+            ):
+                continue
+            linked_roles = self.guild_linked_roles[guild.id]
+            for member in guild.members:
+                mem_roles = set(role.id for role in member.roles)
+                updated_roleids = linked_roles.get_all_targets_for_reqs(*mem_roles)
+
+                add_role_ids = updated_roleids - mem_roles
+                remove_role_ids = mem_roles - updated_roleids
+
+                if not add_role_ids and not remove_role_ids:
+                    continue # do nothing if no relevant roles changed
+
+                add_roles = [member.guild.get_role(rid) for rid in add_role_ids]
+                remove_roles = [member.guild.get_role(rid) for rid in remove_role_ids]
+
+                if add_role_ids:
+                    try:
+                        sleep(0.01) # to not trigger rate limit
+                        await member.add_roles(*add_roles, atomic=False)
+                    # if "forbidden" exception is thrown
+                    except discord.errors.Forbidden:
+                        logger.info(f"Bot is missing permission to add roles in {member.guild.name}")
+
+                if remove_role_ids:
+                    try:
+                        sleep(0.01) # to not trigger rate limit
+                        await member.remove_roles(*remove_roles, atomic=False)
+                    except discord.Forbidden:
+                        logger.info(
+                            f"Bot is missing permission to manage roles for {member.name} in {member.guild.name}"
+                        )
+        return
+
 
     ###############################################################################################################
     ########################################### Listener (Events) #################################################
@@ -57,6 +110,8 @@ class LinkedRolesBot(commands.Cog, name="Linked Roles"):
     @commands.Cog.listener() #ansatt bot.event!
     async def on_ready(self):
         logger.info("Linkedroles.py is ready!")
+        self.check_all_roles()
+        await self.check_all_members()
 
     # if a role in a guild gets deleted, the bot check if it was an linkedrole and deletes it from the list, else it creates a log entry
 
@@ -111,9 +166,6 @@ class LinkedRolesBot(commands.Cog, name="Linked Roles"):
 
         linked_roles = self.guild_linked_roles[guild_id]
 
-        # added_roles = new_roles - old_roles
-        # removed_roles = old_roles - new_roles
-
         after_roleids = set(r.id for r in after.roles)
         updated_roleids = linked_roles.get_all_targets_for_reqs(*after_roleids)
 
@@ -140,99 +192,6 @@ class LinkedRolesBot(commands.Cog, name="Linked Roles"):
                 logger.info(
                     f"Bot is missing permission to manage roles for {after.name} in {after.guild.name}"
                 )
-        # with open("modules/Linkedroles/json/linkedroles.json", "r") as f:
-        #     data = json.load(f)
-
-        # guild = str(before.guild.id)
-
-        # # if no no server, dont do jack
-        # if guild not in data:
-        #     return
-        
-        # # if no linked roles in server, its time to stop
-        # if data[guild] == {}:
-        #     return
-        
-        # old_roles = before.roles
-        # new_roles = after.roles
-        
-        # # if no roles added or removed, dont do anything
-        # if old_roles == new_roles:
-        #     return
-        
-        # # if roles where added
-        # if len(new_roles) > len(old_roles):
-        #     added_roles = []
-        #     #find roles that were added, list if multiple roles were added at the same time
-        #     for role in new_roles:
-        #         if role not in old_roles:
-        #             added_roles.append(role)
-        #     #get the ids of added roles as strings for comparison
-        #     added_roles_ids = [str(role.id) for role in added_roles]
-        #     #list of required (linked) roles
-        #     required_role_list = list(data[guild].values())
-
-        #     # iterate over added_roles and check in which list of required roles they reside 
-        #     for added_role_id in added_roles_ids:
-        #         #checks if the added role is in any of the roles requirements list
-        #         if any(added_role_id in sl for sl in required_role_list):
-        #             # role ids to add
-        #             add = [r for r, lr in data[guild].items() if added_role_id in lr]
-        #             # list of roles to add to member
-        #             add_r = []
-        #             for r in add:
-        #                 nr = before.guild.get_role(int(r))
-        #                 add_r.append(nr)
-        #             # try adding the role
-        #             try:
-        #                 await after.add_roles(*add_r)
-        #             # if "forbidden" exception is thrown
-        #             except discord.errors.Forbidden:
-        #                 logger.info(f"Bot is missing permission to add roles in {after.guild.name}")
-
-        # # if roles were removed
-        # else:
-        #     removed_roles = []
-        #     #removed roles list
-        #     for role in old_roles:
-        #         if role not in new_roles:
-        #             removed_roles.append(role)
-        #     # removed roles ids as strings
-        #     removed_roles_ids = [str(role.id) for role in removed_roles]
-        #     # the remaining roles for checking if the member has some required roles left or none
-        #     remaining_roles_ids = [str(role.id) for role in after.roles]
-
-        #     required_role_list = list(data[guild].values())
-
-        #     for removed_roles_id in removed_roles_ids:
-        #         #checks if the removed role is in any of the roles requirements list
-        #         if any(removed_roles_id in sl for sl in required_role_list):
-        #             # role ids to remove
-        #             remove = [r for r, lr in data[guild].items() if removed_roles_id in lr]
-        #             # roles to remove
-        #             remove_r = []
-        #             for r in remove:
-        #                 nr = before.guild.get_role(int(r))
-        #                 remove_r.append(nr)
-        #             # try removing the role
-        #             try:
-        #                 await after.remove_roles(*remove_r)
-        #             except discord.errors.Forbidden:
-        #                 logger.info(f"Bot is missing permission to manage roles for {after.name} in {after.guild.name}")
-
-        #     # readding roles if member still has some required roles left TODO: fix, to many api calls?!
-        #     for remaining_role_id in remaining_roles_ids:
-        #         if any(remaining_role_id in sl for sl in required_role_list):
-        #             add = [r for r, lr in data[guild].items() if remaining_role_id in lr]
-        #             add_r = []
-        #             for r in add:
-        #                 nr = before.guild.get_role(int(r))
-        #                 add_r.append(nr)
-        #             # try readding the role
-        #             try:
-        #                 await after.add_roles(*add_r)
-        #             except discord.errors.Forbidden:
-        #                 logger.info(f"Bot is missing permission to add roles in {after.guild.name}")
             
 
 
