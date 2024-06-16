@@ -1,8 +1,8 @@
 import discord
-from discord.ext import commands, tasks
+from discord.ext import commands
 from discord import app_commands
 import json
-from utils import jsonfunctions, settings
+from utils import settings
 from utils.embeds import embedbuilder as emb
 from utils.filepaths import LINKED_ROLES_FILE
 from utils.structs.LinkedRoles import LinkedRoles
@@ -47,7 +47,7 @@ class LinkedRolesBot(commands.Cog, name="Linked Roles"):
             json.dump(serialized_dict, f, indent=4)
         self.file_open = False
 
-    #TODO: write check_all_members and check_all_roles
+    #region Startup functionalities
 
     def check_all_roles(self):
         for guild in self.bot.guilds:
@@ -64,6 +64,7 @@ class LinkedRolesBot(commands.Cog, name="Linked Roles"):
         self.write_json()
         return
     
+
     async def check_all_members(self):
         for guild in self.bot.guilds:
             if (guild.id not in set(self.guild_linked_roles)
@@ -101,6 +102,7 @@ class LinkedRolesBot(commands.Cog, name="Linked Roles"):
                             f"Bot is missing permission to manage roles for {member.name} in {member.guild.name}"
                         )
         return
+    #endregion
 
 
     ###############################################################################################################
