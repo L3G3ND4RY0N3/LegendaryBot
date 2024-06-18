@@ -40,7 +40,7 @@ class LinkedRoles():
         """Returns a set with all roles a user should have for given roles
 
         Returns:
-            set[int]: The set with all ids for roles the user should have
+            set[int]: The set with all ids for roles the user should have, including the given roles
         """
         if not req_ids:
             return set()
