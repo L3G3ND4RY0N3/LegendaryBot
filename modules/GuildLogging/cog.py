@@ -85,12 +85,7 @@ class GuildLogging(commands.Cog, name="Guild Logging"):
     #region STATIC METHODS        
     @staticmethod
     async def custom_send(log_channel: discord.TextChannel, embed: discord.Embed, file:discord.File = None) -> None:
-        if file:
-            await log_channel.send(embed=embed, file=file)
-            return
-        else:
-            await log_channel.send(embed=embed)
-        return
+        await log_channel.send(embed=embed, file=file)
     #endregion
     
 
