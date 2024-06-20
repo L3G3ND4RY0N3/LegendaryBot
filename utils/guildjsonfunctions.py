@@ -1,13 +1,13 @@
 import json
 from utils import filepaths as fp
 from utils import settings
-from constants import enums as en
+from constants.enums import GuildChannelTypes as GCT, GuildChannelStatus as GCS
 
 logger=settings.logging.getLogger("discord")
 
 
 # set allowed channels, as they are in the JSON file:
-allowed_channels = [en.GuildChannelTypes.ERROR.value, en.GuildChannelTypes.LOG.value, en.GuildChannelTypes.WELCOME.value, en.GuildChannelTypes.BOOST.value]
+allowed_channels = [GCT.ERROR.value, GCT.LOG.value, GCT.WELCOME.value, GCT.BOOST.value]
 
 #region common functions
 def is_valid_channel(channel: str) -> bool:
@@ -71,7 +71,7 @@ def load_json_to_activity_id_list():
     
     for key in data:
         try:
-            if data[key][en.GuildChannelTypes.ACTIVITY.value] != 0:
+            if data[key][GCT.ACTIVITY.value] != 0:
                 activity_ids.add(int(key))
         except KeyError as e:
             logger.error(f"Key error for {key} or activity tracker!")
@@ -92,7 +92,7 @@ def initialise_guild_setup(guild_id: str) -> None:
         if guild_id in data:
             return
         #else add the guild with basic settings
-        data[guild_id] = {en.GuildChannelTypes.ERROR.value: 0, en.GuildChannelTypes.LOG.value: 0, en.GuildChannelTypes.WELCOME.value: 0, en.GuildChannelTypes.BOOST.value : 0, en.GuildChannelTypes.ACTIVITY.value: 0}
+        data[guild_id] = {GCT.ERROR.value: 0, GCT.LOG.value: 0, GCT.WELCOME.value: 0, GCT.BOOST.value : 0, GCT.ACTIVITY.value: 0}
         save_json(fp.guild_log_json, data)
         return
     
@@ -121,17 +121,17 @@ def remove_guild_setup(guild_id: str) -> int:
 
 
 ####### check channel status to disable buttons, returns a negative returncode, when operation fails
-def check_guild_channel_status(guild_id: str, channel: str, path=fp.guild_log_json) -> int:
+def check_guild_channel_status(guild_id: str, channel: str, path=fp.guild_log_json) -> GCS:
     data = load_json(path)
     #if the guild is not in the data send an error code
     if guild_id not in data: 
-        return -1
+        return GCS.GuildNotSet
     # if channel is zero, the return zero e.g. meaning "Not Active"
     if data[guild_id][channel] == 0:
-        return 0
+        return GCS.Inactive
     # else return 1, e.g. "Active"
     else:
-        return 1
+        return GCS.Active
 
 
 ####### called to update the json for a specific channel
@@ -167,7 +167,7 @@ def update_activity_tracker(guild_id: str, status: int, path=fp.guild_log_json) 
         if guild_id not in data:
             return -1
         #else modify the Activity channel specifically
-        update_channel(data, guild_id, en.GuildChannelTypes.ACTIVITY.value, status)
+        update_channel(data, guild_id, GCT.ACTIVITY.value, status)
         update_channel_set(status, int(guild_id), activity_ids)
         save_json(path, data)
         return 0
@@ -191,7 +191,7 @@ def get_guild_channel(guild_id: str, channel: str, path=fp.guild_log_json) -> in
     Returns:
         int: The channel id
     """
-    if check_guild_channel_status(guild_id, channel) != 1:
+    if check_guild_channel_status(guild_id, channel) != GCS.Active:
         return None
     data = load_json(path)
 
