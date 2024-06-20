@@ -113,6 +113,8 @@ def log_del_message_embed(message: discord.Message, member: discord.Member) -> t
     embed.timestamp = dt.datetime.now()
     embed.add_field(name="", value=f"** Message sent by **{member.mention} ** deleted in **{message.channel.mention}")
     embed.add_field(name="", value=message.content, inline=False)
+    if len(message.attachments) == 1:
+        embed.set_image(url=message.attachments[0].url)
     embed.set_footer(text=f"Author ID: {member.id} | Message ID: {message.id}")
     embed, file = custom_set_author(embed, member)
     return (embed, file)
