@@ -17,6 +17,11 @@ LINKED_ROLES_FILE: Path = Path("modules/Linkedroles/json/linkedroles.json")
 guild_log_json = "tables/guildchannels.json"
 
 
+
+#################### wordle
+WORDLE_WORDS: Path = Path("utils/Wordle/valid-wordle-words.txt")
+
+
 #region IMAGES
 ##################### images
 discord_logo = "img/discord_logo.jpg"
