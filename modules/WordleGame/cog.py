@@ -83,11 +83,10 @@ class WordleGame(commands.Cog, name="Wordle"):
     @app_commands.command(name="wordle", description="starts a game of wordle")
     @app_commands.describe(difficulty="Select a difficulty for the game, which determines the number of tries you have.")
     @app_commands.choices(difficulty=[
-    app_commands.Choice(name="Easy", value="EASY"),
-    app_commands.Choice(name="Normal", value="NORMAL"),
-    app_commands.Choice(name="Hard", value="HARD"),
-    app_commands.Choice(name="Good Luck", value="GOODLUCK"),
-    ])
+        app_commands.Choice(
+            name=diff.name.title(),
+            value=diff.name) for diff in Difficulty]
+        )
     async def wordle(self, ctx:discord.Interaction, difficulty: app_commands.Choice[str]) -> None:
         if ctx.user.id in self.games:
             thread = self.games[ctx.user.id].games_and_threads[GAMEKEYS.THREAD]
