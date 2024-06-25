@@ -1,11 +1,11 @@
-# from utils.filepaths import WORDLE_WORDS
+from utils.filepaths import WORDLE_WORDS, WORDLE_ANSWER_WORDS
 import random
 from enum import Enum
 
 #region IMPORT WORDS
-def get_valid_words() -> set[str]:
+def get_words(fp: str) -> set[str]:
     words = set()
-    with open("utils/Wordle/valid-wordle-words.txt", "r") as f:
+    with open(fp, "r") as f:
         for line in f:
             cleaned = line.strip()
             words.add(cleaned)
@@ -39,8 +39,9 @@ class WordValidity(Enum):
     INVALID = "Invalid"
 #endregion
 
-WORDS = get_valid_words()
-WORDSLIST = list(WORDS)
+WORDS = get_words(WORDLE_WORDS)
+ANSWERS = get_words(WORDLE_ANSWER_WORDS)
+WORDSLIST = list(ANSWERS)
 WORDLENGTH = 5
 
 
@@ -49,7 +50,7 @@ class Wordle():
     def __init__(self, max_guesses: Difficulty = Difficulty.NORMAL):
         self._secret: str = random.choice(WORDSLIST) # private
         self._guess_count = 0 # private
-        self._gamestate = GameState.ONGOING # private
+        self.gamestate = GameState.ONGOING # public
         self.max_guesses: int = max_guesses.value
         
 
@@ -60,20 +61,20 @@ class Wordle():
         #     return None
         self._guess_count += 1
         letter_state_list = self._check_guess(guess)
-        if self._guess_count >= self.max_guesses and self._gamestate != GameState.WON: # if max guesses reached and game not won, lose!
-            self._gamestate = GameState.LOST
+        if self._guess_count >= self.max_guesses and self.gamestate != GameState.WON: # if max guesses reached and game not won, lose!
+            self.gamestate = GameState.LOST
         return letter_state_list
     
 
-    # private
+    # public
     # checks if the guess is a valid five-letter word
     def guess_is_valid(self, guess: str) -> WordValidity:
-        if guess.lower() not in WORDS:
-            return WordValidity.INVALID
-        elif len(guess) > WORDLENGTH:
+        if len(guess) > WORDLENGTH:
             return WordValidity.TOOLONG
         elif len(guess) < WORDLENGTH:
             return WordValidity.TOOSHORT
+        elif guess.lower() not in WORDS:
+            return WordValidity.INVALID
         else:
             return WordValidity.VALID
 
@@ -109,23 +110,23 @@ class Wordle():
     # checks if the guessed word is exactly the secret word
     def _is_secret(self, guess: str) -> bool:
         if guess.lower() == self._secret.lower():
-            self._gamestate = GameState.WON
+            self.gamestate = GameState.WON
             return True
         
         return False
 
 #endregion
 
-game = Wordle(Difficulty.NORMAL)
-game._secret = "hobby"
-print(game.max_guesses)
-print(game._secret)
+# game = Wordle(Difficulty.NORMAL)
+# game._secret = "hobby"
+# print(game.max_guesses)
+# print(game._secret)
 
-game.handle_guess("TeSTr")
-game.handle_guess("TeSTr")
-res = game.handle_guess("cobbb")
-res2 = game.handle_guess("zymic")
-print(game._guess_count)
-print(res)
-print(res2)
-print(game._gamestate)
+# game.handle_guess("TeSTr")
+# game.handle_guess("TeSTr")
+# res = game.handle_guess("cobbb")
+# res2 = game.handle_guess("zymic")
+# print(game._guess_count)
+# print(res)
+# print(res2)
+# print(game._gamestate)
