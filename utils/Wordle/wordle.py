@@ -114,19 +114,3 @@ class Wordle():
             return True
         
         return False
-
-#endregion
-
-# game = Wordle(Difficulty.NORMAL)
-# game._secret = "hobby"
-# print(game.max_guesses)
-# print(game._secret)
-
-# game.handle_guess("TeSTr")
-# game.handle_guess("TeSTr")
-# res = game.handle_guess("cobbb")
-# res2 = game.handle_guess("zymic")
-# print(game._guess_count)
-# print(res)
-# print(res2)
-# print(game._gamestate)

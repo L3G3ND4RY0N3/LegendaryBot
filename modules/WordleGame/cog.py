@@ -52,7 +52,7 @@ class WordleGame(commands.Cog, name="Wordle"):
 
         # retrieve the game embed for edit
         game_embed = self.games[user.id].games_and_threads[GAMEKEYS.EMBED]
-        print(game._secret)
+
         # edit game embed
         game_embed = update_embed(game_embed, guess, letter_states, game)
         game_message = self.games[user.id].games_and_threads[GAMEKEYS.MESSAGE]
@@ -175,9 +175,3 @@ class GAMEKEYS(Enum):
 @dataclass
 class GameAndThreadDict():
     games_and_threads: Dict[GAMEKEYS, Union[Wordle, discord.Thread, discord.Embed, discord.Message]] = field(default_factory=dict)
-
-    # def __contains__(self, entry: Union[Wordle, discord.Thread, discord.Embed, discord.Message]):
-    #     for sub_dict in self.games_and_threads.values():
-    #         if entry in sub_dict:
-    #             return True
-    #     return False
