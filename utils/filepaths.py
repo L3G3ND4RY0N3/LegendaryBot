@@ -20,6 +20,7 @@ guild_log_json = "tables/guildchannels.json"
 
 #################### wordle
 WORDLE_WORDS: Path = Path("utils/Wordle/valid-wordle-words.txt")
+WORDLE_ANSWER_WORDS: Path = Path("utils/Wordle/wordle_answers.txt")
 
 
 #region IMAGES
