@@ -1,9 +1,8 @@
 import discord
-import json
-from utils import filepaths as fp
 from utils.embeds import embedbuilder as emb
+from utils.embeds.guild_settings_embed import createSettingEmbed
 import utils.settings as settings
-from utils import guildjsonfunctions as gjf
+from utils import guildjsonfunctions as GJF
 from utils.views import guildsetupselectview as gssv
 from constants import enums as en
 
@@ -25,7 +24,7 @@ class GuildSetupView(discord.ui.View):
     @discord.ui.button(label="Previous", style=discord.ButtonStyle.blurple, custom_id='Activate_Guild_Setup_Back', emoji="⬅")
     async def guild_setup_back(self, interaction: discord.Interaction, button:discord.ui.Button):
         self.currentPage -= 1
-        embed = emb.createSettingEmbed(interaction.guild, pageNum=self.currentPage)
+        embed = createSettingEmbed(interaction.guild, pageNum=self.currentPage)
         self.channel = embed.fields[0].name.split(" ")[0].lower()
 
         await interaction.response.edit_message(embed=embed, view=GuildSetupView(interaction, self.bot, self.currentPage, self.channel))
@@ -37,7 +36,7 @@ class GuildSetupView(discord.ui.View):
     @discord.ui.button(label="Next", style=discord.ButtonStyle.blurple, custom_id='Activate_Guild_Setup_Forward', emoji="➡")
     async def guild_setup_forward(self, interaction: discord.Interaction, button:discord.ui.Button):
         self.currentPage += 1
-        embed = emb.createSettingEmbed(interaction.guild, pageNum=self.currentPage)
+        embed = createSettingEmbed(interaction.guild, pageNum=self.currentPage)
         self.channel = embed.fields[0].name.split(" ")[0].lower()
 
         await interaction.response.edit_message(embed=embed, view=GuildSetupView(interaction, self.bot, self.currentPage, self.channel))
@@ -64,9 +63,9 @@ class GuildSetupView(discord.ui.View):
         # if for some reason anything fails, log the exception and still send an embed
             # check if activity or channels are updated
             if self.channel != en.GuildChannelTypes.ACTIVITY.value:
-                returncode = gjf.update_guild_channel(guild_id, 0, self.channel)
+                returncode = GJF.update_guild_channel(guild_id, 0, self.channel)
             else:
-                returncode = gjf.update_activity_tracker(guild_id, 0)
+                returncode = GJF.update_activity_tracker(guild_id, 0)
         except Exception as e:
             logger.exception(f"{e}")
             returncode = -1
@@ -90,7 +89,7 @@ class GuildSetupView(discord.ui.View):
             await interaction.response.send_message(f"Choose a channel for the {self.channel} module: ", view=gssv.GuildSetupSelectView(self.channel), ephemeral=True)
             return
         else:
-            retcode = gjf.update_activity_tracker(str(interaction.guild.id), 1)
+            retcode = GJF.update_activity_tracker(str(interaction.guild.id), 1)
             if retcode < 0:
                 embed = emb.warn_embed(f"There was an error activating the {self.channel} feature.")
                 await interaction.response.send_message(embed=embed, ephemeral=True)

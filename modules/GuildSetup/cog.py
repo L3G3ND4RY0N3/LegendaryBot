@@ -3,6 +3,7 @@ from discord.ext import commands, tasks
 from discord import app_commands
 from utils import settings, guildjsonfunctions 
 from utils.embeds import embedbuilder as emb
+from utils.embeds.guild_settings_embed import createSettingEmbed
 from utils.views import guildsetupview as gsv
 from utils import filepaths as fp
 
@@ -74,7 +75,7 @@ class GuildSetup(commands.Cog, name="GuildSetup"):
         
         currentPage = 0
         
-        embed = emb.createSettingEmbed(ctx.guild, pageNum=currentPage)
+        embed = createSettingEmbed(ctx.guild, pageNum=currentPage)
         channel = embed.fields[0].name.split(" ")[0].lower()
         sent_msg = await ctx.response.send_message(embed=embed, view=gsv.GuildSetupView(ctx, self.bot, currentPage, channel))
 

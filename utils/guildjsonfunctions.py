@@ -47,6 +47,7 @@ def update_channel_set(status: int, guild_id: int, id_set: set) -> None:
 #region "Properties"
 #Property
 ##### set to store the server ids with setups for quick access
+#TODO: error when having multiple channels with the same id! Build custom log class
 ids: set = set()
 
 
