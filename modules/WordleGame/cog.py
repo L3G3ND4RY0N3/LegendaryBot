@@ -60,19 +60,25 @@ class WordleGame(commands.Cog, name="Wordle"):
 
         # update game and embed in dictionary and delete thread if game is over
         if not self.update_games_dictionary(user.id, game, thread, game_embed, game_message):
-            try:
-                # wait 10 seconds to delete thread
-                await sleep(10)
-                await thread.delete(reason=f"Wordle {game.gamestate.value.lower()}")
-            except discord.Forbidden as e:
-                logger.error(f"Unable to delete thread {thread.name} in guild {message.guild.name}")
-                logger.exception(f"{e}")
+            await self.del_game_thread(thread, f"Wordle {game.gamestate.value.lower()}", 10)
         return
     
 
+    # called when the thread is deleted by any means to remove the associated game, if any
     @commands.Cog.listener()
     async def on_thread_remove(self, thread: discord.Thread) -> None:
-        #TODO: remove game from dict, when thread gets deleted by other means
+        if id := self.find_player_id_by(thread=thread):
+            self.games.pop(id)
+        return
+
+
+    # called when the game message is deleted to delete the game too!
+    @commands.Cog.listener()
+    async def on_message_delete(self, message: discord.Message) -> None:
+        if id := self.find_player_id_by(message=message):
+            thread = self.games[id].thread
+            self.games.pop(id)
+            await self.del_game_thread(thread, "Game message was deleted", 1)            
         return
 
 #endregion
@@ -90,9 +96,10 @@ class WordleGame(commands.Cog, name="Wordle"):
     async def wordle(self, ctx:discord.Interaction, difficulty: app_commands.Choice[str]) -> None:
         if ctx.user.id in self.games:
             thread = self.games[ctx.user.id].thread
-            emb = warn_embed(f"You already have an ongoing game in {thread.mention}!")
-            await ctx.response.send_message(embed=emb, ephemeral=True)
-            return
+            if thread in thread.guild.threads: # thread and game message were not deleted -> game is ongoing
+                emb = warn_embed(f"You already have an ongoing game in {thread.mention}!")
+                await ctx.response.send_message(embed=emb, ephemeral=True)
+                return
         
         # create public thread, where only the interacting user can write
         thread = await self.create_wordle_thread(ctx)
@@ -101,8 +108,7 @@ class WordleGame(commands.Cog, name="Wordle"):
             return
         
         game = Wordle(Difficulty[difficulty.value])
-        selected_difficulty = Difficulty[difficulty.value]
-        emb = wordle_embed(ctx.user, game, selected_difficulty)
+        emb = wordle_embed(ctx.user, game)
 
         try:
             message = await thread.send(embed=emb)
@@ -138,6 +144,26 @@ class WordleGame(commands.Cog, name="Wordle"):
         if not thread or not embed or not message:
             self.games.pop(user_id)
             return False
+        
+
+    def find_player_id_by(self, thread: discord.Thread = None, embed: discord.Embed = None, message: discord.Message = None) -> int | None:
+        # if no input, return None
+        if not thread and not embed and not message:
+            return None
+        
+        for player_id, player_data in self.games.items():
+            if player_data.thread == thread:
+                return player_id
+            
+            if player_data.embed == embed:
+                return player_id
+            
+            if player_data.message == message:
+                return player_id
+            
+        # if nothing found return None    
+        return None
+
 #endregion
 
 #region STATIC METHODS
@@ -148,6 +174,7 @@ class WordleGame(commands.Cog, name="Wordle"):
                 name=f"Wordle for {ctx.user.name}",
                 type=discord.ChannelType.public_thread
             )
+            await thread.add_user(ctx.user)
             return thread
         except discord.Forbidden as e:
             logger.error(f"Unable to create public thread in guild {ctx.guild} in channel {ctx.channel}")
@@ -156,6 +183,16 @@ class WordleGame(commands.Cog, name="Wordle"):
             emb = forbidden_embed(f"Unable to create public thread in guild {ctx.guild} in channel {ctx.channel}")
             await ctx.response.send_message(embed=emb, ephemeral=True)
             return None
+        
+
+    @staticmethod
+    async def del_game_thread(thread: discord.Thread, msg: str, time: float) -> None:
+        try:
+            await sleep(time)
+            await thread.delete(reason=msg) # msg is reason for audit log
+        except discord.Forbidden as e:
+            logger.error(f"Unable to delete thread {thread.name} in guild {thread.guild.name}")
+            logger.exception(f"{e}")
         
 #endregion
 
