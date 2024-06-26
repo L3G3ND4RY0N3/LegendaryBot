@@ -47,11 +47,12 @@ WORDLENGTH = 5
 
 #region WORDLE CLASS
 class Wordle():
-    def __init__(self, max_guesses: Difficulty = Difficulty.NORMAL):
+    def __init__(self, difficulty: Difficulty = Difficulty.NORMAL):
         self._secret: str = random.choice(WORDSLIST) # private
         self._guess_count = 0 # private
         self.gamestate = GameState.ONGOING # public
-        self.max_guesses: int = max_guesses.value
+        self.difficulty: Difficulty = difficulty
+        self.max_guesses: int = difficulty.value
         
 
     # public
