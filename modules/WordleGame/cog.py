@@ -1,12 +1,13 @@
 from asyncio import sleep
+from dataclasses import dataclass
 import discord
 from discord.ext import commands
 from discord import app_commands
-from dataclasses import dataclass
 from utils import settings
 from utils.Wordle.wordle import Wordle, Difficulty, GameState
 from utils.embeds.embedbuilder import warn_embed, forbidden_embed, success_embed
 from utils.embeds.wordle_embed import wordle_embed, validity_of_guess_embed, update_embed
+from utils.views.wordle_view import WordleView
 
 logger=settings.logging.getLogger("discord")
 
@@ -43,7 +44,6 @@ class WordleGame(commands.Cog, name="Wordle"):
         if emb:
             await message.reply(embed=emb, delete_after=5)
             return
-        
         
         # check the guess and update the gamestate, if game is won, lost or continuing
         letter_states = game.handle_guess(guess)
@@ -94,9 +94,10 @@ class WordleGame(commands.Cog, name="Wordle"):
     async def wordle(self, ctx:discord.Interaction, difficulty: app_commands.Choice[str]) -> None:
         if ctx.user.id in self.games:
             thread = self.games[ctx.user.id].thread
-            if thread in thread.guild.threads: # thread and game message were not deleted -> game is ongoing
+            if thread and thread in thread.guild.threads: # thread was not deleted -> game is ongoing
                 emb = warn_embed(f"You already have an ongoing game in {thread.mention}!")
-                await ctx.response.send_message(embed=emb, ephemeral=True)
+                await ctx.response.send_message(embed=emb, ephemeral=True, view=WordleView(ctx, self.bot, self.games[ctx.user.id]))
+                print(self.games[ctx.user.id].game)
                 return
         
         # create public thread, where only the interacting user can write
@@ -129,10 +130,18 @@ class WordleGame(commands.Cog, name="Wordle"):
 
 
 #region METHODS
+
     def update_games_dictionary(self, user_id: int, game: Wordle, thread: discord.Thread, embed: discord.Embed, message: discord.Message) -> bool:
+        # if new game, set all variables
         if user_id not in self.games or game.gamestate == GameState.ONGOING:
             self.games[user_id] = PlayerData(game=game, thread=thread, embed=embed, message=message)
             return True
+        
+        # if game was aborted via button, restart if /wordle is used
+        if user_id in self.games and thread != self.games[user_id].thread:
+            self.games[user_id] = PlayerData(game=game, thread=thread, embed=embed, message=message)
+            return True
+        
         # if game is over remove the user and their game from the dict
         if game.gamestate != GameState.ONGOING:
             self.games.pop(user_id)
