@@ -13,7 +13,7 @@ class MessageCog(commands.Cog):
 
     @commands.Cog.listener() #ansatt bot.event!
     async def on_ready(self):
-        logger.info("Messagefetcher.py is ready!")
+        logger.info(f"{self.__cog_name__}.py is ready!")
 
     @app_commands.command(name="export_messages", description="Export messages from a channel using some filters and return them in a json file.")
     @app_commands.checks.has_permissions(administrator=True)

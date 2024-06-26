@@ -12,7 +12,7 @@ class Slap(commands.Cog, name="Slaps"):
 
     @commands.Cog.listener() #ansatt bot.event!
     async def on_ready(self):
-        logger.info("Slap.py is ready!")    
+        logger.info(f"{self.__cog_name__}.py is ready!")   
 
     #Juraslap!
     @app_commands.command(name="slapjura", description="Gib Jura eine Schelle, weil er das verdient hat!")
@@ -28,7 +28,7 @@ class Slap(commands.Cog, name="Slaps"):
             amount = jura_data[str(interaction.guild.id)]
 
             f.seek(0)
-       
+
             json.dump(jura_data, f, indent=4)
 
         conf_embed = discord.Embed(color=discord.Color.blue())
@@ -63,7 +63,7 @@ class Slap(commands.Cog, name="Slaps"):
             amount = hug_data[str(interaction.guild.id)][str(user.id)]
         
             f.seek(0)
-       
+
             json.dump(hug_data, f, indent=4)
 
         conf_embed = discord.Embed(color=discord.Color.green())
@@ -88,7 +88,7 @@ class Slap(commands.Cog, name="Slaps"):
             amount = pat_data[str(interaction.guild.id)][str(user.id)]
         
             f.seek(0)
-       
+
             json.dump(pat_data, f, indent=4)
 
         conf_embed = discord.Embed(color=discord.Color.green())
@@ -118,7 +118,7 @@ class Slap(commands.Cog, name="Slaps"):
             amount = slap_data[str(interaction.guild.id)][str(user.id)]
         
             f.seek(0)
-       
+
             json.dump(slap_data, f, indent=4)
         
         conf_embed = discord.Embed(color=discord.Color.blue())

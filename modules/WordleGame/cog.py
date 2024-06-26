@@ -2,13 +2,11 @@ from asyncio import sleep
 import discord
 from discord.ext import commands
 from discord import app_commands
-from dataclasses import dataclass, field
-from enum import Enum
+from dataclasses import dataclass
 from utils import settings
-from utils.Wordle.wordle import Wordle, get_words, Difficulty, GameState
+from utils.Wordle.wordle import Wordle, Difficulty, GameState
 from utils.embeds.embedbuilder import warn_embed, forbidden_embed, success_embed
 from utils.embeds.wordle_embed import wordle_embed, validity_of_guess_embed, update_embed
-from typing import Dict, Union
 
 logger=settings.logging.getLogger("discord")
 
@@ -20,7 +18,7 @@ class WordleGame(commands.Cog, name="Wordle"):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        logger.info("WordleGame.py is ready!")
+        logger.info(f"{self.__cog_name__}.py is ready!")
 
 
 #region EVENTS

@@ -13,7 +13,7 @@ class Help(commands.Cog, name="Help"):
 
     @commands.Cog.listener() #ansatt bot.event!
     async def on_ready(self):
-        logger.info("Help.py is ready!")
+        logger.info(f"{self.__cog_name__}.py is ready!")
 
     def createHelpEmbed(self, pageNum=0, inline=False):
         with open("modules/Help/json/help.json", "r") as f:

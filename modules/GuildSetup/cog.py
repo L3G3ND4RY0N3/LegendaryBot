@@ -9,7 +9,7 @@ from utils import filepaths as fp
 logger=settings.logging.getLogger("discord")
 
 
-class GuildSetup(commands.Cog, name="Guild Setup"):
+class GuildSetup(commands.Cog, name="GuildSetup"):
     def __init__(self, bot: discord.Client):
         self.bot = bot
         self.load_guilds_from_json.start()
@@ -17,7 +17,7 @@ class GuildSetup(commands.Cog, name="Guild Setup"):
 
     @commands.Cog.listener() #ansatt bot.event!
     async def on_ready(self):
-        logger.info("GuildLogging.py is ready!")
+        logger.info(f"{self.__cog_name__}.py is ready!")
         fp.create_empty_json(fp.guild_log_json)
 
     @commands.Cog.listener()

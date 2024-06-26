@@ -11,7 +11,7 @@ class Ping(commands.Cog, name="Ping"):
 
     @commands.Cog.listener() #ansatt bot.event!
     async def on_ready(self):
-        logger.info("Ping.py is ready!")    
+        logger.info(f"{self.__cog_name__}.py is ready!") 
 
     @commands.command()
     async def ping(self, ctx):

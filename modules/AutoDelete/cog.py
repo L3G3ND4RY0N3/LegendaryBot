@@ -23,7 +23,7 @@ class Autodelete(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         self.load_settings()
-        logger.info("Autodelete.py is ready!")
+        logger.info(f"{self.__cog_name__}.py is ready!")
 
     @commands.Cog.listener()
     async def on_message(self, message):

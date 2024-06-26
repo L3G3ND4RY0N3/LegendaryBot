@@ -12,7 +12,7 @@ from time import sleep
 
 logger=settings.logging.getLogger("discord")
 
-class LinkedRolesBot(commands.Cog, name="Linked Roles"):
+class LinkedRolesBot(commands.Cog, name="LinkedRoles"):
     def __init__(self, bot: discord.Client):
         self.bot = bot
         self.file_open = True
@@ -111,7 +111,7 @@ class LinkedRolesBot(commands.Cog, name="Linked Roles"):
 
     @commands.Cog.listener() #ansatt bot.event!
     async def on_ready(self):
-        logger.info("Linkedroles.py is ready!")
+        logger.info(f"{self.__cog_name__}.py is ready!")
         self.check_all_roles()
         await self.check_all_members()
 

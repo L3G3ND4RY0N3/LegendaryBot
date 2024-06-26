@@ -10,14 +10,14 @@ from utils.embeds import embedbuilder as emb
 
 logger=settings.logging.getLogger("discord")
 
-class GuildLogging(commands.Cog, name="Guild Logging"):
+class GuildLogging(commands.Cog, name="GuildLogging"):
     def __init__(self, bot: discord.Client):
         self.bot = bot
 
 
     @commands.Cog.listener() #ansatt bot.event!
     async def on_ready(self):
-        logger.info("GuildLogging.py is ready!")
+        logger.info(f"{self.__cog_name__}.py is ready!")
 
     #region TASKS
     ####################### tasks #######################################################################################

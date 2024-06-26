@@ -10,7 +10,7 @@ from utils import settings, guildjsonfunctions
 
 logger=settings.logging.getLogger("discord")
 
-class LevelSystem(commands.Cog, name="Level System"):
+class LevelSystem(commands.Cog, name="LevelSystem"):
     def __init__(self, bot: discord.Client):
         self.bot = bot
         self.DB = "level.db" # TODO: have some sort of server dependent tracking either trough relational databases or something else.
@@ -30,7 +30,7 @@ class LevelSystem(commands.Cog, name="Level System"):
 
     @commands.Cog.listener() #ansatt bot.event!
     async def on_ready(self):
-        logger.info("LevelSystem.py is ready!")    
+        logger.info(f"{self.__cog_name__}.py is ready!")   
         async with aiosqlite.connect(self.DB) as db:
             await db.execute(
                 """

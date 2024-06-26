@@ -44,7 +44,7 @@ class TemporaryVoice(commands.GroupCog, name="temporaryvoice"):
 
     @commands.Cog.listener() #ansatt bot.event!
     async def on_ready(self):
-        logger.info("TemporaryVoice.py is ready!")
+        logger.info(f"{self.__cog_name__}.py is ready!")
         self.bot.add_view(tvv.TempVoiceCustomView(None, self.bot))
 
 ##########################################################################################################################################################################################

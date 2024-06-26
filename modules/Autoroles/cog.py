@@ -17,7 +17,7 @@ class Autoroles(commands.Cog, name="Autoroles"):
 
     @commands.Cog.listener() #ansatt bot.event!
     async def on_ready(self):
-        logger.info("Autoroles.py is ready!")    
+        logger.info(f"{self.__cog_name__}.py is ready!")  
 
     @commands.Cog.listener() #TODO: Add role deletion from json if role got deleted while bot was offline
     async def on_member_join(self, member):

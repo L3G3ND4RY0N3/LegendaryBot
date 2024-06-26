@@ -13,7 +13,7 @@ class serverinfo(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        logger.info("Serverinfo.py is ready!")
+        logger.info(f"{self.__cog_name__}.py is ready!")
 
     @app_commands.command(description="Show info about the server")
     async def serverinfo(self, ctx: discord.Interaction):
