@@ -9,9 +9,9 @@ from utils.embeds.embedbuilder import warn_embed
 logger=settings.logging.getLogger("discord")
 
 
-def wordle_embed(user: discord.Member, game: Wordle, difficulty: Difficulty) -> discord.Embed:
+def wordle_embed(user: discord.Member, game: Wordle) -> discord.Embed:
     emb = discord.Embed(color=discord.Color.blurple(), title=f"Wordle for {user.name}")
-    emb.add_field(name=f"Difficulty: {difficulty.name.title()}", value=f"You have {difficulty.value} attempts to solve the wordle.")
+    emb.add_field(name=f"Difficulty: {game.difficulty.name.title()}", value=f"You have {game.difficulty.value} attempts to solve the wordle.")
     emb.description = "\n".join([generate_blank_lines()] * game.max_guesses)
     emb.set_footer(text=
                 "To play, use command /wordle!\n"
@@ -41,7 +41,7 @@ def update_embed(embed: discord.Embed, guess: str, letter_states: list[LetterSta
         if num_empty_slots >= 5:
             embed.description += "\n\n**Genius!**"
     elif game.gamestate == GameState.LOST:
-        embed.description += f"\n\n**You lost!** \n**The secret word was {game._secret}**"
+        embed.description += f"\n\n**Better luck next time!** \n**The secret word was {game._secret}**"
 
     return embed
 
