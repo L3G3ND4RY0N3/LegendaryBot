@@ -97,7 +97,6 @@ class WordleGame(commands.Cog, name="Wordle"):
             if thread and thread in thread.guild.threads: # thread was not deleted -> game is ongoing
                 emb = warn_embed(f"You already have an ongoing game in {thread.mention}!")
                 await ctx.response.send_message(embed=emb, ephemeral=True, view=WordleView(ctx, self.bot, self.games[ctx.user.id]))
-                print(self.games[ctx.user.id].game)
                 return
         
         # create public thread, where only the interacting user can write
