@@ -1,8 +1,6 @@
 import discord
 import utils.settings as settings
 import utils.filepaths as fp
-import json
-from constants import enums as en
 import datetime as dt
 
 logger=settings.logging.getLogger("discord")
