@@ -53,7 +53,13 @@ class Wordle():
         self.gamestate = GameState.ONGOING # public
         self.difficulty: Difficulty = difficulty
         self.max_guesses: int = difficulty.value
-        
+    
+
+    # public to present the secret word
+    @property
+    def secret(self) -> str:
+        return self._secret
+    
 
     # public
     # returns a list with the letter states (colors)

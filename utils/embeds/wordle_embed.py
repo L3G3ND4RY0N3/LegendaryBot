@@ -41,7 +41,7 @@ def update_embed(embed: discord.Embed, guess: str, letter_states: list[LetterSta
         if num_empty_slots >= 5:
             embed.description += "\n\n**Genius!**"
     elif game.gamestate == GameState.LOST:
-        embed.description += f"\n\n**Better luck next time!** \n**The secret word was {game._secret}**"
+        embed.description += f"\n\n**Better luck next time!** \n**The secret word was {game.secret}**"
 
     return embed
 
