@@ -16,7 +16,7 @@ logger=settings.logging.getLogger("discord")
 class WordleGame(commands.Cog, name="Wordle"):
     def __init__(self, bot: discord.Client):
         self.bot = bot
-        self.games: dict[int, GameAndThreadDict] = {} # dict with user_id, Games and threads to keep track of ongoing games and their threads
+        self.games: dict[int, PlayerData] = {} # dict with user_id, Games and threads to keep track of ongoing games and their threads
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -31,12 +31,12 @@ class WordleGame(commands.Cog, name="Wordle"):
         # if user is not playing a wordle game or is a bot, quit
         if user.id not in self.games or message.author.bot:
             return
-        thread = self.games[user.id].games_and_threads[GAMEKEYS.THREAD]
+        thread = self.games[user.id].thread
         # if message is not send in the users game thread, quit
         if message.channel.id != thread.id:
             return
         # get users game
-        game = self.games[user.id].games_and_threads[GAMEKEYS.GAME]
+        game = self.games[user.id].game
         #get guess from message
         guess = message.content.lower()
         # check if guess is a valid 5 letter english word
@@ -51,15 +51,15 @@ class WordleGame(commands.Cog, name="Wordle"):
         letter_states = game.handle_guess(guess)
 
         # retrieve the game embed for edit
-        game_embed = self.games[user.id].games_and_threads[GAMEKEYS.EMBED]
+        game_embed = self.games[user.id].embed
 
         # edit game embed
         game_embed = update_embed(game_embed, guess, letter_states, game)
-        game_message = self.games[user.id].games_and_threads[GAMEKEYS.MESSAGE]
+        game_message = self.games[user.id].message
         await game_message.edit(embed=game_embed)
 
         # update game and embed in dictionary and delete thread if game is over
-        if not self.update_game_dictionary(user.id, game, thread, game_embed, game_message):
+        if not self.update_games_dictionary(user.id, game, thread, game_embed, game_message):
             try:
                 # wait 10 seconds to delete thread
                 await sleep(10)
@@ -89,7 +89,7 @@ class WordleGame(commands.Cog, name="Wordle"):
         )
     async def wordle(self, ctx:discord.Interaction, difficulty: app_commands.Choice[str]) -> None:
         if ctx.user.id in self.games:
-            thread = self.games[ctx.user.id].games_and_threads[GAMEKEYS.THREAD]
+            thread = self.games[ctx.user.id].thread
             emb = warn_embed(f"You already have an ongoing game in {thread.mention}!")
             await ctx.response.send_message(embed=emb, ephemeral=True)
             return
@@ -113,7 +113,7 @@ class WordleGame(commands.Cog, name="Wordle"):
             await ctx.response.send_message(embed=fail_emb, ephemeral=True)
             return
         
-        if self.update_game_dictionary(ctx.user.id, game, thread, emb, message):
+        if self.update_games_dictionary(ctx.user.id, game, thread, emb, message):
             suc_emb = success_embed(f"Created wordle in {thread.mention}")
             await ctx.response.send_message(embed=suc_emb)
             return
@@ -125,9 +125,9 @@ class WordleGame(commands.Cog, name="Wordle"):
 
 
 #region METHODS
-    def update_game_dictionary(self, user_id: int, game: Wordle, thread: discord.Thread, embed: discord.Embed, message: discord.Message) -> bool:
+    def update_games_dictionary(self, user_id: int, game: Wordle, thread: discord.Thread, embed: discord.Embed, message: discord.Message) -> bool:
         if user_id not in self.games or game.gamestate == GameState.ONGOING:
-            self.games[user_id] = GameAndThreadDict(games_and_threads={GAMEKEYS.GAME: game, GAMEKEYS.THREAD: thread, GAMEKEYS.EMBED: embed, GAMEKEYS.MESSAGE: message})
+            self.games[user_id] = PlayerData(game=game, thread=thread, embed=embed, message=message)
             return True
         # if game is over remove the user and their game from the dict
         if game.gamestate != GameState.ONGOING:
@@ -164,13 +164,9 @@ async def setup(bot):
     await bot.add_cog(WordleGame(bot))
 
 
-class GAMEKEYS(Enum):
-    GAME = "Game"
-    THREAD = "Thread"
-    EMBED = "Embed"
-    MESSAGE = "Message"
-
-
 @dataclass
-class GameAndThreadDict():
-    games_and_threads: Dict[GAMEKEYS, Union[Wordle, discord.Thread, discord.Embed, discord.Message]] = field(default_factory=dict)
+class PlayerData():
+    game: Wordle = None
+    thread: discord.Thread = None
+    embed: discord.Embed = None
+    message: discord.Message = None
