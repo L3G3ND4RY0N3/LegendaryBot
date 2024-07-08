@@ -1,10 +1,10 @@
 import discord
-from discord.ext import commands, tasks
+from discord.ext import commands
 from dotenv import load_dotenv
 import os as os
 import asyncio
-from itertools import cycle
 from utils import settings
+from utils.customwrappers import on_app_command_error
 
 #Lädt das .env File mit dem Token!
 load_dotenv()
@@ -13,21 +13,16 @@ logger=settings.logging.getLogger("discord")
 
 #Bot initialiseren und Status Zyklus festlegen
 bot = commands.Bot(command_prefix= "$", intents= discord.Intents.all())
-bot_status = cycle(["Slapping Juratyp", "Preparing next Slap", "Searching for new Targets"])
-
-#Status Zyklus
-@tasks.loop(seconds = 5)
-async def change_status():
-    await bot.change_presence(activity=discord.Game(next(bot_status)))
 
 #Nachrichten beim Starten des Bots, wie viele Slash Commands gefunden wurden und welche Module geladen sind.
 @bot.event
 async def on_ready():
     logger.info(f"{bot.user.name} Bot is up and running and even logging!")
+    #bot.owner_id = (await bot.application_info()).owner.id
     print(f"{bot.user.name} is running :)")
-    change_status.start()
     try: 
         synced = await bot.tree.sync()
+        bot.tree.error(on_app_command_error)
         logger.info(f"Synced {len(synced)} command(s)")
     except Exception as e:
         logger.error(e)

@@ -1,5 +1,9 @@
+import discord
 import functools
 
+
+
+#region GENERAL USE
 class CountFuncCalls:
     def __init__(self, max_count=1):
         self.max_count = max_count
@@ -30,3 +34,21 @@ def repeat_func(num: int):
             return result
         return wrapper
     return decorator_repeat
+#endregion
+
+#region DISCORD DECORATORS
+
+def is_owner():
+    def predicate(interaction: discord.Interaction) -> bool:
+        return interaction.user.id == 247342650917650434
+    return discord.app_commands.check(predicate)
+
+
+async def on_app_command_error(interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
+    if isinstance(error, discord.app_commands.CheckFailure):
+        embed = discord.Embed(title="Access Denied", description="You are not allowed to use this command.", color=discord.Color.red())
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+    else:
+        await interaction.response.send_message(f"An error occurred: {error}", ephemeral=True)
+
+#endregion
