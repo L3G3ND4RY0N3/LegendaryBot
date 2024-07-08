@@ -2,11 +2,12 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 from utils import settings
+from utils.customwrappers import is_owner
 
 logger=settings.logging.getLogger("discord")
 
 class Ping(commands.Cog, name="Ping"):
-    def __init__(self, bot):
+    def __init__(self, bot: discord.Client):
         self.bot = bot
 
     @commands.Cog.listener() #ansatt bot.event!
@@ -22,6 +23,7 @@ class Ping(commands.Cog, name="Ping"):
         await ctx.send(f"Hello there {ctx.author.mention}")
 
     @app_commands.command(name="hello", description="The Bot says hello to you")
+    @is_owner()
     async def hello(self, interaction: discord.Interaction):
         await interaction.response.send_message(f"Hello {interaction.user.mention}! This is my first slash (/) command.")
 
