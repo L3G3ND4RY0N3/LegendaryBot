@@ -24,10 +24,15 @@ class WordleView(discord.ui.View):
             return
         
         # delete game by poping the user_id
-        thread: discord.Thread = self.wordle_data.games[self.user.id].thread
+        data = self.wordle_data.games.get(self.user.id, None)
+        button.disabled = True
+
+        if not data:
+            await interaction.response.edit_message(embed=emb.warn_embed("Game was already aborted!"), view=self)
+            return
+        thread = data.thread
         self.wordle_data.update_games_dictionary(self.user.id)
 
-        button.disabled = True
         await interaction.response.edit_message(embed=emb.success_embed(f"Successfully aborted game!"), view=self)
         await thread.delete(reason="Game aborted")
         return
