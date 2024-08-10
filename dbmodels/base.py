@@ -1,8 +1,9 @@
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
-DATABASE_URL = "sqlite:///tables/testbase.db"
+DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///tables/testbase.db')
 
 engine = create_engine(DATABASE_URL, echo=True)
 
@@ -23,4 +24,6 @@ def get_db_session():
         db.close()
 
 def init_db() -> None:
+    """Initiates the database, creating all nonexisting tables
+    """
     Base.metadata.create_all(engine)
