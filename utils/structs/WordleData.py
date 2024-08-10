@@ -46,10 +46,6 @@ class WordleData():
         
 
     def find_player_id_by(self, thread: discord.Thread = None, embed: discord.Embed = None, message: discord.Message = None) -> int | None:
-        # if no input, return None
-        if not thread and not embed and not message:
-            return None
-        
         for player_id, player_data in self.games.items():
             if player_data.thread == thread:
                 return player_id
