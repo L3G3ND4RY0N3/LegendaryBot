@@ -13,6 +13,7 @@ aiosqlite = "^0.20.0"
 pytest = "^8.3.2"
 sqlalchemy = "^2.0.32"
 alembic = "^1.13.2"
+pytest-sqlalchemy = "^0.2.1"
 
 
 [build-system]
