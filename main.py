@@ -3,6 +3,8 @@ from discord.ext import commands
 from dotenv import load_dotenv
 import os as os
 import asyncio
+
+from dbmodels.base import init_db
 from utils import settings
 from utils.customwrappers import on_app_command_error
 
@@ -38,6 +40,7 @@ async def load():
 async def main():
     async with bot:
         await load()
+        init_db()
         await bot.start(os.getenv('TOKEN'))
 
 asyncio.run(main())
