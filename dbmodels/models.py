@@ -12,11 +12,22 @@ class User(Base):
     name = Column(String, unique=True)
     user_id = Column(Integer, unique=True)
 
-    activities = relationship('Activity', back_populates='user')
+    members = relationship('Member', back_populates='user')
     wordle_scores = relationship('WordleScore', back_populates='user')
 
     def __repr__(self) -> str:
         return f"User:{self.name}, ID: {self.user_id}"
+    
+
+    @classmethod
+    def create_user(cls, dcuser: discord.User) -> "User":
+        """Creates a new instance of the User db Class and saves it to the database
+        """
+        with next(get_db_session()) as session:
+            user = User(name=dcuser.global_name, user_id=dcuser.id)
+            session.add(user)
+            session.commit()
+            return user
     
     @classmethod
     def get_or_create_user(cls, dcuser: discord.User) -> "User":
@@ -32,10 +43,9 @@ class User(Base):
         with next(get_db_session()) as session:
             user: User = session.query(cls).filter_by(user_id=dcuser.id).first()
             if not user:
-                user = User(name=dcuser.global_name, user_id=dcuser.id)
+                user = cls.create_user(dcuser)
                 session.add(user)
                 session.commit()
-            
             return user
 
 
@@ -43,15 +53,15 @@ class Activity(Base):
     __tablename__ = 'activities'
 
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey('users.id')) #user.id foreign key
+    member_id = Column(Integer, ForeignKey('members.id')) #user.id foreign key
     minutes_in_voice = Column(Integer, default=0)
     message_count = Column(Integer, default=0)
     xp = Column(Integer, default=0)
 
-    user = relationship("User", back_populates="activities")
+    member = relationship("Member", back_populates="activities")
 
     def __repr__(self) -> str:
-        return f"User:{self.user}, minutes: {self.minutes_in_voice}, messages: {self.message_count}, XP: {self.xp}"
+        return f"Member:{self.member.server_name}, minutes: {self.minutes_in_voice}, messages: {self.message_count}, XP: {self.xp}"
     
 
 class WordleScore(Base):
@@ -71,7 +81,7 @@ class WordleScore(Base):
     def __repr__(self) -> str:
         return f"User:{self.user}, Won: {self.games_won}, Lost: {self.games_lost}, Score: {self.score}, Average Guess Count: {self.average_guesses:.2}"
     
-
+#region INSTANCE METHODS
     def add_score(self, score_increment: int) -> None:
         """Adds to the user's score, ensuring the increment is positive."""
         if score_increment < 0:
@@ -107,6 +117,35 @@ class WordleScore(Base):
         self.add_game(game_won)
         self.add_total_guesses(guess_count)
         self.calculate_average_guess_count(guess_count)
+#endregion
+    
+#region CLASS METHODS    
+    @classmethod
+    def create_wordle_score(cls, user: User, score_increment: int = 0, game_won: bool = None, guess_count: int = 0) -> "WordleScore":
+        """Creates a new instance of WordleScore and records it to the database
+
+        Args:
+            dcuser (User): A dbmodels.model.User instance
+            score_increment (int, optional): The score increment from winning the game. Defaults to 0.
+            game_won (bool, optional): Whether the game was won/lost. Defaults to None, if executed via another command and not a game.
+            guess_count (int, optional): The number of guesses for the game. Defaults to 0.
+
+        Returns:
+            WordleScore: A WordleScore object.
+        """
+        with next(get_db_session()) as session:
+            wordle_score = WordleScore(
+                user_id=user.id,
+                score=score_increment,
+                total_guess_count=guess_count, 
+                average_guesses=guess_count
+                )
+            session.add(wordle_score)
+            # if the creation stems from a game and not another command, record the game
+            if game_won is not None:
+                wordle_score.add_game(game_won)
+            session.commit()
+            return wordle_score
 
     @classmethod
     def update_or_create_wordle_score(cls, dcuser: discord.User, score_increment: int, game_won: bool, guess_count: int = 0) -> None:
@@ -116,22 +155,27 @@ class WordleScore(Base):
             dcuser (discord.User): A discord User|Member as Member inherits from user
             score (int): The score that will be added to the database
         """
-        user = User.get_or_create_user(dcuser)
         with next(get_db_session()) as session:
             # merge the sessions or get a DetachedInstanceError later!
-            user = session.merge(user)
+            user = User.get_or_create_user(dcuser)
 
             wordle_score = session.query(cls).filter_by(user_id=user.id).first()
+
             if wordle_score:
                 wordle_score.update_wordle_score(score_increment, game_won, guess_count)
             else:
-                wordle_score = WordleScore(
-                    user_id=user.id, score=score_increment,
-                    total_guess_count=guess_count, 
-                    average_guesses=guess_count, 
-                    total_games=1
-                    )
-                session.add(wordle_score)
-                wordle_score.add_game(game_won)
+                wordle_score = WordleScore.create_wordle_score(user, score_increment, game_won, guess_count)
 
             session.commit()
+
+    @classmethod
+    def get_or_create_wordle_score_for_user(cls, dcuser: discord.User) -> "WordleScore":
+        """Retrieves a wordle score instance for a dc User or creates a new Instance with no games played"""
+        with next(get_db_session()) as session:
+            user = User.get_or_create_user(dcuser)
+            wordle_score = session.query(cls).filter_by(user_id=user.id).first()
+            if not wordle_score:
+                wordle_score = WordleScore.create_wordle_score(dcuser)
+
+            return wordle_score
+#endregion
