@@ -2,3 +2,6 @@ discord.py
 python-dotenv
 aiosqlite
 pytest
+sqlalchemy
+alembic
+pytest-sqlalchemy

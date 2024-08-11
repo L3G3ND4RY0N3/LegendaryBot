@@ -54,12 +54,39 @@ class Wordle():
         self.difficulty: Difficulty = difficulty
         self.max_guesses: int = difficulty.value
     
+#region "PROPERTIES"
 
     # public to present the secret word
     @property
     def secret(self) -> str:
         return self._secret
     
+    # property for guess count
+    @property
+    def guess_count(self) -> int:
+        return self._guess_count
+    
+    # property to check whether the game is won
+    @property
+    def game_is_won(self) -> bool:
+        if self.gamestate != GameState.ONGOING:
+            return self.gamestate == GameState.WON
+        
+    @property
+    def score(self) -> int:
+        if not self.game_is_won:
+            return 0
+        
+        score_map = {
+        Difficulty.EASY: 1,
+        Difficulty.NORMAL: 2,
+        Difficulty.HARD: 5,
+        Difficulty.GOODLUCK: 10
+        }
+    
+        return score_map.get(self.difficulty, 0)
+        
+#endregion
 
     # public
     # returns a list with the letter states (colors)

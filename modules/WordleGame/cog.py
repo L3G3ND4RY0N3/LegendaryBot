@@ -3,6 +3,8 @@ from dataclasses import dataclass
 import discord
 from discord.ext import commands
 from discord import app_commands
+
+from dbmodels.models import WordleScore
 from utils import settings
 from utils.Wordle.wordle import Wordle, Difficulty, GameState
 from utils.embeds.embedbuilder import warn_embed, forbidden_embed, success_embed
@@ -61,6 +63,8 @@ class WordleGame(commands.Cog, name="Wordle"):
 
         # update game and embed in dictionary and delete thread if game is over
         if not game.gamestate == GameState.ONGOING:
+            # updating the score of the user in the database
+            WordleScore.update_or_create_wordle_score(user, game.score, game.game_is_won, game.guess_count)
             await self.del_game_thread(thread, f"Wordle {game.gamestate.value.lower()}", 10)
             self.wordle_data.update_games_dictionary(user.id)
         return
