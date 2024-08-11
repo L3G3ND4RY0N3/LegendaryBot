@@ -147,8 +147,8 @@ class WordleGame(commands.Cog, name="Wordle"):
     @app_commands.command(name="wordle_score", description="View your worlde score and statistics")
     async def wordle_score(self, ctx: discord.Interaction) -> None:
         dcuser = ctx.user
-        wordle_score = WordleScore.get_or_create_wordle_score_for_user(dcuser)
-        await ctx.response.send_message(embed=wordle_score_embed(dcuser, wordle_score))
+        wordle_score_data = WordleScore.get_or_create_wordle_score_for_user(dcuser)
+        await ctx.response.send_message(embed=wordle_score_embed(dcuser, wordle_score_data))
 
 #endregion
 

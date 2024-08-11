@@ -158,7 +158,7 @@ class WordleScore(Base):
         user = User.get_or_create_user(dcuser)
         with next(get_db_session()) as session:
             # merge the sessions or get a DetachedInstanceError later!
-            session.merge(user)
+            session.add(user)
 
             wordle_score = session.query(cls).filter_by(user_id=user.id).first()
 
@@ -166,17 +166,27 @@ class WordleScore(Base):
                 wordle_score.update_wordle_score(score_increment, game_won, guess_count)
             else:
                 wordle_score = WordleScore.create_wordle_score(user, score_increment, game_won, guess_count)
+                session.add(wordle_score)
 
             session.commit()
 
     @classmethod
-    def get_or_create_wordle_score_for_user(cls, dcuser: discord.User) -> "WordleScore":
+    def get_or_create_wordle_score_for_user(cls, dcuser: discord.User) -> dict:
         """Retrieves a wordle score instance for a dc User or creates a new Instance with no games played"""
+        user = User.get_or_create_user(dcuser)
         with next(get_db_session()) as session:
-            user = User.get_or_create_user(dcuser)
+            session.add(user)
             wordle_score = session.query(cls).filter_by(user_id=user.id).first()
             if not wordle_score:
-                wordle_score = WordleScore.create_wordle_score(dcuser)
+                wordle_score = WordleScore.create_wordle_score(user)
+                session.add(wordle_score)
 
-            return wordle_score
+            return {
+            "score": wordle_score.score,
+            "games_won": wordle_score.games_won,
+            "games_lost": wordle_score.games_lost,
+            "total_games": wordle_score.total_games,
+            "total_guess_count": wordle_score.total_guess_count,
+            "average_guesses": wordle_score.average_guesses,
+            }
 #endregion
