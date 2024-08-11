@@ -155,9 +155,10 @@ class WordleScore(Base):
             dcuser (discord.User): A discord User|Member as Member inherits from user
             score (int): The score that will be added to the database
         """
+        user = User.get_or_create_user(dcuser)
         with next(get_db_session()) as session:
             # merge the sessions or get a DetachedInstanceError later!
-            user = User.get_or_create_user(dcuser)
+            session.merge(user)
 
             wordle_score = session.query(cls).filter_by(user_id=user.id).first()
 
