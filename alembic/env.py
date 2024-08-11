@@ -6,7 +6,7 @@ from sqlalchemy import pool
 from alembic import context
 
 from dbmodels.base import Base
-from dbmodels.models import Activity, User, WordleScore
+from dbmodels import Activity, Guild, Member, User, WordleScore
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

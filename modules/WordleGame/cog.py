@@ -8,7 +8,7 @@ from dbmodels.models import WordleScore
 from utils import settings
 from utils.Wordle.wordle import Wordle, Difficulty, GameState
 from utils.embeds.embedbuilder import warn_embed, forbidden_embed, success_embed
-from utils.embeds.wordle_embed import wordle_embed, validity_of_guess_embed, update_embed
+from utils.embeds.wordle_embed import wordle_embed, validity_of_guess_embed, update_embed, wordle_score_embed
 from utils.views.wordle_view import WordleView
 from utils.structs.WordleData import PlayerData, WordleData
 
@@ -142,6 +142,14 @@ class WordleGame(commands.Cog, name="Wordle"):
             await thread.delete(reason="Error in wordle creation")
             self.wordle_data.update_games_dictionary(ctx.user.id)
             return
+        
+
+    @app_commands.command(name="wordle_score", description="View your worlde score and statistics")
+    async def wordle_score(self, ctx: discord.Interaction) -> None:
+        dcuser = ctx.user
+        wordle_score = WordleScore.get_or_create_wordle_score_for_user(dcuser)
+        await ctx.response.send_message(embed=wordle_score_embed(dcuser, wordle_score))
+
 #endregion
 
 #region STATIC METHODS
