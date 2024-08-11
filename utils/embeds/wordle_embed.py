@@ -51,11 +51,11 @@ def update_embed(embed: discord.Embed, guess: str, letter_states: list[LetterSta
 def wordle_score_embed(user: discord.Member ,wordle_score_data: dict) -> discord.Embed:
     """Creates a embed for the users Wordle score"""
     emb = discord.Embed(color=discord.Color.blue(), title=f"{user.global_name}´s Wordle Statistics")
-    emb.add_field(name="Total Games", value=f"Wordle Games played: {wordle_score_data.get("total_games")}", inline=False)
-    emb.add_field(name="Wordle Score", value=f"Overall Score: {wordle_score_data.get("score")}", inline=False)
-    emb.add_field(name="Games Won", value=f"Wordle Games Won: {wordle_score_data.get("games_won")}", inline=False)
-    emb.add_field(name="Games Lost", value=f"Wordle Games Lost: {wordle_score_data.get("games_lost")}", inline=False)
-    emb.add_field(name="Average Number of Guesses", value=f"Average Guess count: {wordle_score_data.get("average_guesses"):.2}", inline=False)
+    emb.add_field(name="Total Games", value=f'Wordle Games played: {wordle_score_data.get("total_games")}', inline=False)
+    emb.add_field(name="Wordle Score", value=f'Overall Score: {wordle_score_data.get("score")}', inline=False)
+    emb.add_field(name="Games Won", value=f'Wordle Games Won: {wordle_score_data.get("games_won")}', inline=False)
+    emb.add_field(name="Games Lost", value=f'Wordle Games Lost: {wordle_score_data.get("games_lost")}', inline=False)
+    emb.add_field(name="Average Number of Guesses", value=f'Average Guess count: {wordle_score_data.get("average_guesses"):.2}', inline=False)
     emb.set_footer(text=
                 "To play, use command /wordle!\n"
                 f"Author: {user.name}"
