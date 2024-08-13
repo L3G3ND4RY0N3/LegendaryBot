@@ -1,8 +1,7 @@
 from constants.wordle_emojies import LETTER_EMOJIES
-from dbmodels.models import WordleScore
 import discord
 import utils.settings as settings
-from utils.Wordle.wordle import Wordle, Difficulty, WORDLENGTH, LetterState, WordValidity, GameState
+from utils.Wordle.wordle import Wordle, WORDLENGTH, LetterState, WordValidity, GameState
 from utils.embeds.embedbuilder import warn_embed
 
 
