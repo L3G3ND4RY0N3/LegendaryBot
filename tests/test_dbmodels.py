@@ -39,9 +39,7 @@ def test_update_wordle_score(session):
     session.commit()
 
     # Update the score
-    wordle_score.add_game(game_won=True)
-    wordle_score.add_total_guesses(6)
-    wordle_score.add_score(15)
+    wordle_score.update_wordle_score(15, True, 6)
     session.commit()
 
     retrieved_score = session.query(WordleScore).filter_by(user_id=user.id).first()
