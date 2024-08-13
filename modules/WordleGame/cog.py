@@ -4,6 +4,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 
+from utils.dbhelpers.wordle_db_helpers import handle_wordle_score
 from dbmodels.models import WordleScore
 from utils import settings
 from utils.Wordle.wordle import Wordle, Difficulty, GameState
@@ -64,7 +65,7 @@ class WordleGame(commands.Cog, name="Wordle"):
         # update game and embed in dictionary and delete thread if game is over
         if not game.gamestate == GameState.ONGOING:
             # updating the score of the user in the database
-            WordleScore.update_or_create_wordle_score(user, game.score, game.game_is_won, game.guess_count)
+            handle_wordle_score(user, game.score, game.game_is_won, game.guess_count, update=True)
             await self.del_game_thread(thread, f"Wordle {game.gamestate.value.lower()}", 10)
             self.wordle_data.update_games_dictionary(user.id)
         return
@@ -147,7 +148,7 @@ class WordleGame(commands.Cog, name="Wordle"):
     @app_commands.command(name="wordle_score", description="View your worlde score and statistics")
     async def wordle_score(self, ctx: discord.Interaction) -> None:
         dcuser = ctx.user
-        wordle_score_data = WordleScore.get_or_create_wordle_score_for_user(dcuser)
+        wordle_score_data = handle_wordle_score(dcuser)
         await ctx.response.send_message(embed=wordle_score_embed(dcuser, wordle_score_data))
 
 #endregion
