@@ -1,8 +1,7 @@
-import discord
 from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
-from .base import Base, get_db_session
+from .base import Base
 
 
 class Guild(Base):

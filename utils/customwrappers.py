@@ -1,7 +1,12 @@
+from dotenv import load_dotenv
+import os
 import discord
 import functools
 
 
+load_dotenv()
+
+OWNER = int(os.getenv('OWNER'))
 
 #region GENERAL USE
 class CountFuncCalls:
@@ -40,7 +45,7 @@ def repeat_func(num: int):
 
 def is_owner():
     def predicate(interaction: discord.Interaction) -> bool:
-        return interaction.user.id == 247342650917650434
+        return interaction.user.id == OWNER
     return discord.app_commands.check(predicate)
 
 
@@ -49,6 +54,9 @@ async def on_app_command_error(interaction: discord.Interaction, error: discord.
         embed = discord.Embed(title="Access Denied", description="You are not allowed to use this command.", color=discord.Color.red())
         await interaction.response.send_message(embed=embed, ephemeral=True)
     else:
-        await interaction.response.send_message(f"An error occurred: {error}", ephemeral=True)
+        if interaction.user.id == OWNER:
+            await interaction.response.send_message(f"An error occurred: {error}", ephemeral=True)
+        else:
+            await interaction.response.send_message(f"An error occurred, please try again later!", ephemeral=True)
 
 #endregion
