@@ -33,6 +33,30 @@ class Activity(Base):
     def __repr__(self) -> str:
         return f"Member:{self.member.server_name}, minutes: {self.minutes_in_voice}, messages: {self.message_count}, XP: {self.xp}"
     
+    def update_member_activity(self, minutes: int = None, messages: int = None, xp: int = None) -> None:
+        if minutes:
+            self._add_minutes_in_voice(minutes)
+        if messages:
+            self._add_messages(messages)
+        if xp:
+            self._add_xp(xp)
+
+#region PRIVATE METHODS
+    def _add_minutes_in_voice(self, minutes: int) -> None:
+        if not self.minutes_in_voice:
+            self.minutes_in_voice = 0
+        self.minutes_in_voice += minutes
+
+    def _add_messages(self, messages: int) -> None:
+        if not self.message_count:
+            self.message_count = 0
+        self.message_count += messages
+
+    def _add_xp(self, xp: int) -> None:
+        if not self.xp:
+            self.xp = 0
+        self.xp += xp
+#endregion
 
 class WordleScore(Base, SerializerMixin):
     __tablename__ = 'wordle_scores'
