@@ -10,9 +10,9 @@ def handle_activity_update(dcuser: discord.User, minutes: int = 0, messages: int
     with db_service.session_scope() as session:
         user = db_service.get_or_create(User, user_id=dcuser.id, name=dcuser.global_name)
         session.add(user)
-        member = db_service.get_or_create(Member, user_id=user.id)
+        member = db_service.get_or_create(Member, user=user)
         session.add(member)
-        activity = db_service.get_or_create(Activity, member_id=member.id)
+        activity = db_service.get_or_create(Activity, member=member)
         session.add(activity)
         
         if activity:
