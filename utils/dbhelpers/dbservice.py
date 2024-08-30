@@ -18,9 +18,18 @@ class DatabaseService:
         finally:
             session.close()
 
-    def get_or_create(self, model, **kwargs):
+    def get_or_create(self, model, session: Session = None, **kwargs):
         """Generic method to get or create a model instance."""
-        with self.session_scope() as session:
+        if not session:
+            with self.session_scope() as session:
+                instance = session.query(model).filter_by(**kwargs).first()
+                if instance:
+                    return instance
+                else:
+                    instance = model(**kwargs)
+                    session.add(instance)
+                    return instance
+        else:
             instance = session.query(model).filter_by(**kwargs).first()
             if instance:
                 return instance
