@@ -50,7 +50,7 @@ class GuildSetup(commands.Cog, name="GuildSetup"):
     @load_guilds_from_json.after_loop
     async def after_load_guilds_from_json(self) -> None:
         logger.info(f"Finished load_guilds_from_json loop!")
-        logger.info("Ending loading gulds from json loop!")
+        logger.info("Ending loading guilds from json loop!")
 
     #endregion
     
