@@ -3,30 +3,30 @@ import json
 from pathlib import Path
 
 ##################### temp vc paths
-temp_vc_fp = "modules/TemporaryVoiceChannel/json/"
-temp_vc_json = "modules/TemporaryVoiceChannel/json/tempchannels.json"
-temp_creation_vc_json = "modules/TemporaryVoiceChannel/json/tempcreationvc.json"
+TEMP_VC_FP = Path("modules/TemporaryVoiceChannel/json/")
+TEMP_VC_JSON = Path("modules/TemporaryVoiceChannel/json/tempchannels.json")
+TEMP_CREATION_VC_JSON = Path("modules/TemporaryVoiceChannel/json/tempcreationvc.json")
 
 
 ##################### role paths
-join_roles_json = "modules/Autoroles/json/autoroles.json"
-LINKED_ROLES_FILE: Path = Path("modules/Linkedroles/json/linkedroles.json")
+JOIN_ROLES_JSON = Path("modules/Autoroles/json/autoroles.json")
+LINKED_ROLES_FILE = Path("modules/Linkedroles/json/linkedroles.json")
 
 
 ##################### guild logging
-guild_log_json = "tables/guildchannels.json"
+GUILD_LOG_JSON = Path("tables/guildchannels.json")
 
 
 
 #################### wordle
-WORDLE_WORDS: Path = Path("utils/Wordle/valid-wordle-words.txt")
-WORDLE_ANSWER_WORDS: Path = Path("utils/Wordle/wordle_answers.txt")
+WORDLE_WORDS = Path("utils/Wordle/valid-wordle-words.txt")
+WORDLE_ANSWER_WORDS = Path("utils/Wordle/wordle_answers.txt")
 
 
 #region IMAGES
 ##################### images
-discord_logo = "img/discord_logo.jpg"
-discord_logo_name="discord_logo.jpg"
+DISCORD_LOGO_IMG = Path("img/discord_logo.jpg")
+DISCORD_LOGO_NAME = "discord_logo.jpg"
 
 
 
@@ -42,7 +42,6 @@ def json_exists(path: str) -> bool:
 
 def create_empty_json(path: str) -> None:
     if not os.path.isfile(path):
-        empty_dict = {}
         with open(path, "w") as f:
-            json.dump(empty_dict, f, indent=4)
+            json.dump({}, f, indent=4)
 #endregion
