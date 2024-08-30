@@ -47,7 +47,7 @@ def update_embed(embed: discord.Embed, guess: str, letter_states: list[LetterSta
 
 
 # SCORE EMBED
-def wordle_score_embed(user: discord.Member ,wordle_score_data: dict) -> discord.Embed:
+def wordle_score_embed(user: discord.Member, wordle_score_data: dict) -> discord.Embed:
     """Creates a embed for the users Wordle score"""
     emb = discord.Embed(color=discord.Color.blue(), title=f"{user.global_name}´s Wordle Statistics")
     emb.add_field(name="Total Games", value=f'Wordle Games played: {wordle_score_data.get("total_games")}', inline=False)
