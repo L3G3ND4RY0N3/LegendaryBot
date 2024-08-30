@@ -31,7 +31,7 @@ class TempVoiceCustomView(discord.ui.View):
     ####################### open json file
     @staticmethod
     def open_temp_vc_json():
-        with open(fp.temp_vc_json, "r") as f:
+        with open(fp.TEMP_VC_JSON, "r") as f:
             data = json.load(f)
         return data
     
