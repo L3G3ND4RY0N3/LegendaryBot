@@ -7,6 +7,9 @@ import math
 import aiosqlite
 import datetime
 from utils import settings, guildjsonfunctions
+from utils.customwrappers import is_owner
+from utils.dbhelpers.activity_db_helpers import display_test, handle_activity_update, handle_stats_command
+
 
 logger=settings.logging.getLogger("discord")
 
@@ -161,6 +164,7 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
             return
 
         xp = random.randint(5,15)
+        handle_activity_update(message.author, messages=1,xp=xp)
         async with aiosqlite.connect(self.DB) as db:
             await db.execute(
                 "INSERT OR IGNORE INTO users (user_id) VALUES (?)", (message.author.id,)
@@ -189,8 +193,9 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
             duration = end - self.starttime.pop(member.id, end)
             minutes = int(duration.total_seconds() / 60)
             # Award currency for unmuted time
-            currency = minutes*20  # Customize how much currency to award per minute
+            currency = minutes*20  # TODO: Customize how much currency to award per minute
             # Update currency in the database
+            handle_activity_update(member, minutes, xp=currency)
             async with aiosqlite.connect(self.DB) as conn:
                 async with conn.execute("UPDATE users SET vc_minutes = vc_minutes + ?, xp = xp + ? WHERE user_id = ?", (minutes, currency, member.id)):
                     await conn.commit()
@@ -199,7 +204,7 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
         #     logger.info(f"{member.name} switched from voice channel {before.channel.name} to {after.channel.name} in {member.guild.name}")
     #endregion
 
-
+#region COMMANDS
     ########################## Rank Command #######################################################
 
     @app_commands.command(name="rank", description="Check your current rank!")
@@ -225,6 +230,21 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
         lvl = self.get_level(xp)
 
         await interaction.response.send_message(f"{'You' if user is None else user.mention} {'have' if user is None else 'has'} **{xp}** XP ({xp_pos}. place), **{vc_minutes}** minute{'s' if vc_minutes!=1 else ''} in voice ({vc_pos}. place), written **{msg_count}** message{'s' if msg_count!=1 else ''} ({msg_pos}. place) and reached level {lvl}!")
+
+    @is_owner()
+    @app_commands.command(name="display_member_info", description="Look at infos")
+    async def display(self, ctx: discord.Interaction) -> None:
+        await ctx.response.send_message(content=display_test(ctx.user))
+
+    @is_owner()
+    @app_commands.command(name="activity_stats", description="Look up your activity stats")
+    async def activity_stats(self, ctx: discord.Interaction) -> None:
+        activity_stats = handle_stats_command(ctx.user)
+        emb = discord.Embed(color=discord.Color.blue(), title=f"{ctx.user.global_name}´s Activity Statistics")
+        # TODO: Make readabel e.g. using an Enum  
+        for key, val in activity_stats.items():
+            emb.add_field(name=f"{key}", value=f"{val}", inline=False)
+        await ctx.response.send_message(embed=emb)
 
     ########################## Leaderboard Command #######################################################
 
@@ -264,7 +284,7 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
         confedembed.set_footer(text=f"Requested by {interaction.user.name}, leaderboard sorted by {order}")
 
         await interaction.response.send_message(embed=confedembed)
-
+#endregion
 
 
 async def setup(bot):
