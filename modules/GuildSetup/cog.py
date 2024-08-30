@@ -19,7 +19,7 @@ class GuildSetup(commands.Cog, name="GuildSetup"):
     @commands.Cog.listener() #ansatt bot.event!
     async def on_ready(self):
         logger.info(f"{self.__cog_name__}.py is ready!")
-        fp.create_empty_json(fp.guild_log_json)
+        fp.create_empty_json(fp.GUILD_LOG_JSON)
 
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild) -> None:
