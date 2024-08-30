@@ -19,7 +19,7 @@ class User(Base):
         return f"User:{self.name}, ID: {self.user_id}"
 
 
-class Activity(Base):
+class Activity(Base, SerializerMixin):
     __tablename__ = 'activities'
 
     id = Column(Integer, primary_key=True)
