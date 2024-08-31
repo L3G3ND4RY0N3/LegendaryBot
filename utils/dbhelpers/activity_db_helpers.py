@@ -30,7 +30,7 @@ def handle_activity_update(dcuser: discord.User | discord.Member, minutes: int =
 
 
 #region LEADERBOARD
-def handle_guild_leaderboard(dcuser: discord.Member, sort_by: str = 'xp', limit: int = 10):
+def handle_guild_leaderboard(dcuser: discord.Member, sort_by: str = 'xp', limit: int = 10) -> str:
     try:
         if sort_by not in get_valid_attributes(Activity):
             raise ValueError(f"Invalid sorting attribute: {sort_by}")
@@ -46,10 +46,8 @@ def handle_guild_leaderboard(dcuser: discord.Member, sort_by: str = 'xp', limit:
                           .limit(limit)
                           )
         activities = activity_query.all()
-
-        activity_dict_list = list[dict]
-        for activity in activities:
-            activity_dict_list.append(activity.to_dict())
+        # create table
+        return format_leaderboard_table(activities)
 
 #endregion
 
@@ -63,7 +61,7 @@ def handle_stats_command(dcuser: discord.Member) -> dict:
 def display_test(dcuser: discord.User | discord.Member) -> str:
     with db_service.session_scope() as session:
         user, guild, member, activity = get_or_create_for_activity(dcuser, session)
-        return f"{user.name} with id: {member.id} in guild: {member.guild.guild_dc_id} = {guild.name} and msg_count: {activity.message_count}"
+        return f"{activity.member.user.name} with id: {member.id} in guild: {member.guild.guild_dc_id} = {guild.name} and msg_count: {activity.message_count}"
 #endregion
 
 #region GENEREAL USE
@@ -76,4 +74,21 @@ def get_or_create_for_activity(dcuser: discord.User | discord.Member, session: S
     session.flush()
     activity = db_service.get_or_create(Activity, member=member, session=session)
     return user, guild, member, activity
+
+
+# TODO: broaden to also allow for use for general leaderboard
+# TODO: Add discord module to allow mentioning of the member
+# TODO: Add abbreviations for powers of 10 to not destroy table alignement
+def format_leaderboard_table(activities: list[Activity]) -> str:
+    """Creates and formats a table for the guild activity leaderboard"""
+    header = ["Pos.", "Member    ", "Messages", "VC Minutes", "Exp   "]
+    rows = []
+    for idx, activity in enumerate(activities, start=1):
+        rows.append(f"{idx:<4} | {activity.member.user.name:>10} | {activity.message_count:>8} | {activity.minutes_in_voice:>10} | {activity.xp:>7}")
+
+    table = f"{' | '.join(header)}\n"
+    table += "-" * len(table) + "\n"
+    table += "\n".join(rows)
+
+    return table
 #endregion
