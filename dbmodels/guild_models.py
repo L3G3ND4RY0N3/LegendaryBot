@@ -9,7 +9,7 @@ class Guild(Base):
     __tablename__ = 'guilds'
 
     id = Column(Integer, primary_key=True)
-    guild_dc_id = Column(Integer,  unique=True)
+    guild_dc_id = Column(Integer, unique=True)
     name = Column(String)
 
     members: Mapped["Member"] = relationship("Member", back_populates="guild")
