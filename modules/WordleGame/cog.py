@@ -100,7 +100,7 @@ class WordleGame(commands.Cog, name="Wordle"):
             name=diff.name.title(),
             value=diff.name) for diff in Difficulty]
         )
-    async def wordle(self, ctx:discord.Interaction, difficulty: app_commands.Choice[str]) -> None:
+    async def wordle(self, ctx: discord.Interaction, difficulty: app_commands.Choice[str]) -> None:
         if ctx.user.id in self.wordle_data.games:
             thread = self.wordle_data.games[ctx.user.id].thread
             if thread and thread in thread.guild.threads: # thread was not deleted -> game is ongoing
