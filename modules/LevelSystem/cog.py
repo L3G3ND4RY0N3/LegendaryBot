@@ -299,7 +299,7 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
         await ctx.response.send_message(embed=emb)
 
     
-    is_owner()
+    @is_owner()
     @app_commands.command(name="migrate_activity_data", description="Migrate data from old sqlite db to new ORM")
     async def migrate_data_for_activity(self, ctx: discord.Interaction) -> None:
         con_str = "SELECT user_id, xp, msg_count, vc_minutes FROM users"
