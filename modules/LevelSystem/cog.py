@@ -8,7 +8,10 @@ import aiosqlite
 import datetime
 from utils import settings, guildjsonfunctions
 from utils.customwrappers import is_owner
-from utils.dbhelpers.activity_db_helpers import display_test, handle_activity_update, handle_stats_command
+from utils.dbhelpers.activity_db_helpers import display_test, handle_activity_update, handle_guild_leaderboard, handle_stats_command
+from utils.dbhelpers.migrate_from_old_db import migrate_db_data
+from utils.embeds.activity_embeds import activity_stats_embed, guild_leaderboard_embed
+from utils.embeds.embedbuilder import forbidden_embed, success_embed
 
 
 logger=settings.logging.getLogger("discord")
@@ -31,6 +34,7 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
     def cog_unload(self):
         self.check_members_in_voice.cancel()
 
+#region EVENTS
     @commands.Cog.listener() #ansatt bot.event!
     async def on_ready(self):
         logger.info(f"{self.__cog_name__}.py is ready!")   
@@ -52,10 +56,10 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
             #    """
             #) To ALTER Table to add new column!######################################
 
-    # TODO: Remove, not possible with also deactivating/activating voice tracker via /guild_setup
-    # when joining a new guild, check all voice channels to update the starttime dict!
+    # OBSOLETE TODO: Remove?
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild):
+        """checks on guild join all members in a vc"""
         if guild.id not in guildjsonfunctions.activity_ids:
             return
         vc_count = len(guild.voice_channels)
@@ -69,6 +73,8 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
         self.vc_count += vc_count
         self.new_users += new_user_count
         logger.info(f"Checked {vc_count} voice channel{'s' if vc_count!=1 else ''} in {guild.name} and added {new_user_count} user{'s' if new_user_count!=1 else ''}!")
+#endregion
+
 
     ##################################### Tasks #################################################################
     #region TASKS
@@ -231,20 +237,6 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
 
         await interaction.response.send_message(f"{'You' if user is None else user.mention} {'have' if user is None else 'has'} **{xp}** XP ({xp_pos}. place), **{vc_minutes}** minute{'s' if vc_minutes!=1 else ''} in voice ({vc_pos}. place), written **{msg_count}** message{'s' if msg_count!=1 else ''} ({msg_pos}. place) and reached level {lvl}!")
 
-    @is_owner()
-    @app_commands.command(name="display_member_info", description="Look at infos")
-    async def display(self, ctx: discord.Interaction) -> None:
-        await ctx.response.send_message(content=display_test(ctx.user))
-
-    @is_owner()
-    @app_commands.command(name="activity_stats", description="Look up your activity stats")
-    async def activity_stats(self, ctx: discord.Interaction) -> None:
-        activity_stats = handle_stats_command(ctx.user)
-        emb = discord.Embed(color=discord.Color.blue(), title=f"{ctx.user.global_name}´s Activity Statistics")
-        # TODO: Make readabel e.g. using an Enum  
-        for key, val in activity_stats.items():
-            emb.add_field(name=f"{key}", value=f"{val}", inline=False)
-        await ctx.response.send_message(embed=emb)
 
     ########################## Leaderboard Command #######################################################
 
@@ -255,7 +247,7 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
         Choice(name = "minutes in voice", value = "vc_minutes")
     ])
     async def leaderboard(self, interaction: discord.Interaction, stat: str = None):
-        if stat is None:
+        if not stat:
             order = 'xp'
         else:
             order = stat
@@ -269,7 +261,7 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
                 async for user_id, xp, msg_count, vc_minutes in cursor:
                     lvl = self.get_level(xp)
                     time = self.calc_time(vc_minutes)
-                    user = discord.Client.get_user(self.bot,int(user_id))
+                    user = discord.Client.get_user(self.bot, int(user_id))
                     if user is not None:                        
                         # TODO: Fix formatting of leaderboard
                         desc += f"**{counter:<2}.** {user.mention:32} - **{xp:<9}** XP - **{msg_count:<5}** message{'s' if msg_count!=1 else ''} - **{time:<4} ** {'minute' if vc_minutes<60 else 'hour'}{'s' if vc_minutes!=1 else ''} in voice - Level **{lvl:<3}**\n **------------------------------------------------------------------**\n"
@@ -278,14 +270,49 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
                         #TODO: delete user from db or set as inactive (and fetch new TOP 10?)
                         continue
         
-        confedembed = discord.Embed(title="Leaderboard", description=desc, color=discord.Color.blurple())
+        table = handle_guild_leaderboard(interaction.user, order)
+        emb = guild_leaderboard_embed(table, order, interaction.user)
+        # confedembed = discord.Embed(title="Leaderboard", description=desc, color=discord.Color.blurple())
 
-        confedembed.set_thumbnail(url=interaction.user.avatar.url)
-        confedembed.set_footer(text=f"Requested by {interaction.user.name}, leaderboard sorted by {order}")
+        # confedembed.set_thumbnail(url=interaction.user.avatar.url)
+        # confedembed.set_footer(text=f"Requested by {interaction.user.name}, leaderboard sorted by {order}")
 
-        await interaction.response.send_message(embed=confedembed)
+
+        await interaction.response.send_message(embed=emb)
 #endregion
 
+#region DEBUG COMMANDS
+    @is_owner()
+    @app_commands.command(name="display_member_info", description="Look at infos")
+    async def display(self, ctx: discord.Interaction) -> None:
+        await ctx.response.send_message(content=display_test(ctx.user))
+
+    @is_owner()
+    @app_commands.command(name="activity_stats", description="Look up your activity stats")
+    async def activity_stats(self, ctx: discord.Interaction) -> None:
+        activity_stats = handle_stats_command(ctx.user)
+        emb = activity_stats_embed(activity_stats, ctx.user)
+        # emb = discord.Embed(color=discord.Color.blue(), title=f"{ctx.user.global_name}´s Activity Statistics")
+        # TODO: Make readabel e.g. using an Enum  
+        # for key, val in activity_stats.items():
+        #     emb.add_field(name=f"{key}", value=f"{val}", inline=False)
+        await ctx.response.send_message(embed=emb)
+
+    
+    is_owner()
+    @app_commands.command(name="migrate_activity_data", description="Migrate data from old sqlite db to new ORM")
+    async def migrate_data_for_activity(self, ctx: discord.Interaction) -> None:
+        con_str = "SELECT user_id, xp, msg_count, vc_minutes FROM users"
+        async with aiosqlite.connect(self.DB) as db:
+            async with db.execute(con_str) as cursor:
+                result = await cursor.fetchall()
+        if not migrate_db_data(self.bot, result):
+            await ctx.response.send_message(embed=forbidden_embed("Failure to migrate database!"))
+            return
+        await ctx.response.send_message(embed=success_embed("Successfully migrated data!"))
+
+
+#endregion
 
 async def setup(bot):
     await bot.add_cog(LevelSystem(bot))
