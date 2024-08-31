@@ -8,7 +8,7 @@ import aiosqlite
 import datetime
 from utils import settings, guildjsonfunctions
 from utils.customwrappers import is_owner
-from utils.dbhelpers.activity_db_helpers import display_test, handle_activity_update, handle_guild_leaderboard, handle_stats_command
+from utils.dbhelpers.activity_db_helpers import display_test, handle_activity_update, handle_leaderboard_command, handle_stats_command
 from utils.dbhelpers.migrate_from_old_db import migrate_db_data
 from utils.embeds.activity_embeds import activity_stats_embed, guild_leaderboard_embed
 from utils.embeds.embedbuilder import forbidden_embed, success_embed
@@ -246,7 +246,7 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
         Choice(name = "message count", value = "msg_count"),
         Choice(name = "minutes in voice", value = "vc_minutes")
     ])
-    async def leaderboard(self, interaction: discord.Interaction, stat: str = None):
+    async def leaderboard(self, interaction: discord.Interaction, stat: str = None, guild_only: bool = False):
         if not stat:
             order = 'xp'
         else:
@@ -270,7 +270,7 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
                         #TODO: delete user from db or set as inactive (and fetch new TOP 10?)
                         continue
         
-        table = handle_guild_leaderboard(interaction.user, order)
+        table = handle_leaderboard_command(interaction.user, order, guild_only=guild_only)
         emb = guild_leaderboard_embed(table, order, interaction.user)
         # confedembed = discord.Embed(title="Leaderboard", description=desc, color=discord.Color.blurple())
 

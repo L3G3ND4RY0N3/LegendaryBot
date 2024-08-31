@@ -30,13 +30,20 @@ def handle_activity_update(dcuser: discord.User | discord.Member, minutes: int =
 
 
 #region LEADERBOARD
-def handle_guild_leaderboard(dcuser: discord.Member, sort_by: str = 'xp', limit: int = 10) -> str:
+def handle_leaderboard_command(dcuser: discord.Member, sort_by: str = 'xp', limit: int = 10, guild_only: bool = True) -> str:
     try:
         if sort_by not in get_valid_attributes(Activity):
             raise ValueError(f"Invalid sorting attribute: {sort_by}")
     except ValueError as e:
         logger.exception(f"{e}")
         return
+    if guild_only:
+        return get_guild_leaderboard(dcuser, sort_by, limit)
+    else:
+        return get_global_leaderboard(dcuser, sort_by, limit)
+
+
+def get_guild_leaderboard(dcuser: discord.Member, sort_by: str = 'xp', limit: int = 10) -> str:
     guild_id = dcuser.guild.id
     with db_service.session_scope() as session:
         activity_query = (session.query(Activity)
@@ -48,7 +55,23 @@ def handle_guild_leaderboard(dcuser: discord.Member, sort_by: str = 'xp', limit:
         activities = activity_query.all()
         # create table
         return format_leaderboard_table(activities)
+    
 
+def get_global_leaderboard(dcuser: discord.Member, sort_by: str = 'xp', limit: int = 10) -> str:
+    with db_service.session_scope() as session:
+        activity_query = (session.query(Activity,
+                            func.sum(Activity.xp).label('total_xp'),
+                            func.sum(Activity.message_count).label('total_messages'),
+                            func.sum(Activity.minutes_in_voice).label('total_voice_minutes'),
+                            )
+                          .join(Member).join(User)
+                          .group_by(User.id)
+                          .order_by(desc(getattr(Activity, sort_by)))
+                          .limit(limit)
+                          )
+        activities = activity_query.all()
+        # create table
+        return format_leaderboard_table(activities)
 #endregion
 
 #region DEBUG
@@ -81,7 +104,8 @@ def get_or_create_for_activity(dcuser: discord.User | discord.Member, session: S
 # TODO: Add abbreviations for powers of 10 to not destroy table alignement
 def format_leaderboard_table(activities: list[Activity]) -> str:
     """Creates and formats a table for the guild activity leaderboard"""
-    header = ["Pos.", "Member    ", "Messages", "VC Minutes", "Exp   "]
+    # spacing is for alignment
+    header = ["Pos.", "    Member", "Messages", "VC Minutes", "    Exp"]
     rows = []
     for idx, activity in enumerate(activities, start=1):
         rows.append(f"{idx:<4} | {activity.member.user.name:>10} | {activity.message_count:>8} | {activity.minutes_in_voice:>10} | {activity.xp:>7}")
