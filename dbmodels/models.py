@@ -1,10 +1,13 @@
 import discord
 from sqlalchemy import Column, Integer, String, Float, ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, relationship
 
-from .base import Base, get_db_session
+from .base import Base
+import dbmodels
 from utils.dbhelpers.mixin import SerializerMixin
 
+
+#region USER
 class User(Base):
     __tablename__ = 'users'
 
@@ -12,13 +15,15 @@ class User(Base):
     name = Column(String, unique=True)
     user_id = Column(Integer, unique=True)
 
-    members = relationship('Member', back_populates='user')
-    wordle_scores = relationship('WordleScore', back_populates='user')
+    members: Mapped["dbmodels.Member"] = relationship('Member', back_populates='user')
+    wordle_scores: Mapped["WordleScore"] = relationship('WordleScore', back_populates='user')
 
     def __repr__(self) -> str:
         return f"User:{self.name}, ID: {self.user_id}"
+#endregion
 
 
+#region ACTIVITY
 class Activity(Base, SerializerMixin):
     __tablename__ = 'activities'
 
@@ -28,7 +33,7 @@ class Activity(Base, SerializerMixin):
     message_count = Column(Integer, default=0)
     xp = Column(Integer, default=0)
 
-    member = relationship("Member", back_populates="activities")
+    member: Mapped["dbmodels.Member"] = relationship("Member", back_populates="activities")
 
     def __repr__(self) -> str:
         return f"Member:{self.member.server_name}, minutes: {self.minutes_in_voice}, messages: {self.message_count}, XP: {self.xp}"
@@ -57,7 +62,10 @@ class Activity(Base, SerializerMixin):
             self.xp = 0
         self.xp += xp
 #endregion
+#endregion
 
+
+#region WORDLE SCORE
 class WordleScore(Base, SerializerMixin):
     __tablename__ = 'wordle_scores'
 
@@ -70,7 +78,7 @@ class WordleScore(Base, SerializerMixin):
     total_guess_count = Column(Integer, default=0)
     average_guesses = Column(Float, default=0)
 
-    user = relationship("User", back_populates="wordle_scores")
+    user: Mapped["User"] = relationship("User", back_populates="wordle_scores")
 
     def __repr__(self) -> str:
         return f"User:{self.user}, Won: {self.games_won}, Lost: {self.games_lost}, Score: {self.score}, Average Guess Count: {self.average_guesses:.2}"
@@ -114,4 +122,5 @@ class WordleScore(Base, SerializerMixin):
         if guess_count is not None:
             self._add_total_guesses(guess_count)
             self._calculate_average_guess_count(guess_count)
+#endregion
 #endregion
