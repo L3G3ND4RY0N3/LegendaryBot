@@ -27,7 +27,7 @@ class Activity(Base, SerializerMixin):
     __tablename__ = 'activities'
 
     id = Column(Integer, primary_key=True)
-    member_id = Column(Integer, ForeignKey('members.id')) #user.id foreign key
+    member_id = Column(Integer, ForeignKey('members.id')) # member.id foreign key
     minutes_in_voice = Column(Integer, default=0)
     message_count = Column(Integer, default=0)
     xp = Column(Integer, default=0)
@@ -35,7 +35,7 @@ class Activity(Base, SerializerMixin):
     member: Mapped["dbmodels.Member"] = relationship("Member", back_populates="activities")
 
     def __repr__(self) -> str:
-        return f"Member:{self.member.server_name}, minutes: {self.minutes_in_voice}, messages: {self.message_count}, XP: {self.xp}"
+        return f"Member:{self.member.user.name}, minutes: {self.minutes_in_voice}, messages: {self.message_count}, XP: {self.xp}"
     
     def update_member_activity(self, minutes: int = None, messages: int = None, xp: int = None) -> None:
         if minutes:
