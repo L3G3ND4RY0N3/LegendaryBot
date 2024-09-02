@@ -26,7 +26,7 @@ def handle_activity_update(dcuser: discord.User | discord.Member, minutes: int =
         _,_,_, activity = get_or_create_for_activity(dcuser, session)
         
         if activity:
-            activity.update_member_activity(minutes, messages, xp)
+            activity.update_member_activity(minutes=minutes, messages=messages, xp=xp)
 
 
 #region LEADERBOARD
@@ -47,11 +47,11 @@ def get_guild_leaderboard(dcuser: discord.Member, sort_by: str = 'xp', limit: in
     guild_id = dcuser.guild.id
     with db_service.session_scope() as session:
         activity_query = (session.query(Activity)
-                          .join(Member).join(Guild)
-                          .filter(Guild.guild_dc_id == guild_id)
-                          .order_by(desc(getattr(Activity, sort_by)))
-                          .limit(limit)
-                          )
+                        .join(Member).join(Guild)
+                        .filter(Guild.guild_dc_id == guild_id)
+                        .order_by(desc(getattr(Activity, sort_by)))
+                        .limit(limit)
+                        )
         activities = activity_query.all()
         # create table
         return format_leaderboard_table(activities)
@@ -64,11 +64,11 @@ def get_global_leaderboard(dcuser: discord.Member, sort_by: str = 'xp', limit: i
                             func.sum(Activity.message_count).label('total_messages'),
                             func.sum(Activity.minutes_in_voice).label('total_voice_minutes'),
                             )
-                          .join(Member).join(User)
-                          .group_by(User.id)
-                          .order_by(desc(getattr(Activity, sort_by)))
-                          .limit(limit)
-                          )
+                        .join(Member).join(User)
+                        .group_by(User.id)
+                        .order_by(desc(getattr(Activity, sort_by)))
+                        .limit(limit)
+                        )
         activities = activity_query.all()
         # create table
         return format_leaderboard_table(activities)
