@@ -77,7 +77,7 @@ class GuildSetup(commands.Cog, name="GuildSetup"):
         
         embed = createSettingEmbed(ctx.guild, pageNum=currentPage)
         channel = embed.fields[0].name.split(" ")[0].lower()
-        sent_msg = await ctx.response.send_message(embed=embed, view=gsv.GuildSetupView(ctx, self.bot, currentPage, channel))
+        await ctx.response.send_message(embed=embed, view=gsv.GuildSetupView(ctx, self.bot, currentPage, channel))
 
 
 async def setup(bot):
