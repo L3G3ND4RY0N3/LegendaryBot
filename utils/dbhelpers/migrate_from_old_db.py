@@ -17,12 +17,12 @@ def migrate_db_data(bot: discord.Client, old_data: Iterable[Row]) -> bool:
     with db_service.session_scope() as session:
         try:
             for row in old_data:
-                user_id, message_count, xp, voice_minutes = row
+                user_id, xp, message_count, voice_minutes = row
                 dcuser = discord.Client.get_user(bot, user_id)
                 if dcuser is None:
                     continue
                 user = db_service.get_or_create(User, session=session, user_id=dcuser.id, name=dcuser.global_name)
-                guild = db_service.get_or_create(Guild, session=session, id=3) #Id for Terste DC
+                guild = db_service.get_or_create(Guild, session=session, name="Terste´s Kinderzimmer", guild_dc_id=618043172047552520) #Id for Terste DC
                 session.flush()
                 member = db_service.get_or_create(Member, session=session, 
                                                 user_id=user.id, 
@@ -36,9 +36,7 @@ def migrate_db_data(bot: discord.Client, old_data: Iterable[Row]) -> bool:
                                                     member_id=member.id
                                                     )
                 # update activity
-                activity.message_count += message_count
-                activity.minutes_in_voice += voice_minutes
-                activity.xp += xp
+                activity.update_member_activity(minutes=voice_minutes, messages=message_count, xp=xp)
         except Exception as e:
             logger.exception(f"{e}")
             session.rollback()
