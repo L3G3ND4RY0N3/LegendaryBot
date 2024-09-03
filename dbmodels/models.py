@@ -14,7 +14,7 @@ class User(Base):
     name = Column(String, unique=True)
     user_id = Column(Integer, unique=True)
 
-    members: Mapped["dbmodels.Member"] = relationship('Member', back_populates='user')
+    members: Mapped["dbmodels.Member"] = relationship('Member', back_populates='user', uselist=True)
     wordle_scores: Mapped["WordleScore"] = relationship('WordleScore', back_populates='user')
 
     def __repr__(self) -> str:
