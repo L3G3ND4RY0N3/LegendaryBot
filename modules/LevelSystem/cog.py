@@ -12,6 +12,7 @@ from utils.dbhelpers.activity_db_helpers import display_test, handle_activity_up
 from utils.dbhelpers.migrate_from_old_db import migrate_db_data
 from utils.embeds.activity_embeds import activity_stats_embed, guild_leaderboard_embed
 from utils.embeds.embedbuilder import forbidden_embed, success_embed
+from utils.structs.activity_start_times import UserStartTime
 
 
 logger=settings.logging.getLogger("discord")
@@ -19,8 +20,8 @@ logger=settings.logging.getLogger("discord")
 class LevelSystem(commands.Cog, name="LevelSystem"):
     def __init__(self, bot: discord.Client):
         self.bot = bot
-        self.DB = "level.db" # TODO: have some sort of server dependent tracking either trough relational databases or something else.
-        self.starttime = {} # initiates a  dict for keeping "user": "starttime" with starttime being the time they joined a voice channel or got updated
+        self.DB = "level.db"
+        self.users_in_voice: UserStartTime = UserStartTime() # TODO: add correct assignment!
         self.guild_count = 0 # number of guilds the bot is in TODO: reverse assignment
         self.vc_count = 0 # number of voice channels the bot has acces to TODO: reverse assignment
         self.new_users = 0 # count of users who get added to the start time dict, when the bot is booted
@@ -37,24 +38,7 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
 #region EVENTS
     @commands.Cog.listener() #ansatt bot.event!
     async def on_ready(self):
-        logger.info(f"{self.__cog_name__}.py is ready!")   
-        async with aiosqlite.connect(self.DB) as db:
-            await db.execute(
-                """
-                CREATE TABLE IF NOT EXISTS users (
-                user_id INTEGER PRIMARY KEY,
-                msg_count INTEGER DEFAULT 0,
-                xp INTEGER DEFAULT 0,
-                vc_minutes INTEGER DEFAULT 0
-                )
-                """
-            )
-
-            #await db.execute(
-            #    """
-            #    ALTER TABLE users ADD vc_minutes INTEGER DEFAULT 0
-            #    """
-            #) To ALTER Table to add new column!######################################
+        logger.info(f"{self.__cog_name__}.py is ready!")
 
     # OBSOLETE TODO: Remove?
     @commands.Cog.listener()
@@ -67,9 +51,9 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
         new_user_count = 0
         for vc in guild.voice_channels:
             for member in vc.members:
-                if member.id not in self.starttime.keys():
+                if member.id not in self.users_in_voice.times.keys():
                     new_user_count+=1
-                    self.starttime[member.id] = datetime.datetime.now()
+                    self.users_in_voice.times[member.id] = datetime.datetime.now()
         self.vc_count += vc_count
         self.new_users += new_user_count
         logger.info(f"Checked {vc_count} voice channel{'s' if vc_count!=1 else ''} in {guild.name} and added {new_user_count} user{'s' if new_user_count!=1 else ''}!")
@@ -81,19 +65,18 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
     @tasks.loop(minutes=1, count=2)
     async def check_members_in_voice(self):
         guilds = self.bot.guilds
-        vc_channels = []
+        vc_channels: list[discord.VoiceChannel] = []
         for guild in guilds: #TODO: here and in on_message, on_voice_state_update guild_id match against activity_ids, then the starttime dict should only hold members in guilds with active tracking
             if guild.id not in guildjsonfunctions.activity_ids:
                 continue
-            for vc_channel in guild.voice_channels:
-                vc_channels.append(vc_channel)
+            vc_channels.extend(guild.voice_channels)
         vc_channels_count = len(vc_channels)
         new_user_count = 0
         for channel in vc_channels:
             for member in channel.members:
-                if member.id not in self.starttime.keys():
-                    new_user_count+=1
-                    self.starttime[member.id] = datetime.datetime.now()
+                if member.id not in self.users_in_voice.times.keys():
+                    new_user_count += 1
+                    self.users_in_voice.times[member.id] = datetime.datetime.now()
         self.vc_count = vc_channels_count # TODO: buggy, for += it adds the vc_count giving double result! fix with .current_loop conditional?
         self.guild_count = len(guilds)
         self.new_users += new_user_count
@@ -109,24 +92,22 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
         logger.info(f"Checked {self.vc_count} voice channel{'s' if self.vc_count!=1 else ''} across {self.guild_count} server{'s' if self.guild_count!=1 else ''} and added a total of {self.new_users} member{'s' if self.new_users!=1 else ''}!")
         logger.info("Ending check member loop!")
 
-
+    # TODO: We need the guild here to get a member instance! New starttime structure necessary
     @tasks.loop(minutes=5)
     async def update_member_points(self):
-        if not bool(self.starttime):
+        if not bool(self.users_in_voice.times):
             logger.info("No members currently in a voice channel!") 
             return
-        user_count = len(self.starttime.keys())
-        for key in self.starttime:
+        user_count = len(self.users_in_voice.times.keys())
+        for user_id in self.users_in_voice.times:
             update_time = datetime.datetime.now()
-            member_id = int(key)
-            duration = update_time - self.starttime[member_id]
+            dcuser = discord.Client.get_user(self.bot, user_id)
+            duration = update_time - self.users_in_voice.times[user_id]
             minutes = int(duration.total_seconds() / 60)
             # Award currency for unmuted time
             currency = minutes*20
-            async with aiosqlite.connect(self.DB) as conn:
-                async with conn.execute("UPDATE users SET vc_minutes = vc_minutes + ?, xp = xp + ? WHERE user_id = ?", (minutes, currency, member_id)):
-                    await conn.commit()
-            self.starttime[key] = update_time
+            handle_activity_update(dcuser, minutes=minutes, xp=currency)
+            self.users_in_voice.times[user_id] = update_time
         logger.info(f"Updated points and times for {user_count} user{'s' if user_count!=1 else ''}!") 
 
 
@@ -171,14 +152,6 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
 
         xp = random.randint(5,15)
         handle_activity_update(message.author, messages=1,xp=xp)
-        async with aiosqlite.connect(self.DB) as db:
-            await db.execute(
-                "INSERT OR IGNORE INTO users (user_id) VALUES (?)", (message.author.id,)
-            )
-            await db.execute(
-                "UPDATE users SET msg_count = msg_count + 1, xp = xp + ? WHERE user_id = ?", (xp, message.author.id)
-            )
-            await db.commit()
 
     ########################## Voice Tracker #######################################################
 
@@ -187,35 +160,23 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
         if member.guild.id not in guildjsonfunctions.activity_ids:
             return
         if before.channel is None and after.channel is not None:
-            # User joined a voice channel
             start = datetime.datetime.now()
-            self.starttime[member.id] = start
-            # logger.info(f"{member.name} joined voice channel {after.channel.name} in {member.guild.name}")
+            self.users_in_voice.times[member.id] = start
         elif before.channel is not None and after.channel is None:
-            # User left a voice channel
-            # logger.info(f"{member.name} left voice channel {before.channel.name} in {member.guild.name}")
-            # Calculate voice activity duration
             end = datetime.datetime.now()
-            duration = end - self.starttime.pop(member.id, end)
+            duration = end - self.users_in_voice.times.pop(member.id, end)
             minutes = int(duration.total_seconds() / 60)
-            # Award currency for unmuted time
             currency = minutes*20  # TODO: Customize how much currency to award per minute
-            # Update currency in the database
             handle_activity_update(member, minutes, xp=currency)
-            async with aiosqlite.connect(self.DB) as conn:
-                async with conn.execute("UPDATE users SET vc_minutes = vc_minutes + ?, xp = xp + ? WHERE user_id = ?", (minutes, currency, member.id)):
-                    await conn.commit()
-        # elif before.channel is not None and after.channel is not None and before.channel != after.channel:
-        #     # User switched voice channels
-        #     logger.info(f"{member.name} switched from voice channel {before.channel.name} to {after.channel.name} in {member.guild.name}")
     #endregion
 
 #region COMMANDS
     ########################## Rank Command #######################################################
 
+    # TODO: recreate with new models
     @app_commands.command(name="rank", description="Check your current rank!")
     @app_commands.describe(user="user you want to check the rank off, default is yourself")
-    async def rank(self, interaction: discord.Interaction, user: discord.User = None):
+    async def rank(self, interaction: discord.Interaction, user: discord.User | None = None):
         if user is None:
             user_id = interaction.user.id
         else:
@@ -243,40 +204,12 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
     @app_commands.command(name="leaderboard", description="Look at the leaderborad!")
     @app_commands.describe(stat="the stat for which you want the leaderboard to be ordered by")
     @app_commands.choices(stat = [
-        Choice(name = "message count", value = "msg_count"),
-        Choice(name = "minutes in voice", value = "vc_minutes")
+        Choice(name = "message count", value = "message_count"),
+        Choice(name = "minutes in voice", value = "minutes_in_voice")
     ])
-    async def leaderboard(self, interaction: discord.Interaction, stat: str = None, guild_only: bool = False):
-        if not stat:
-            order = 'xp'
-        else:
-            order = stat
-        desc=""
-        counter = 1
-        con_string = f"SELECT user_id, xp, msg_count, vc_minutes FROM users WHERE {order} > 0 ORDER BY {order} DESC LIMIT 10"
-        async with aiosqlite.connect(self.DB) as db:
-            async with db.execute(
-                con_string
-            ) as cursor:
-                async for user_id, xp, msg_count, vc_minutes in cursor:
-                    lvl = self.get_level(xp)
-                    time = self.calc_time(vc_minutes)
-                    user = discord.Client.get_user(self.bot, int(user_id))
-                    if user is not None:                        
-                        # TODO: Fix formatting of leaderboard
-                        desc += f"**{counter:<2}.** {user.mention:32} - **{xp:<9}** XP - **{msg_count:<5}** message{'s' if msg_count!=1 else ''} - **{time:<4} ** {'minute' if vc_minutes<60 else 'hour'}{'s' if vc_minutes!=1 else ''} in voice - Level **{lvl:<3}**\n **------------------------------------------------------------------**\n"
-                        counter += 1
-                    else:
-                        #TODO: delete user from db or set as inactive (and fetch new TOP 10?)
-                        continue
-        
-        table = handle_leaderboard_command(interaction.user, order, guild_only=guild_only)
-        emb = guild_leaderboard_embed(table, order, interaction.user)
-        # confedembed = discord.Embed(title="Leaderboard", description=desc, color=discord.Color.blurple())
-
-        # confedembed.set_thumbnail(url=interaction.user.avatar.url)
-        # confedembed.set_footer(text=f"Requested by {interaction.user.name}, leaderboard sorted by {order}")
-
+    async def leaderboard(self, interaction: discord.Interaction, stat: str = 'xp', guild_only: bool = False):
+        table = handle_leaderboard_command(interaction.user, stat, guild_only=guild_only)
+        emb = guild_leaderboard_embed(table, stat, interaction.user)
 
         await interaction.response.send_message(embed=emb)
 #endregion
