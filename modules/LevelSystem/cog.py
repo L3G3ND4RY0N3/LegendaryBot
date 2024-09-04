@@ -12,7 +12,7 @@ from utils.dbhelpers.activity_db_helpers import display_test, handle_activity_up
 from utils.dbhelpers.migrate_from_old_db import migrate_db_data
 from utils.embeds.activity_embeds import activity_stats_embed, guild_leaderboard_embed
 from utils.embeds.embedbuilder import forbidden_embed, success_embed
-from utils.structs.activity_start_times import UserStartTime
+from utils.structs.activity_times_data import SessionManager
 
 
 logger=settings.logging.getLogger("discord")
@@ -21,7 +21,7 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
     def __init__(self, bot: discord.Client):
         self.bot = bot
         self.DB = "level.db"
-        self.users_in_voice: UserStartTime = UserStartTime() # TODO: add correct assignment!
+        self.users_in_voice = SessionManager() # TODO: add correct assignment!
         self.guild_count = 0 # number of guilds the bot is in TODO: reverse assignment
         self.vc_count = 0 # number of voice channels the bot has acces to TODO: reverse assignment
         self.new_users = 0 # count of users who get added to the start time dict, when the bot is booted
@@ -51,9 +51,9 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
         new_user_count = 0
         for vc in guild.voice_channels:
             for member in vc.members:
-                if member.id not in self.users_in_voice.times.keys():
+                if member.id not in self.users_in_voice.sessions.keys():
                     new_user_count+=1
-                    self.users_in_voice.times[member.id] = datetime.datetime.now()
+                    self.users_in_voice.sessions[member.id] = datetime.datetime.now()
         self.vc_count += vc_count
         self.new_users += new_user_count
         logger.info(f"Checked {vc_count} voice channel{'s' if vc_count!=1 else ''} in {guild.name} and added {new_user_count} user{'s' if new_user_count!=1 else ''}!")
@@ -74,9 +74,9 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
         new_user_count = 0
         for channel in vc_channels:
             for member in channel.members:
-                if member.id not in self.users_in_voice.times.keys():
+                if member.id not in self.users_in_voice.sessions.keys():
                     new_user_count += 1
-                    self.users_in_voice.times[member.id] = datetime.datetime.now()
+                    self.users_in_voice.sessions[member.id] = datetime.datetime.now()
         self.vc_count = vc_channels_count # TODO: buggy, for += it adds the vc_count giving double result! fix with .current_loop conditional?
         self.guild_count = len(guilds)
         self.new_users += new_user_count
@@ -95,19 +95,21 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
     # TODO: We need the guild here to get a member instance! New starttime structure necessary
     @tasks.loop(minutes=5)
     async def update_member_points(self):
-        if not bool(self.users_in_voice.times):
+        if not bool(self.users_in_voice.sessions):
             logger.info("No members currently in a voice channel!") 
             return
-        user_count = len(self.users_in_voice.times.keys())
-        for user_id in self.users_in_voice.times:
+        user_count = len(self.users_in_voice.sessions.keys())
+        for user_id in self.users_in_voice.sessions.keys():
+            member = self.users_in_voice.get_guild_member(self.bot, user_id)
+            if not member:
+                continue
             update_time = datetime.datetime.now()
-            dcuser = discord.Client.get_user(self.bot, user_id)
-            duration = update_time - self.users_in_voice.times[user_id]
+            duration = update_time - self.users_in_voice.sessions[user_id].start_time
             minutes = int(duration.total_seconds() / 60)
             # Award currency for unmuted time
             currency = minutes*20
-            handle_activity_update(dcuser, minutes=minutes, xp=currency)
-            self.users_in_voice.times[user_id] = update_time
+            handle_activity_update(member, minutes=minutes, xp=currency)
+            self.users_in_voice.sessions[user_id].start_time = update_time
         logger.info(f"Updated points and times for {user_count} user{'s' if user_count!=1 else ''}!") 
 
 
@@ -161,10 +163,10 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
             return
         if before.channel is None and after.channel is not None:
             start = datetime.datetime.now()
-            self.users_in_voice.times[member.id] = start
+            self.users_in_voice.sessions[member.id] = start
         elif before.channel is not None and after.channel is None:
             end = datetime.datetime.now()
-            duration = end - self.users_in_voice.times.pop(member.id, end)
+            duration = end - self.users_in_voice.sessions.pop(member.id, end)
             minutes = int(duration.total_seconds() / 60)
             currency = minutes*20  # TODO: Customize how much currency to award per minute
             handle_activity_update(member, minutes, xp=currency)
