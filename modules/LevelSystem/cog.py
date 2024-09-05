@@ -12,7 +12,7 @@ from utils.customwrappers import is_owner
 from utils.dbhelpers.activity_db_helpers import display_test, handle_activity_update, handle_leaderboard_command, handle_stats_command
 from utils.dbhelpers.migrate_from_old_db import migrate_db_data
 from utils.embeds.activity_embeds import activity_stats_embed, guild_leaderboard_embed
-from utils.embeds.embedbuilder import forbidden_embed, success_embed
+from utils.embeds.embedbuilder import forbidden_embed, success_embed, warn_embed
 from utils.structs.activity_times_data import SessionManager
 
 
@@ -205,7 +205,11 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
     ])
     async def leaderboard(self, interaction: discord.Interaction, stat: str = 'xp', guild_only: bool = False):
         table = handle_leaderboard_command(interaction.user, stat, guild_only=guild_only)
-        emb = guild_leaderboard_embed(table, stat, interaction.user)
+        if table == "":
+            # TODO: create a better embed maybe!
+            emb = warn_embed(f"There is currently no leaderboard available for {interaction.user.guild.name}")
+        else:
+            emb = guild_leaderboard_embed(table, stat, interaction.user)
 
         await interaction.response.send_message(embed=emb)
 #endregion

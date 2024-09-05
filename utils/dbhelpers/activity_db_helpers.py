@@ -59,7 +59,7 @@ def get_guild_leaderboard(dcuser: discord.Member, sort_by: str = 'xp', limit: in
         # create table
         if activities:
             return format_leaderboard_table(activities)
-        # TODO: handle empty guild
+        # To handle guild without activities (yet)
         return ""
     
 
