@@ -7,6 +7,7 @@ import math
 import aiosqlite
 import datetime
 from utils import settings, guildjsonfunctions
+from utils.Activity.activity_helpers import update_all_members_in_voice
 from utils.customwrappers import is_owner
 from utils.dbhelpers.activity_db_helpers import display_test, handle_activity_update, handle_leaderboard_command, handle_stats_command
 from utils.dbhelpers.migrate_from_old_db import migrate_db_data
@@ -21,7 +22,7 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
     def __init__(self, bot: discord.Client):
         self.bot = bot
         self.DB = "level.db"
-        self.users_in_voice = SessionManager() # TODO: add correct assignment!
+        self.users_in_voice = SessionManager()
         self.guild_count = 0 # number of guilds the bot is in TODO: reverse assignment
         self.vc_count = 0 # number of voice channels the bot has acces to TODO: reverse assignment
         self.new_users = 0 # count of users who get added to the start time dict, when the bot is booted
@@ -40,7 +41,7 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
     async def on_ready(self):
         logger.info(f"{self.__cog_name__}.py is ready!")
 
-    # OBSOLETE TODO: Remove?
+    # OBSOLETE TODO: Remove, since it should always return after the first check, since the guild id will not be in activity ids set?
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild):
         """checks on guild join all members in a vc"""
@@ -53,7 +54,7 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
             for member in vc.members:
                 if member.id not in self.users_in_voice.sessions.keys():
                     new_user_count+=1
-                    self.users_in_voice.sessions[member.id] = datetime.datetime.now()
+                    self.users_in_voice.add_session(member_id=member.id, guild_id=guild.id)
         self.vc_count += vc_count
         self.new_users += new_user_count
         logger.info(f"Checked {vc_count} voice channel{'s' if vc_count!=1 else ''} in {guild.name} and added {new_user_count} user{'s' if new_user_count!=1 else ''}!")
@@ -64,6 +65,7 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
     #region TASKS
     @tasks.loop(minutes=1, count=2)
     async def check_members_in_voice(self):
+        """runs after the bot starts to add all members currently in a voice channel to the SessionManager so that they get points"""
         guilds = self.bot.guilds
         vc_channels: list[discord.VoiceChannel] = []
         for guild in guilds: #TODO: here and in on_message, on_voice_state_update guild_id match against activity_ids, then the starttime dict should only hold members in guilds with active tracking
@@ -76,7 +78,7 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
             for member in channel.members:
                 if member.id not in self.users_in_voice.sessions.keys():
                     new_user_count += 1
-                    self.users_in_voice.sessions[member.id] = datetime.datetime.now()
+                    self.users_in_voice.add_session(member_id=member.id, guild_id=member.guild.id)
         self.vc_count = vc_channels_count # TODO: buggy, for += it adds the vc_count giving double result! fix with .current_loop conditional?
         self.guild_count = len(guilds)
         self.new_users += new_user_count
@@ -92,24 +94,14 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
         logger.info(f"Checked {self.vc_count} voice channel{'s' if self.vc_count!=1 else ''} across {self.guild_count} server{'s' if self.guild_count!=1 else ''} and added a total of {self.new_users} member{'s' if self.new_users!=1 else ''}!")
         logger.info("Ending check member loop!")
 
-    # TODO: We need the guild here to get a member instance! New starttime structure necessary
-    @tasks.loop(minutes=5)
+    
+    @tasks.loop(minutes=1)
     async def update_member_points(self):
+        """regularly updates the points of all members currently in a voice channel"""
         if not bool(self.users_in_voice.sessions):
             logger.info("No members currently in a voice channel!") 
             return
-        user_count = len(self.users_in_voice.sessions.keys())
-        for user_id in self.users_in_voice.sessions.keys():
-            member = self.users_in_voice.get_guild_member(self.bot, user_id)
-            if not member:
-                continue
-            update_time = datetime.datetime.now()
-            duration = update_time - self.users_in_voice.sessions[user_id].start_time
-            minutes = int(duration.total_seconds() / 60)
-            # Award currency for unmuted time
-            currency = minutes*20
-            handle_activity_update(member, minutes=minutes, xp=currency)
-            self.users_in_voice.sessions[user_id].start_time = update_time
+        user_count = update_all_members_in_voice(self.users_in_voice, self.bot)
         logger.info(f"Updated points and times for {user_count} user{'s' if user_count!=1 else ''}!") 
 
 
@@ -147,29 +139,31 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        if message.author.bot:
-            return
-        if message.guild.id not in guildjsonfunctions.activity_ids:
+        if message.author.bot or message.guild.id not in guildjsonfunctions.activity_ids:
             return
 
         xp = random.randint(5,15)
-        handle_activity_update(message.author, messages=1,xp=xp)
+        handle_activity_update(message.author, messages=1, xp=xp)
 
     ########################## Voice Tracker #######################################################
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
-        if member.guild.id not in guildjsonfunctions.activity_ids:
+        if  member.bot or member.guild.id not in guildjsonfunctions.activity_ids:
             return
         if before.channel is None and after.channel is not None:
-            start = datetime.datetime.now()
-            self.users_in_voice.sessions[member.id] = start
+            self.users_in_voice.add_session(member.id, member.guild.id)
         elif before.channel is not None and after.channel is None:
+            if not (session := self.users_in_voice.remove_session(member.id)):
+                return
             end = datetime.datetime.now()
-            duration = end - self.users_in_voice.sessions.pop(member.id, end)
+            duration = end - session.start_time
             minutes = int(duration.total_seconds() / 60)
-            currency = minutes*20  # TODO: Customize how much currency to award per minute
-            handle_activity_update(member, minutes, xp=currency)
+            currency = minutes * 20  # TODO: Customize how much currency to award per minute
+            handle_activity_update(member, minutes=minutes, xp=currency)
+        # user switched guilds
+        elif before.channel.guild.id != after.channel.guild.id:
+            self.users_in_voice.update_session(member_id=member.id, guild_id=after.channel.guild.id)
     #endregion
 
 #region COMMANDS
