@@ -163,6 +163,7 @@ def display_test(dcuser: discord.User | discord.Member) -> str:
 #region GENEREAL USE
 # TODO: consider Named Tuple returns
 def get_or_create_for_activity(dcuser: discord.Member, session: Session) -> tuple[User, Guild, Member, Activity]:
+    """creates all relevant models for the activity updates"""
     user = db_service.get_or_create(User, user_id=dcuser.id, name=dcuser.global_name, session=session)
     session.flush()
     guild = db_service.get_or_create(Guild, guild_dc_id=dcuser.guild.id, name=dcuser.guild.name, session=session)
