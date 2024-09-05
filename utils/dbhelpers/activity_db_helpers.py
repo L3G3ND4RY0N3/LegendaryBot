@@ -15,7 +15,7 @@ logger=settings.logging.getLogger("discord")
 db_service = DatabaseService(SessionLocal)
 
 def handle_activity_update(dcuser: discord.Member, minutes: int = 0, messages: int = 0, xp: int = 0) -> None:
-    """handles all activity updates
+    """handles all activity database updates
 
     Args:
         dcuser (discord.Member): A discord member
@@ -162,7 +162,7 @@ def display_test(dcuser: discord.User | discord.Member) -> str:
 
 #region GENEREAL USE
 # TODO: consider Named Tuple returns
-def get_or_create_for_activity(dcuser: discord.User | discord.Member, session: Session) -> tuple[User, Guild, Member, Activity]:
+def get_or_create_for_activity(dcuser: discord.Member, session: Session) -> tuple[User, Guild, Member, Activity]:
     user = db_service.get_or_create(User, user_id=dcuser.id, name=dcuser.global_name, session=session)
     session.flush()
     guild = db_service.get_or_create(Guild, guild_dc_id=dcuser.guild.id, name=dcuser.guild.name, session=session)
