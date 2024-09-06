@@ -50,7 +50,7 @@ def get_guild_leaderboard(dcuser: discord.Member, sort_by: str = 'xp', limit: in
     guild_id = dcuser.guild.id
     with db_service.session_scope() as session:
         activity_query = (session.query(Activity)
-                        .join(Member).join(Guild)
+                        .join(Member, full=True).join(Guild, full=True)
                         .filter(Guild.guild_dc_id == guild_id)
                         .order_by(desc(getattr(Activity, sort_by)))
                         .limit(limit)
@@ -168,9 +168,9 @@ def get_or_create_for_activity(dcuser: discord.Member, session: Session) -> tupl
     session.flush()
     guild = db_service.get_or_create(Guild, guild_dc_id=dcuser.guild.id, name=dcuser.guild.name, session=session)
     session.flush()
-    member = db_service.get_or_create(Member, user_id=user.id, guild=guild, server_name=guild.name, session=session)
+    member = db_service.get_or_create(Member, user_id=user.id, guild_id=guild.id, server_name=guild.name, session=session)
     session.flush()
-    activity = db_service.get_or_create(Activity, member=member, session=session)
+    activity = db_service.get_or_create(Activity, member_id=member.id, session=session)
     return user, guild, member, activity
 
 

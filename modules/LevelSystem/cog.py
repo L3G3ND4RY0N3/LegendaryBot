@@ -220,7 +220,7 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
     async def display(self, ctx: discord.Interaction) -> None:
         await ctx.response.send_message(content=display_test(ctx.user))
 
-    @is_owner()
+    # @is_owner()
     @app_commands.command(name="activity_stats", description="Look up your activity stats")
     async def activity_stats(self, ctx: discord.Interaction) -> None:
         activity_stats = handle_stats_command(ctx.user)
