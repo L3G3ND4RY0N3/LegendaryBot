@@ -2,7 +2,7 @@ import datetime as dt
 import discord
 from ..structs.activity_times_data import SessionManager
 from utils.dbhelpers.activity_db_helpers import handle_activity_update
-from utils.guildjsonfunctions import activity_ids
+from utils.guildjsonfunctions import ACTIVITY_IDS
 
 
 # Idea to make it more modular, make a call to a new function update user?
@@ -16,7 +16,7 @@ def update_all_members_in_voice(users_in_voice: SessionManager, bot: discord.Cli
             continue
         update_time = dt.datetime.now()
         # if the guild is removed while the users were still in voice, just keep updating their times, in case it gets turned back on!
-        if member.guild.id not in activity_ids:
+        if member.guild.id not in ACTIVITY_IDS:
             session.update_session_data(time=update_time)
             continue
         if member_is_mute(member.voice) or len(member.voice.channel.members) < 2:

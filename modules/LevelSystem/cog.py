@@ -45,7 +45,7 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild):
         """checks on guild join all members in a vc"""
-        if guild.id not in guildjsonfunctions.activity_ids:
+        if guild.id not in guildjsonfunctions.ACTIVITY_IDS:
             return
         vc_count = len(guild.voice_channels)
         self.guild_count += 1
@@ -69,7 +69,7 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
         guilds = self.bot.guilds
         vc_channels: list[discord.VoiceChannel] = []
         for guild in guilds: #TODO: here and in on_message, on_voice_state_update guild_id match against activity_ids, then the starttime dict should only hold members in guilds with active tracking
-            if guild.id not in guildjsonfunctions.activity_ids:
+            if guild.id not in guildjsonfunctions.ACTIVITY_IDS:
                 continue
             vc_channels.extend(guild.voice_channels)
         vc_channels_count = len(vc_channels)
@@ -139,7 +139,7 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        if message.author.bot or message.guild.id not in guildjsonfunctions.activity_ids:
+        if message.author.bot or message.guild.id not in guildjsonfunctions.ACTIVITY_IDS:
             return
 
         xp = random.randint(5,15)
@@ -149,7 +149,7 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
-        if  member.bot or member.guild.id not in guildjsonfunctions.activity_ids:
+        if  member.bot or member.guild.id not in guildjsonfunctions.ACTIVITY_IDS:
             return
         if before.channel is None and after.channel is not None:
             self.users_in_voice.add_session(member.id, member.guild.id)

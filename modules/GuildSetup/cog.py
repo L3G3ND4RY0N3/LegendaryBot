@@ -59,13 +59,13 @@ class GuildSetup(commands.Cog, name="GuildSetup"):
         
     @app_commands.command(name="guild_setup", description="calls the setup menu for the guild")
     @app_commands.checks.has_permissions(administrator=True)
-    async def guild_setup(self, ctx:discord.Interaction):
+    async def guild_setup(self, ctx: discord.Interaction):
         guild_id = ctx.guild.id
 
         retcode = 0
-        if guild_id not in guildjsonfunctions.ids:
+        if guild_id not in guildjsonfunctions.IDS:
             guildjsonfunctions.initialise_guild_setup(str(guild_id))
-            guildjsonfunctions.ids.add(guild_id)
+            guildjsonfunctions.IDS.add(guild_id)
         
         if retcode < 0:
             conf_embed = emb.warn_embed("That did not work!")
@@ -77,7 +77,7 @@ class GuildSetup(commands.Cog, name="GuildSetup"):
         
         embed = createSettingEmbed(ctx.guild, pageNum=currentPage)
         channel = embed.fields[0].name.split(" ")[0].lower()
-        await ctx.response.send_message(embed=embed, view=gsv.GuildSetupView(ctx, self.bot, currentPage, channel))
+        await ctx.response.send_message(embed=embed, view=gsv.GuildSetupView(self.bot, currentPage, channel))
 
 
 async def setup(bot):

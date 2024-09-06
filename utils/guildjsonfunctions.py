@@ -48,7 +48,7 @@ def update_channel_set(status: int, guild_id: int, id_set: set) -> None:
 #Property
 ##### set to store the server ids with setups for quick access
 #TODO: error when having multiple channels with the same id! Build custom log class
-ids: set = set()
+IDS: set = set()
 
 
 #Loading the Property
@@ -57,12 +57,12 @@ def load_json_to_guild_id_list():
     data = load_json(fp.GUILD_LOG_JSON)
         
     for key in data:
-        ids.add(int(key))
+        IDS.add(int(key))
 
 
 #Property set of INTS
 ##### set with guild ids with active activity tracker
-activity_ids: set = set()
+ACTIVITY_IDS: set = set()
 
 
 #Loading the Property
@@ -73,7 +73,7 @@ def load_json_to_activity_id_list():
     for key in data:
         try:
             if data[key][GCT.ACTIVITY.value] != 0:
-                activity_ids.add(int(key))
+                ACTIVITY_IDS.add(int(key))
         except KeyError as e:
             logger.error(f"Key error for {key} or activity tracker!")
             logger.exception(f"{e}")
@@ -145,9 +145,13 @@ def update_guild_channel(guild_id: str, channel_id: int, channel: str, path=fp.G
         #if the guild is not in the data send an error code
         if guild_id not in data: 
             return -1
+        if data[guild_id][channel] == channel_id:
+            return -2
         #else modify the specific channel
         update_channel(data, guild_id, channel, channel_id)
-        update_channel_set(channel_id, int(guild_id), ids)
+        # TODO: temporary fix to not remove guild_ids from IDS set that still have channels
+        if channel_id > 0:
+            update_channel_set(channel_id, int(guild_id), IDS)
         save_json(path, data)    
         return 0
 
@@ -167,9 +171,12 @@ def update_activity_tracker(guild_id: str, status: int, path=fp.GUILD_LOG_JSON) 
         #if the guild is not in the data send an error code
         if guild_id not in data:
             return -1
+        # if activity is already deactivated return -2
+        if data[guild_id][GCT.ACTIVITY.value] == status:
+            return -2
         #else modify the Activity channel specifically
         update_channel(data, guild_id, GCT.ACTIVITY.value, status)
-        update_channel_set(status, int(guild_id), activity_ids)
+        update_channel_set(status, int(guild_id), ACTIVITY_IDS)
         save_json(path, data)
         return 0
             
