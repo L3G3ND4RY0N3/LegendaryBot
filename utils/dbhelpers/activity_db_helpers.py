@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Any, Tuple
 import discord
 from dbmodels.base import SessionLocal
 from dbmodels import Activity, Guild, Member, User
@@ -85,66 +85,77 @@ def get_global_leaderboard(sort_by: str = 'xp', limit: int = 10) -> str:
 
 # TODO: Rank Command
 #region RANK COMMAND
-def get_user_stats_with_position(session: Session, user_id: int):
-    # Aliases for subqueries
-    MemberAlias1 = aliased(Member)
-    MemberAlias2 = aliased(Member)
-    MemberAlias3 = aliased(Member)
-    ActivityAlias1 = aliased(Activity)
-    ActivityAlias2 = aliased(Activity)
-    ActivityAlias3 = aliased(Activity)
+def get_user_stats_with_position(dcuser: discord.Member) -> str:
+    with db_service.session_scope() as session:
+        _, guild, _, _ = get_or_create_for_activity(dcuser, session)
+        # Aliases for subqueries
+        MemberAlias1 = aliased(Member)
+        MemberAlias2 = aliased(Member)
+        MemberAlias3 = aliased(Member)
+        ActivityAlias1 = aliased(Activity)
+        ActivityAlias2 = aliased(Activity)
+        ActivityAlias3 = aliased(Activity)
 
-    # Subquery for XP position
-    xp_position_subquery = (
-        session.query(func.count(MemberAlias1.id) + 1)
-        .join(ActivityAlias1, MemberAlias1.id == ActivityAlias1.member_id)
-        .filter(
-            MemberAlias1.user_id == User.id,
-            ActivityAlias1.xp > func.sum(Activity.xp).label('user_xp')
+        # Subquery for XP position
+        xp_position_subquery = (
+            session.query(func.count(MemberAlias1.id) + 1)
+            .join(ActivityAlias1, MemberAlias1.id == ActivityAlias1.member_id)
+            .filter(
+                MemberAlias1.user_id == User.id,
+                guild.id == MemberAlias1.guild_id,
+                ActivityAlias1.xp > func.sum(Activity.xp).label('user_xp')
+            )
+        ).as_scalar()
+
+        # Subquery for VC Minutes position
+        vc_minutes_position_subquery = (
+            session.query(func.count(MemberAlias2.id) + 1)
+            .join(ActivityAlias2, MemberAlias2.id == ActivityAlias2.member_id)
+            .filter(
+                MemberAlias2.user_id == User.id,
+                guild.id == MemberAlias2.guild_id,
+                ActivityAlias2.minutes_in_voice > func.sum(Activity.minutes_in_voice).label('user_minutes')
+            )
+        ).as_scalar()
+
+        # Subquery for Message Count position
+        msg_count_position_subquery = (
+            session.query(func.count(MemberAlias3.id) + 1)
+            .join(ActivityAlias3, MemberAlias3.id == ActivityAlias3.member_id)
+            .filter(
+                MemberAlias3.user_id == User.id,
+                guild.id == MemberAlias3.guild_id,
+                ActivityAlias3.message_count > func.sum(Activity.message_count).label('user_messages')
+            )
+        ).as_scalar()
+
+        # Main query to get the user stats and positions
+        query = (
+            session.query(
+                func.sum(Activity.xp).label('total_xp'),
+                func.sum(Activity.minutes_in_voice).label('total_minutes'),
+                func.sum(Activity.message_count).label('total_messages'),
+                User,
+                xp_position_subquery.label("xp_position"),
+                vc_minutes_position_subquery.label("vc_minutes_position"),
+                msg_count_position_subquery.label("msg_count_position"),
+            )
+            .join(Member, Member.user_id == User.id)
+            .join(Activity, Activity.member_id == Member.id)
+            .join(Guild, Guild.id == Member.guild_id)
+            .filter(User.user_id == dcuser.id, Guild.guild_dc_id == dcuser.guild.id)
+            .group_by(User.id)
         )
-    ).as_scalar()
 
-    # Subquery for VC Minutes position
-    vc_minutes_position_subquery = (
-        session.query(func.count(MemberAlias2.id) + 1)
-        .join(ActivityAlias2, MemberAlias2.id == ActivityAlias2.member_id)
-        .filter(
-            MemberAlias2.user_id == User.id,
-            ActivityAlias2.minutes_in_voice > func.sum(Activity.minutes_in_voice).label('user_minutes')
-        )
-    ).as_scalar()
+        # Execute the query and fetch the result
+        result = query.one_or_none()
+        ret_str = format_member_rank(result)
+    return ret_str
 
-    # Subquery for Message Count position
-    msg_count_position_subquery = (
-        session.query(func.count(MemberAlias3.id) + 1)
-        .join(ActivityAlias3, MemberAlias3.id == ActivityAlias3.member_id)
-        .filter(
-            MemberAlias3.user_id == User.id,
-            ActivityAlias3.message_count > func.sum(Activity.message_count).label('user_messages')
-        )
-    ).as_scalar()
 
-    # Main query to get the user stats and positions
-    query = (
-        session.query(
-            func.sum(Activity.xp).label('total_xp'),
-            func.sum(Activity.minutes_in_voice).label('total_minutes'),
-            func.sum(Activity.message_count).label('total_messages'),
-            User.user_id,
-            xp_position_subquery.label("xp_position"),
-            vc_minutes_position_subquery.label("vc_minutes_position"),
-            msg_count_position_subquery.label("msg_count_position"),
-        )
-        .join(Member, Member.user_id == User.id)
-        .join(Activity, Activity.member_id == Member.id)
-        .filter(User.user_id == user_id)
-        .group_by(User.id)
-    )
-
-    # Execute the query and fetch the result
-    result = query.one_or_none()
-
-    return result
+def format_member_rank(position_tuple: Row[tuple[int, int, int, User, int, int, int]]):
+    xp, minutes, message_count, user, xp_pos, minutes_pos, message_pos = position_tuple
+    return f"{user.name}, You have {xp} xp, {xp_pos}. Pos., {message_count} messages, {message_pos}. Pos., You have {minutes} minutes in voice, {minutes_pos}. Pos."
 #endregion
 
 #region DEBUG

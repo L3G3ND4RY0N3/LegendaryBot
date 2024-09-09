@@ -9,7 +9,7 @@ import datetime
 from utils import settings, guildjsonfunctions
 from utils.Activity.activity_helpers import update_all_members_in_voice
 from utils.customwrappers import is_owner
-from utils.dbhelpers.activity_db_helpers import display_test, handle_activity_update, handle_leaderboard_command, handle_stats_command
+from utils.dbhelpers.activity_db_helpers import display_test, get_user_stats_with_position, handle_activity_update, handle_leaderboard_command, handle_stats_command
 from utils.dbhelpers.migrate_from_old_db import migrate_db_data
 from utils.embeds.activity_embeds import activity_stats_embed, guild_leaderboard_embed
 from utils.embeds.embedbuilder import forbidden_embed, success_embed, warn_embed
@@ -167,32 +167,17 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
     #endregion
 
 #region COMMANDS
-    ########################## Rank Command #######################################################
 
-    # TODO: recreate with new models
-    @app_commands.command(name="rank", description="Check your current rank!")
-    @app_commands.describe(user="user you want to check the rank off, default is yourself")
-    async def rank(self, interaction: discord.Interaction, user: discord.User | None = None):
-        if user is None:
-            user_id = interaction.user.id
-        else:
-            user_id = user.id
-        async with aiosqlite.connect(self.DB) as db:
-            async with db.execute(f"SELECT xp, vc_minutes, msg_count, user_id, (SELECT COUNT(*) + 1 FROM users AS t2 WHERE t2.xp > t1.xp), (SELECT COUNT(*) + 1 FROM users AS t2 WHERE t2.vc_minutes > t1.vc_minutes), (SELECT COUNT(*) + 1 FROM users AS t2 WHERE t2.msg_count > t1.msg_count) AS pos FROM users AS t1 WHERE user_id = ?", (user_id,)) as cursor:
-                result = await cursor.fetchone()
-                if result is None:
-                    await interaction.response.send_message("You are not yet registered!", ephemeral=True)
-                    return
-    
-        xp = result[0]
-        vc_minutes = result[1]
-        msg_count = result[2]
-        xp_pos = result[4]
-        vc_pos = result[5]
-        msg_pos = result[6]
-        lvl = self.get_level(xp)
-
-        await interaction.response.send_message(f"{'You' if user is None else user.mention} {'have' if user is None else 'has'} **{xp}** XP ({xp_pos}. place), **{vc_minutes}** minute{'s' if vc_minutes!=1 else ''} in voice ({vc_pos}. place), written **{msg_count}** message{'s' if msg_count!=1 else ''} ({msg_pos}. place) and reached level {lvl}!")
+    ########################## Stats Command ###################################################
+    @app_commands.command(name="activity_stats", description="Look up your activity stats")
+    async def activity_stats(self, ctx: discord.Interaction) -> None:
+        activity_stats = handle_stats_command(ctx.user)
+        emb = activity_stats_embed(activity_stats, ctx.user)
+        # emb = discord.Embed(color=discord.Color.blue(), title=f"{ctx.user.global_name}´s Activity Statistics")
+        # TODO: Make readabel e.g. using an Enum  
+        # for key, val in activity_stats.items():
+        #     emb.add_field(name=f"{key}", value=f"{val}", inline=False)
+        await ctx.response.send_message(embed=emb)
 
 
     ########################## Leaderboard Command #######################################################
@@ -220,17 +205,6 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
     async def display(self, ctx: discord.Interaction) -> None:
         await ctx.response.send_message(content=display_test(ctx.user))
 
-    # @is_owner()
-    @app_commands.command(name="activity_stats", description="Look up your activity stats")
-    async def activity_stats(self, ctx: discord.Interaction) -> None:
-        activity_stats = handle_stats_command(ctx.user)
-        emb = activity_stats_embed(activity_stats, ctx.user)
-        # emb = discord.Embed(color=discord.Color.blue(), title=f"{ctx.user.global_name}´s Activity Statistics")
-        # TODO: Make readabel e.g. using an Enum  
-        # for key, val in activity_stats.items():
-        #     emb.add_field(name=f"{key}", value=f"{val}", inline=False)
-        await ctx.response.send_message(embed=emb)
-
     
     @is_owner()
     @app_commands.command(name="migrate_activity_data", description="Migrate data from old sqlite db to new ORM")
@@ -243,6 +217,32 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
             await ctx.response.send_message(embed=forbidden_embed("Failure to migrate database!"))
             return
         await ctx.response.send_message(embed=success_embed("Successfully migrated data!"))
+
+
+    # TODO: recreate with new models
+    @is_owner()
+    @app_commands.command(name="rank", description="Check your current rank!")
+    async def rank(self, interaction: discord.Interaction):
+        # user_id = interaction.user.id
+        # async with aiosqlite.connect(self.DB) as db:
+        #     async with db.execute(f"SELECT xp, vc_minutes, msg_count, user_id, (SELECT COUNT(*) + 1 FROM users AS t2 WHERE t2.xp > t1.xp), (SELECT COUNT(*) + 1 FROM users AS t2 WHERE t2.vc_minutes > t1.vc_minutes), (SELECT COUNT(*) + 1 FROM users AS t2 WHERE t2.msg_count > t1.msg_count) AS pos FROM users AS t1 WHERE user_id = ?", (user_id,)) as cursor:
+        #         result = await cursor.fetchone()
+        #         if result is None:
+        #             await interaction.response.send_message("You are not yet registered!", ephemeral=True)
+        #             return
+    
+        # xp = result[0]
+        # vc_minutes = result[1]
+        # msg_count = result[2]
+        # xp_pos = result[4]
+        # vc_pos = result[5]
+        # msg_pos = result[6]
+        # lvl = self.get_level(xp)
+
+        formated_str = get_user_stats_with_position(interaction.user)
+
+        #await interaction.response.send_message(f"{'You' if user is None else user.mention} {'have' if user is None else 'has'} **{xp}** XP ({xp_pos}. place), **{vc_minutes}** minute{'s' if vc_minutes!=1 else ''} in voice ({vc_pos}. place), written **{msg_count}** message{'s' if msg_count!=1 else ''} ({msg_pos}. place) and reached level {lvl}!")
+        await interaction.response.send_message(formated_str)
 
 
 #endregion
