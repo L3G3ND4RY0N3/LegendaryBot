@@ -7,11 +7,11 @@ logger=settings.logging.getLogger("discord")
 
 
 # set allowed channels, as they are in the JSON file:
-allowed_channels = [GCT.ERROR.value, GCT.LOG.value, GCT.WELCOME.value, GCT.BOOST.value]
+GUILD_CHANNELS = [GCT.ERROR.value, GCT.LOG.value, GCT.WELCOME.value, GCT.BOOST.value]
 
 #region common functions
 def is_valid_channel(channel: str) -> bool:
-    if channel in allowed_channels:
+    if channel in GUILD_CHANNELS:
         return True
     return False
 
