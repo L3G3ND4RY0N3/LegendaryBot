@@ -11,7 +11,7 @@ logger=settings.logging.getLogger("discord")
 #region SETUP EMBEDS
 ######## embed for the /settings command
 def createSettingEmbed(guild: discord.Guild , pageNum=0, inline=False) -> discord.Embed:
-    with open(fp.guild_log_json, "r") as f:
+    with open(fp.GUILD_LOG_JSON, "r") as f:
         data = json.load(f)
     guild_id = str(guild.id)
     try:

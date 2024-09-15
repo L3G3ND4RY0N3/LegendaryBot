@@ -7,14 +7,22 @@ import math
 import aiosqlite
 import datetime
 from utils import settings, guildjsonfunctions
+from utils.Activity.activity_helpers import update_all_members_in_voice
+from utils.customwrappers import is_owner
+from utils.dbhelpers.activity_db_helpers import display_test, get_user_stats_with_position, handle_activity_update, handle_leaderboard_command, handle_stats_command
+from utils.dbhelpers.migrate_from_old_db import migrate_db_data
+from utils.embeds.activity_embeds import activity_stats_embed, guild_leaderboard_embed
+from utils.embeds.embedbuilder import forbidden_embed, success_embed, warn_embed
+from utils.structs.activity_times_data import SessionManager
+
 
 logger=settings.logging.getLogger("discord")
 
 class LevelSystem(commands.Cog, name="LevelSystem"):
     def __init__(self, bot: discord.Client):
         self.bot = bot
-        self.DB = "level.db" # TODO: have some sort of server dependent tracking either trough relational databases or something else.
-        self.starttime = {} # initiates a  dict for keeping "user": "starttime" with starttime being the time they joined a voice channel or got updated
+        self.DB = "level.db"
+        self.users_in_voice = SessionManager()
         self.guild_count = 0 # number of guilds the bot is in TODO: reverse assignment
         self.vc_count = 0 # number of voice channels the bot has acces to TODO: reverse assignment
         self.new_users = 0 # count of users who get added to the start time dict, when the bot is booted
@@ -28,63 +36,49 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
     def cog_unload(self):
         self.check_members_in_voice.cancel()
 
+#region EVENTS
     @commands.Cog.listener() #ansatt bot.event!
     async def on_ready(self):
-        logger.info(f"{self.__cog_name__}.py is ready!")   
-        async with aiosqlite.connect(self.DB) as db:
-            await db.execute(
-                """
-                CREATE TABLE IF NOT EXISTS users (
-                user_id INTEGER PRIMARY KEY,
-                msg_count INTEGER DEFAULT 0,
-                xp INTEGER DEFAULT 0,
-                vc_minutes INTEGER DEFAULT 0
-                )
-                """
-            )
+        logger.info(f"{self.__cog_name__}.py is ready!")
 
-            #await db.execute(
-            #    """
-            #    ALTER TABLE users ADD vc_minutes INTEGER DEFAULT 0
-            #    """
-            #) To ALTER Table to add new column!######################################
-
-    # TODO: Remove, not possible with also deactivating/activating voice tracker via /guild_setup
-    # when joining a new guild, check all voice channels to update the starttime dict!
+    # OBSOLETE TODO: Remove, since it should always return after the first check, since the guild id will not be in activity ids set?
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild):
-        if guild.id not in guildjsonfunctions.activity_ids:
+        """checks on guild join all members in a vc"""
+        if guild.id not in guildjsonfunctions.ACTIVITY_IDS:
             return
         vc_count = len(guild.voice_channels)
         self.guild_count += 1
         new_user_count = 0
         for vc in guild.voice_channels:
             for member in vc.members:
-                if member.id not in self.starttime.keys():
+                if member.id not in self.users_in_voice.sessions.keys():
                     new_user_count+=1
-                    self.starttime[member.id] = datetime.datetime.now()
+                    self.users_in_voice.add_session(member_id=member.id, guild_id=guild.id)
         self.vc_count += vc_count
         self.new_users += new_user_count
         logger.info(f"Checked {vc_count} voice channel{'s' if vc_count!=1 else ''} in {guild.name} and added {new_user_count} user{'s' if new_user_count!=1 else ''}!")
+#endregion
+
 
     ##################################### Tasks #################################################################
     #region TASKS
     @tasks.loop(minutes=1, count=2)
     async def check_members_in_voice(self):
+        """runs after the bot starts to add all members currently in a voice channel to the SessionManager so that they get points"""
         guilds = self.bot.guilds
-        vc_channels = []
+        vc_channels: list[discord.VoiceChannel] = []
         for guild in guilds: #TODO: here and in on_message, on_voice_state_update guild_id match against activity_ids, then the starttime dict should only hold members in guilds with active tracking
-            if guild.id not in guildjsonfunctions.activity_ids:
+            if guild.id not in guildjsonfunctions.ACTIVITY_IDS:
                 continue
-            for vc_channel in guild.voice_channels:
-                vc_channels.append(vc_channel)
+            vc_channels.extend(guild.voice_channels)
         vc_channels_count = len(vc_channels)
         new_user_count = 0
         for channel in vc_channels:
             for member in channel.members:
-                if member.id not in self.starttime.keys():
-                    new_user_count+=1
-                    self.starttime[member.id] = datetime.datetime.now()
+                if member.id not in self.users_in_voice.sessions.keys():
+                    new_user_count += 1
+                    self.users_in_voice.add_session(member_id=member.id, guild_id=member.guild.id)
         self.vc_count = vc_channels_count # TODO: buggy, for += it adds the vc_count giving double result! fix with .current_loop conditional?
         self.guild_count = len(guilds)
         self.new_users += new_user_count
@@ -100,24 +94,14 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
         logger.info(f"Checked {self.vc_count} voice channel{'s' if self.vc_count!=1 else ''} across {self.guild_count} server{'s' if self.guild_count!=1 else ''} and added a total of {self.new_users} member{'s' if self.new_users!=1 else ''}!")
         logger.info("Ending check member loop!")
 
-
-    @tasks.loop(minutes=5)
+    
+    @tasks.loop(minutes=1)
     async def update_member_points(self):
-        if not bool(self.starttime):
+        """regularly updates the points of all members currently in a voice channel"""
+        if not bool(self.users_in_voice.sessions):
             logger.info("No members currently in a voice channel!") 
             return
-        user_count = len(self.starttime.keys())
-        for key in self.starttime:
-            update_time = datetime.datetime.now()
-            member_id = int(key)
-            duration = update_time - self.starttime[member_id]
-            minutes = int(duration.total_seconds() / 60)
-            # Award currency for unmuted time
-            currency = minutes*20
-            async with aiosqlite.connect(self.DB) as conn:
-                async with conn.execute("UPDATE users SET vc_minutes = vc_minutes + ?, xp = xp + ? WHERE user_id = ?", (minutes, currency, member_id)):
-                    await conn.commit()
-            self.starttime[key] = update_time
+        user_count = update_all_members_in_voice(self.users_in_voice, self.bot)
         logger.info(f"Updated points and times for {user_count} user{'s' if user_count!=1 else ''}!") 
 
 
@@ -155,117 +139,113 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        if message.author.bot:
-            return
-        if message.guild.id not in guildjsonfunctions.activity_ids:
+        if message.author.bot or message.guild.id not in guildjsonfunctions.ACTIVITY_IDS:
             return
 
         xp = random.randint(5,15)
-        async with aiosqlite.connect(self.DB) as db:
-            await db.execute(
-                "INSERT OR IGNORE INTO users (user_id) VALUES (?)", (message.author.id,)
-            )
-            await db.execute(
-                "UPDATE users SET msg_count = msg_count + 1, xp = xp + ? WHERE user_id = ?", (xp, message.author.id)
-            )
-            await db.commit()
+        handle_activity_update(message.author, messages=1, xp=xp)
 
     ########################## Voice Tracker #######################################################
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
-        if member.guild.id not in guildjsonfunctions.activity_ids:
+        if  member.bot or member.guild.id not in guildjsonfunctions.ACTIVITY_IDS:
             return
         if before.channel is None and after.channel is not None:
-            # User joined a voice channel
-            start = datetime.datetime.now()
-            self.starttime[member.id] = start
-            # logger.info(f"{member.name} joined voice channel {after.channel.name} in {member.guild.name}")
+            self.users_in_voice.add_session(member.id, member.guild.id)
         elif before.channel is not None and after.channel is None:
-            # User left a voice channel
-            # logger.info(f"{member.name} left voice channel {before.channel.name} in {member.guild.name}")
-            # Calculate voice activity duration
+            if not (session := self.users_in_voice.remove_session(member.id)):
+                return
             end = datetime.datetime.now()
-            duration = end - self.starttime.pop(member.id, end)
+            duration = end - session.start_time
             minutes = int(duration.total_seconds() / 60)
-            # Award currency for unmuted time
-            currency = minutes*20  # Customize how much currency to award per minute
-            # Update currency in the database
-            async with aiosqlite.connect(self.DB) as conn:
-                async with conn.execute("UPDATE users SET vc_minutes = vc_minutes + ?, xp = xp + ? WHERE user_id = ?", (minutes, currency, member.id)):
-                    await conn.commit()
-        # elif before.channel is not None and after.channel is not None and before.channel != after.channel:
-        #     # User switched voice channels
-        #     logger.info(f"{member.name} switched from voice channel {before.channel.name} to {after.channel.name} in {member.guild.name}")
+            currency = minutes * 20  # TODO: Customize how much currency to award per minute
+            handle_activity_update(member, minutes=minutes, xp=currency)
+        # user switched guilds
+        elif before.channel.guild.id != after.channel.guild.id:
+            self.users_in_voice.update_session(member_id=member.id, guild_id=after.channel.guild.id)
     #endregion
 
+#region COMMANDS
 
-    ########################## Rank Command #######################################################
+    ########################## Stats Command ###################################################
+    @app_commands.command(name="activity_stats", description="Look up your activity stats")
+    async def activity_stats(self, ctx: discord.Interaction) -> None:
+        activity_stats = handle_stats_command(ctx.user)
+        emb = activity_stats_embed(activity_stats, ctx.user)
+        # emb = discord.Embed(color=discord.Color.blue(), title=f"{ctx.user.global_name}´s Activity Statistics")
+        # TODO: Make readabel e.g. using an Enum  
+        # for key, val in activity_stats.items():
+        #     emb.add_field(name=f"{key}", value=f"{val}", inline=False)
+        await ctx.response.send_message(embed=emb)
 
-    @app_commands.command(name="rank", description="Check your current rank!")
-    @app_commands.describe(user="user you want to check the rank off, default is yourself")
-    async def rank(self, interaction: discord.Interaction, user: discord.User = None):
-        if user is None:
-            user_id = interaction.user.id
-        else:
-            user_id = user.id
-        async with aiosqlite.connect(self.DB) as db:
-            async with db.execute(f"SELECT xp, vc_minutes, msg_count, user_id, (SELECT COUNT(*) + 1 FROM users AS t2 WHERE t2.xp > t1.xp), (SELECT COUNT(*) + 1 FROM users AS t2 WHERE t2.vc_minutes > t1.vc_minutes), (SELECT COUNT(*) + 1 FROM users AS t2 WHERE t2.msg_count > t1.msg_count) AS pos FROM users AS t1 WHERE user_id = ?", (user_id,)) as cursor:
-                result = await cursor.fetchone()
-                if result is None:
-                    await interaction.response.send_message("You are not yet registered!", ephemeral=True)
-                    return
-    
-        xp = result[0]
-        vc_minutes = result[1]
-        msg_count = result[2]
-        xp_pos = result[4]
-        vc_pos = result[5]
-        msg_pos = result[6]
-        lvl = self.get_level(xp)
-
-        await interaction.response.send_message(f"{'You' if user is None else user.mention} {'have' if user is None else 'has'} **{xp}** XP ({xp_pos}. place), **{vc_minutes}** minute{'s' if vc_minutes!=1 else ''} in voice ({vc_pos}. place), written **{msg_count}** message{'s' if msg_count!=1 else ''} ({msg_pos}. place) and reached level {lvl}!")
 
     ########################## Leaderboard Command #######################################################
 
     @app_commands.command(name="leaderboard", description="Look at the leaderborad!")
     @app_commands.describe(stat="the stat for which you want the leaderboard to be ordered by")
     @app_commands.choices(stat = [
-        Choice(name = "message count", value = "msg_count"),
-        Choice(name = "minutes in voice", value = "vc_minutes")
+        Choice(name = "message count", value = "message_count"),
+        Choice(name = "minutes in voice", value = "minutes_in_voice")
     ])
-    async def leaderboard(self, interaction: discord.Interaction, stat: str = None):
-        if stat is None:
-            order = 'xp'
+    async def leaderboard(self, interaction: discord.Interaction, stat: str = 'xp', guild_only: bool = False):
+        table = handle_leaderboard_command(interaction.user, stat, guild_only=guild_only)
+        if table == "":
+            # TODO: create a better embed maybe!
+            emb = warn_embed(f"There is currently no leaderboard available for {interaction.user.guild.name}")
         else:
-            order = stat
-        desc=""
-        counter = 1
-        con_string = f"SELECT user_id, xp, msg_count, vc_minutes FROM users WHERE {order} > 0 ORDER BY {order} DESC LIMIT 10"
+            emb = guild_leaderboard_embed(table, stat, interaction.user)
+
+        await interaction.response.send_message(embed=emb)
+#endregion
+
+#region DEBUG COMMANDS
+    @is_owner()
+    @app_commands.command(name="display_member_info", description="Look at infos")
+    async def display(self, ctx: discord.Interaction) -> None:
+        await ctx.response.send_message(content=display_test(ctx.user))
+
+    
+    @is_owner()
+    @app_commands.command(name="migrate_activity_data", description="Migrate data from old sqlite db to new ORM")
+    async def migrate_data_for_activity(self, ctx: discord.Interaction) -> None:
+        con_str = "SELECT user_id, xp, msg_count, vc_minutes FROM users"
         async with aiosqlite.connect(self.DB) as db:
-            async with db.execute(
-                con_string
-            ) as cursor:
-                async for user_id, xp, msg_count, vc_minutes in cursor:
-                    lvl = self.get_level(xp)
-                    time = self.calc_time(vc_minutes)
-                    user = discord.Client.get_user(self.bot,int(user_id))
-                    if user is not None:                        
-                        # TODO: Fix formatting of leaderboard
-                        desc += f"**{counter:<2}.** {user.mention:32} - **{xp:<9}** XP - **{msg_count:<5}** message{'s' if msg_count!=1 else ''} - **{time:<4} ** {'minute' if vc_minutes<60 else 'hour'}{'s' if vc_minutes!=1 else ''} in voice - Level **{lvl:<3}**\n **------------------------------------------------------------------**\n"
-                        counter += 1
-                    else:
-                        #TODO: delete user from db or set as inactive (and fetch new TOP 10?)
-                        continue
-        
-        confedembed = discord.Embed(title="Leaderboard", description=desc, color=discord.Color.blurple())
-
-        confedembed.set_thumbnail(url=interaction.user.avatar.url)
-        confedembed.set_footer(text=f"Requested by {interaction.user.name}, leaderboard sorted by {order}")
-
-        await interaction.response.send_message(embed=confedembed)
+            async with db.execute(con_str) as cursor:
+                result = await cursor.fetchall()
+        if not migrate_db_data(self.bot, result):
+            await ctx.response.send_message(embed=forbidden_embed("Failure to migrate database!"))
+            return
+        await ctx.response.send_message(embed=success_embed("Successfully migrated data!"))
 
 
+    # TODO: recreate with new models
+    @is_owner()
+    @app_commands.command(name="rank", description="Check your current rank!")
+    async def rank(self, interaction: discord.Interaction):
+        # user_id = interaction.user.id
+        # async with aiosqlite.connect(self.DB) as db:
+        #     async with db.execute(f"SELECT xp, vc_minutes, msg_count, user_id, (SELECT COUNT(*) + 1 FROM users AS t2 WHERE t2.xp > t1.xp), (SELECT COUNT(*) + 1 FROM users AS t2 WHERE t2.vc_minutes > t1.vc_minutes), (SELECT COUNT(*) + 1 FROM users AS t2 WHERE t2.msg_count > t1.msg_count) AS pos FROM users AS t1 WHERE user_id = ?", (user_id,)) as cursor:
+        #         result = await cursor.fetchone()
+        #         if result is None:
+        #             await interaction.response.send_message("You are not yet registered!", ephemeral=True)
+        #             return
+    
+        # xp = result[0]
+        # vc_minutes = result[1]
+        # msg_count = result[2]
+        # xp_pos = result[4]
+        # vc_pos = result[5]
+        # msg_pos = result[6]
+        # lvl = self.get_level(xp)
+
+        formated_str = get_user_stats_with_position(interaction.user)
+
+        #await interaction.response.send_message(f"{'You' if user is None else user.mention} {'have' if user is None else 'has'} **{xp}** XP ({xp_pos}. place), **{vc_minutes}** minute{'s' if vc_minutes!=1 else ''} in voice ({vc_pos}. place), written **{msg_count}** message{'s' if msg_count!=1 else ''} ({msg_pos}. place) and reached level {lvl}!")
+        await interaction.response.send_message(formated_str)
+
+
+#endregion
 
 async def setup(bot):
     await bot.add_cog(LevelSystem(bot))

@@ -7,11 +7,11 @@ logger=settings.logging.getLogger("discord")
 
 
 # set allowed channels, as they are in the JSON file:
-allowed_channels = [GCT.ERROR.value, GCT.LOG.value, GCT.WELCOME.value, GCT.BOOST.value]
+GUILD_CHANNELS = [GCT.ERROR.value, GCT.LOG.value, GCT.WELCOME.value, GCT.BOOST.value]
 
 #region common functions
 def is_valid_channel(channel: str) -> bool:
-    if channel in allowed_channels:
+    if channel in GUILD_CHANNELS:
         return True
     return False
 
@@ -48,32 +48,32 @@ def update_channel_set(status: int, guild_id: int, id_set: set) -> None:
 #Property
 ##### set to store the server ids with setups for quick access
 #TODO: error when having multiple channels with the same id! Build custom log class
-ids: set = set()
+IDS: set = set()
 
 
 #Loading the Property
 ##### loads the guild ids from the json into memory (list)
 def load_json_to_guild_id_list():
-    data = load_json(fp.guild_log_json)
+    data = load_json(fp.GUILD_LOG_JSON)
         
     for key in data:
-        ids.add(int(key))
+        IDS.add(int(key))
 
 
 #Property set of INTS
 ##### set with guild ids with active activity tracker
-activity_ids: set = set()
+ACTIVITY_IDS: set = set()
 
 
 #Loading the Property
 ##### loads the guild ids from the json into memory (list)
 def load_json_to_activity_id_list():
-    data = load_json(fp.guild_log_json)
+    data = load_json(fp.GUILD_LOG_JSON)
     
     for key in data:
         try:
             if data[key][GCT.ACTIVITY.value] != 0:
-                activity_ids.add(int(key))
+                ACTIVITY_IDS.add(int(key))
         except KeyError as e:
             logger.error(f"Key error for {key} or activity tracker!")
             logger.exception(f"{e}")
@@ -87,14 +87,14 @@ def load_json_to_activity_id_list():
 ######## called when a guild is joined or the /guild_setup command is called
 def initialise_guild_setup(guild_id: str) -> None:
     try:
-        data = load_json(fp.guild_log_json)
+        data = load_json(fp.GUILD_LOG_JSON)
 
         #if guild is already registered return, as this is just the basic setup with no modification intentions
         if guild_id in data:
             return
         #else add the guild with basic settings
         data[guild_id] = {GCT.ERROR.value: 0, GCT.LOG.value: 0, GCT.WELCOME.value: 0, GCT.BOOST.value : 0, GCT.ACTIVITY.value: 0}
-        save_json(fp.guild_log_json, data)
+        save_json(fp.GUILD_LOG_JSON, data)
         return
     
     except Exception as e:
@@ -105,14 +105,14 @@ def initialise_guild_setup(guild_id: str) -> None:
 ####### called when the bot is removed from a guild
 def remove_guild_setup(guild_id: str) -> int:
     try:
-        data = load_json(fp.guild_log_json)
+        data = load_json(fp.GUILD_LOG_JSON)
 
         if guild_id not in data: #if guild had no setup in json return
             return -1
 
         #else remove the guild from the json
         data.pop(guild_id)
-        save_json(fp.guild_log_json, data)
+        save_json(fp.GUILD_LOG_JSON, data)
         return 0
     except Exception as e:
         logger.error(f"An error occured while trying to remove a guild setup: {e}")
@@ -122,7 +122,7 @@ def remove_guild_setup(guild_id: str) -> int:
 
 
 ####### check channel status to disable buttons, returns a negative returncode, when operation fails
-def check_guild_channel_status(guild_id: str, channel: str, path=fp.guild_log_json) -> GCS:
+def check_guild_channel_status(guild_id: str, channel: str, path=fp.GUILD_LOG_JSON) -> GCS:
     data = load_json(path)
     #if the guild is not in the data send an error code
     if guild_id not in data: 
@@ -136,7 +136,7 @@ def check_guild_channel_status(guild_id: str, channel: str, path=fp.guild_log_js
 
 
 ####### called to update the json for a specific channel
-def update_guild_channel(guild_id: str, channel_id: int, channel: str, path=fp.guild_log_json) -> int:
+def update_guild_channel(guild_id: str, channel_id: int, channel: str, path=fp.GUILD_LOG_JSON) -> int:
     if not is_valid_channel(channel):
         logger.error(f"Invalid channel: {channel}")
         return -1
@@ -145,9 +145,13 @@ def update_guild_channel(guild_id: str, channel_id: int, channel: str, path=fp.g
         #if the guild is not in the data send an error code
         if guild_id not in data: 
             return -1
+        if data[guild_id][channel] == channel_id:
+            return -2
         #else modify the specific channel
         update_channel(data, guild_id, channel, channel_id)
-        update_channel_set(channel_id, int(guild_id), ids)
+        # TODO: temporary fix to not remove guild_ids from IDS set that still have channels
+        if channel_id > 0:
+            update_channel_set(channel_id, int(guild_id), IDS)
         save_json(path, data)    
         return 0
 
@@ -158,7 +162,7 @@ def update_guild_channel(guild_id: str, channel_id: int, channel: str, path=fp.g
 
 
 # functiong ONLY for activating the activity feature!
-def update_activity_tracker(guild_id: str, status: int, path=fp.guild_log_json) -> int:
+def update_activity_tracker(guild_id: str, status: int, path=fp.GUILD_LOG_JSON) -> int:
     if status not in [0, 1]:
         logger.error(f"Invalid status: {status}")
         return -1
@@ -167,9 +171,12 @@ def update_activity_tracker(guild_id: str, status: int, path=fp.guild_log_json) 
         #if the guild is not in the data send an error code
         if guild_id not in data:
             return -1
+        # if activity is already deactivated return -2
+        if data[guild_id][GCT.ACTIVITY.value] == status:
+            return -2
         #else modify the Activity channel specifically
         update_channel(data, guild_id, GCT.ACTIVITY.value, status)
-        update_channel_set(status, int(guild_id), activity_ids)
+        update_channel_set(status, int(guild_id), ACTIVITY_IDS)
         save_json(path, data)
         return 0
             
@@ -181,7 +188,7 @@ def update_activity_tracker(guild_id: str, status: int, path=fp.guild_log_json) 
 
 # gets the channel id for the requested channel type of the guild or 0 if guild not found or not enabled for that channel
 # TODO: return data form check function
-def get_guild_channel(guild_id: str, channel: str, path=fp.guild_log_json) -> int|None:
+def get_guild_channel(guild_id: str, channel: str, path=fp.GUILD_LOG_JSON) -> int|None:
     """Checks the status of the specified channel in the json for the guild and returns the channel id, if found, if not None
 
     Args:

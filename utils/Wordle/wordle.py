@@ -55,7 +55,6 @@ class Wordle():
         self.max_guesses: int = difficulty.value
     
 #region "PROPERTIES"
-
     # public to present the secret word
     @property
     def secret(self) -> str:
@@ -88,6 +87,7 @@ class Wordle():
         
 #endregion
 
+#region METHODS
     # public
     # returns a list with the letter states (colors)
     def handle_guess(self, guess: str) -> list[LetterState]:
@@ -148,3 +148,4 @@ class Wordle():
             return True
         
         return False
+#endregion

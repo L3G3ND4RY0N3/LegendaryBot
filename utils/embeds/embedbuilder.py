@@ -62,8 +62,8 @@ def custom_set_author(emb: discord.Embed, member: discord.Member, action: str = 
         emb.set_author(name=f"{name_field}", icon_url=member.avatar.url)
         return (emb, None)
     else:
-        file = discord.File(fp.discord_logo, filename=fp.discord_logo_name)
-        emb.set_author(name=f"{name_field}", icon_url=fp.attach(fp.discord_logo_name))
+        file = discord.File(fp.DISCORD_LOGO_IMG, filename=fp.DISCORD_LOGO_NAME)
+        emb.set_author(name=f"{name_field}", icon_url=fp.attach(fp.DISCORD_LOGO_NAME))
         return (emb, file)
 #endregion
 
