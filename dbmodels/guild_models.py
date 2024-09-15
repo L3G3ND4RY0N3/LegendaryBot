@@ -14,6 +14,8 @@ class Guild(Base):
     name = Column(String, nullable=False)
 
     members: Mapped["Member"] = relationship("Member", back_populates="guild")
+    guild_config: Mapped["GuildConfig"] = relationship("GuildConfig", back_populates="guild")
+    autodelete_channels: Mapped["AutoDeleteChannel"] = relationship("AutoDeleteChannel", back_populates="guild")
 
 
 class Member(Base):
@@ -27,6 +29,7 @@ class Member(Base):
     user: Mapped["dbmodels.User"] = relationship("User", back_populates="members")
     guild: Mapped["Guild"] = relationship("Guild", back_populates="members")
     activities: Mapped["dbmodels.Activity"] = relationship("Activity", back_populates="member")
+    warnings: Mapped["ModWarning"] = relationship("ModWarning", back_populates="member")
 
 
 class GuildConfig(Base):
@@ -40,7 +43,7 @@ class GuildConfig(Base):
     log_channel_id = Column(Integer, default=0)
     activity_status = Column(Boolean, default=False)
 
-    guild: Mapped["Guild"] = relationship("Guild", back_populates="guildconfigs")
+    guild: Mapped["Guild"] = relationship("Guild", back_populates="guildconfig")
 
 
     def update_channels(self, error_id: int | None = None,
@@ -80,14 +83,12 @@ class ModWarning(Base):
     id = Column(Integer, primary_key=True)
     member_id = Column(Integer, ForeignKey('members.id'))
     mod_id = Column(Integer, ForeignKey('users.id'))
-    guild_id = Column(Integer, ForeignKey('guilds.id'))
     warns = Column(Integer, default=0, nullable=False)
     warn_reason = Column(String, default=u'')
     warn_time = Column(DateTime(timezone=True), server_default=func.now())
 
-    member: Mapped["Member"] = relationship("Member", back_populates="modwarnings")
-    guild: Mapped["Guild"] = relationship("Guild", back_populates="modwarnings")
-    user = Mapped["dbmodels.User"] = relationship("User", back_populates="modwarnings")
+    member: Mapped["Member"] = relationship("Member", back_populates="warnings")
+    user: Mapped["dbmodels.User"] = relationship("User", back_populates="warns_given")
 
 
 class AutoDeleteChannel(Base):
@@ -98,3 +99,5 @@ class AutoDeleteChannel(Base):
     channel_id = Column(Integer, nullable=False)
     max_messages = Column(Integer, default=0)
     delay_in_minutes = Column(Integer, default=0)
+
+    guild: Mapped["Guild"] = relationship("Guild", back_populates="autodelete_channels")

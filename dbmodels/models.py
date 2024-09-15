@@ -16,6 +16,7 @@ class User(Base):
 
     members: Mapped["dbmodels.Member"] = relationship('Member', back_populates='user', uselist=True)
     wordle_scores: Mapped["WordleScore"] = relationship('WordleScore', back_populates='user')
+    warns_given: Mapped["dbmodels.ModWarning"] = relationship('ModWarning', back_populates='user')
 
     def __repr__(self) -> str:
         return f"User:{self.name}, ID: {self.user_id}"
