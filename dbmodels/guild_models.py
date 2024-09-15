@@ -43,7 +43,7 @@ class GuildConfig(Base):
     log_channel_id = Column(Integer, default=0)
     activity_status = Column(Boolean, default=False)
 
-    guild: Mapped["Guild"] = relationship("Guild", back_populates="guildconfig")
+    guild: Mapped["Guild"] = relationship("Guild", back_populates="guild_config")
 
 
     def update_channels(self, error_id: int | None = None,
