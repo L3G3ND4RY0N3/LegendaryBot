@@ -1,4 +1,5 @@
 import discord
+from utils.dbhelpers.guild_config_db_helpers import handle_guild_config_update
 from utils.embeds import embedbuilder as emb
 from utils.embeds.guild_settings_embed import createSettingEmbed
 import utils.settings as settings
@@ -65,6 +66,7 @@ class GuildSetupView(discord.ui.View):
                 returncode = GJF.update_guild_channel(guild_id, 0, self.channel)
             else:
                 returncode = GJF.update_activity_tracker(guild_id, 0)
+                handle_guild_config_update(interaction.guild, activity=False)
         except Exception as e:
             logger.exception(f"{e}")
             returncode = -1
@@ -97,6 +99,7 @@ class GuildSetupView(discord.ui.View):
             return
         else:
             retcode = GJF.update_activity_tracker(str(interaction.guild.id), 1)
+            handle_guild_config_update(interaction.guild, activity=True)
             if retcode < 0:
                 embed = emb.warn_embed(f"There was an error activating the {self.channel} feature.")
                 await interaction.response.send_message(embed=embed, ephemeral=True)
