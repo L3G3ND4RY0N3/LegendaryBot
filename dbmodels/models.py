@@ -28,7 +28,7 @@ class Activity(Base, SerializerMixin):
     __tablename__ = 'activities'
 
     id = Column(Integer, primary_key=True)
-    member_id = Column(Integer, ForeignKey('members.id')) # member.id foreign key
+    member_id = Column(Integer, ForeignKey('members.id'), unique=True) # member.id foreign key
     minutes_in_voice = Column(Integer, default=0)
     message_count = Column(Integer, default=0)
     xp = Column(Integer, default=0)
@@ -70,7 +70,7 @@ class WordleScore(Base, SerializerMixin):
     __tablename__ = 'wordle_scores'
 
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey('users.id')) #user.id foreign key
+    user_id = Column(Integer, ForeignKey('users.id'), unique=True) #user.id foreign key
     score = Column(Integer, default=0)
     games_won = Column(Integer, default=0)
     games_lost = Column(Integer, default=0)
@@ -109,6 +109,8 @@ class WordleScore(Base, SerializerMixin):
     
     def _calculate_average_guess_count(self, guess_count: int) -> None:
         """Calculates the average number of guesses per game."""
+        if not self.average_guesses:
+            self.average_guesses = 0
         if self.total_games > 0:
             self.average_guesses += (guess_count - self.average_guesses) / self.total_games
 

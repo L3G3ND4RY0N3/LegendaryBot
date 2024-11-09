@@ -22,7 +22,7 @@ class Member(Base):
     __tablename__ = 'members'
 
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey('users.id'))
+    user_id = Column(Integer, ForeignKey('users.id'), unique=True)
     guild_id = Column(Integer, ForeignKey('guilds.id'))
     server_name = Column(String, nullable=False)
 
