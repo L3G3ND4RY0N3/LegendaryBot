@@ -20,9 +20,9 @@ def handle_wordle_score(dcuser: discord.User, score_increment: int = 0, game_won
         dict | None: If a game was recorded, nothing gets returned, as the score is simply updated. Else return a dictionary with the data for the users WordleScore
     """
     with db_service.session_scope() as session:
-        user = db_service.get_or_create(User, user_id=dcuser.id, name=dcuser.global_name)
+        user = db_service.get_or_create(User, session=session, user_id=dcuser.id, name=dcuser.global_name)
         session.add(user)
-        wordle_score = db_service.get_or_create(WordleScore, user_id=user.id)
+        wordle_score = db_service.get_or_create(WordleScore, session=session, user_id=user.id)
         session.add(wordle_score)
         
         if wordle_score and update:

@@ -21,7 +21,7 @@ class WordleData():
         self.games: dict[int, PlayerData] = {}
 
     
-    def update_games_dictionary(self, user_id: int, player_data: PlayerData = None) -> bool:
+    def update_games_dictionary(self, user_id: int, player_data: PlayerData | None = None) -> bool:
         # if new game, set all variables
         if user_id not in self.games:
             self.games[user_id] = player_data
@@ -45,7 +45,7 @@ class WordleData():
         return False
         
 
-    def find_player_id_by(self, thread: discord.Thread = None, embed: discord.Embed = None, message: discord.Message = None) -> int | None:
+    def find_player_id_by(self, thread: discord.Thread | None = None, embed: discord.Embed | None = None, message: discord.Message | None = None) -> int | None:
         for player_id, player_data in self.games.items():
             if player_data.thread == thread:
                 return player_id

@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands, tasks
 from discord import app_commands
 from utils import settings, guildjsonfunctions 
+from utils.dbhelpers.guild_config_db_helpers import ACTIVITY_GUILDS, get_all_activity_guilds
 from utils.embeds import embedbuilder as emb
 from utils.embeds.guild_settings_embed import createSettingEmbed
 from utils.views import guildsetupview as gsv
@@ -19,7 +20,9 @@ class GuildSetup(commands.Cog, name="GuildSetup"):
     @commands.Cog.listener() #ansatt bot.event!
     async def on_ready(self):
         logger.info(f"{self.__cog_name__}.py is ready!")
-        fp.create_empty_json(fp.guild_log_json)
+        fp.create_empty_json(fp.GUILD_LOG_JSON)
+        ACTIVITY_GUILDS = get_all_activity_guilds()
+
 
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild) -> None:
@@ -29,6 +32,7 @@ class GuildSetup(commands.Cog, name="GuildSetup"):
             conf_embed = discord.Embed(color=discord.Color.blurple())
             conf_embed.add_field(name="`❤` **Hello!**", value=f"Hi, {guild.name}. To set up my functions like logging, welcome greetings and economy, please use the /setup command.")
             await guild.system_channel.send(embed=conf_embed)
+
 
     #region "tasks"
     ####################### tasks
@@ -49,8 +53,8 @@ class GuildSetup(commands.Cog, name="GuildSetup"):
 
     @load_guilds_from_json.after_loop
     async def after_load_guilds_from_json(self) -> None:
-        logger.info(f"Finished load_guilds_from_json loop!")
-        logger.info("Ending loading gulds from json loop!")
+        logger.info("Finished load_guilds_from_json loop!")
+        logger.info("Ending loading guilds from json loop!")
 
     #endregion
     
@@ -59,13 +63,13 @@ class GuildSetup(commands.Cog, name="GuildSetup"):
         
     @app_commands.command(name="guild_setup", description="calls the setup menu for the guild")
     @app_commands.checks.has_permissions(administrator=True)
-    async def guild_setup(self, ctx:discord.Interaction):
+    async def guild_setup(self, ctx: discord.Interaction):
         guild_id = ctx.guild.id
 
         retcode = 0
-        if guild_id not in guildjsonfunctions.ids:
+        if guild_id not in guildjsonfunctions.IDS:
             guildjsonfunctions.initialise_guild_setup(str(guild_id))
-            guildjsonfunctions.ids.add(guild_id)
+            guildjsonfunctions.IDS.add(guild_id)
         
         if retcode < 0:
             conf_embed = emb.warn_embed("That did not work!")
@@ -77,7 +81,7 @@ class GuildSetup(commands.Cog, name="GuildSetup"):
         
         embed = createSettingEmbed(ctx.guild, pageNum=currentPage)
         channel = embed.fields[0].name.split(" ")[0].lower()
-        sent_msg = await ctx.response.send_message(embed=embed, view=gsv.GuildSetupView(ctx, self.bot, currentPage, channel))
+        await ctx.response.send_message(embed=embed, view=gsv.GuildSetupView(self.bot, currentPage, channel))
 
 
 async def setup(bot):

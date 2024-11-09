@@ -16,13 +16,15 @@ class GuildChannelTypes(Enum):
     ACTIVITY = "activity"
 #endregion
 
-
+#region VOICE
 class VoiceChannelStatus(Enum):
     NotInOwnVoice = "NotInOwnVoice"
     AloneInVoice = "AloneInVoice"
     InOwnVoice = "InOwnVoice"
+#endregion
 
-
+#region LINKED Roles
 class LRRetCode(Enum):
     SUCCESS = 0
     FAIL_CIRCULAR = 1
+#endregion
