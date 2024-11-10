@@ -1,4 +1,4 @@
-from typing import Any, Tuple
+from typing import Tuple
 import discord
 from dbmodels.base import SessionLocal
 from dbmodels import Activity, Guild, Member, User
