@@ -1,9 +1,9 @@
 from constants import enums as en
 import discord
 from discord.ext import commands
-from typing import Optional, Tuple
 from utils import settings
 from utils import guildjsonfunctions as GJF
+from utils.embeds.embedbuilder import EmbedFileTuple
 from utils.embeds.guild_logging_embeds import log_del_message_embed, log_edit_message_embed, log_member_join_embed, log_member_leave_embed
 
 
@@ -55,35 +55,35 @@ class GuildLogging(commands.Cog, name="GuildLogging"):
 
     #region CLASS METHODS
     @classmethod
-    async def log_event(cls, channel: discord.TextChannel, embed: discord.Embed, file: Optional[discord.File] = None) -> None:
+    async def log_event(cls, channel: discord.TextChannel, embed: discord.Embed, file: discord.File | None = None) -> None:
         await cls.custom_send(channel, embed, file)
     
 
     @classmethod
-    async def log_event_from_member(cls, guild: discord.Guild, embed_file_tuple: Tuple[discord.Embed, Optional[discord.File]]) -> None:
+    async def log_event_from_member(cls, guild: discord.Guild, embed_file_tuple: EmbedFileTuple) -> None:
         channel_id = GJF.get_guild_channel(str(guild.id), en.GuildChannelTypes.LOG.value)
         if not channel_id:
             return
         channel = guild.get_channel(channel_id)
         if not channel:
             return
-        await cls.log_event(channel, embed_file_tuple[0], embed_file_tuple[1])
+        await cls.log_event(channel, embed_file_tuple.embed, embed_file_tuple.file)
 
 
     @classmethod
-    async def log_event_from_message(cls, guild: discord.Guild, embed_file_tuple: Tuple[discord.Embed, Optional[discord.File]]) -> None:
+    async def log_event_from_message(cls, guild: discord.Guild, embed_file_tuple: EmbedFileTuple) -> None:
         channel_id = GJF.get_guild_channel(str(guild.id), en.GuildChannelTypes.LOG.value)
         if not channel_id:
             return
         channel = guild.get_channel(channel_id)
         if not channel:
             return
-        await cls.log_event(channel, embed_file_tuple[0], embed_file_tuple[1])
+        await cls.log_event(channel, embed_file_tuple.embed, embed_file_tuple.file)
     #endregion
 
     #region STATIC METHODS        
     @staticmethod
-    async def custom_send(log_channel: discord.TextChannel, embed: discord.Embed, file: discord.File = None) -> None:
+    async def custom_send(log_channel: discord.TextChannel, embed: discord.Embed, file: discord.File | None = None) -> None:
         await log_channel.send(embed=embed, file=file)
     #endregion
     
