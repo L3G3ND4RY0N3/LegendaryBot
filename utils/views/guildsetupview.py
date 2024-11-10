@@ -47,7 +47,7 @@ class GuildSetupView(discord.ui.View):
     @discord.ui.button(label="Quit", style=discord.ButtonStyle.grey, custom_id='Activate_Guild_Setup_Quit', emoji="❌")
     async def guild_setup_quit(self, interaction: discord.Interaction, button: discord.ui.Button):
         # TODO: Add logic to display message if no changes were made
-        embed = emb.success_embed(f"Successfully updated guild config!")
+        embed = emb.success_embed("Successfully updated guild config!")
         await interaction.response.edit_message(embed=embed, view=None)
 
         return
