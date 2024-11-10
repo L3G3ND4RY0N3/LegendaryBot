@@ -23,7 +23,7 @@ class DatabaseService:
         finally:
             session.close()
 
-    def get_or_create(self, model: Type[_T], session: Session | None = None, **kwargs) -> _T:
+    def get_or_create(self, model: Type[_T], session: Session, **kwargs) -> _T:
         """Generic method to get or create a model instance."""
         # Get the mapper to inspect the model's attributes and constraints
         mapper = inspect(model)

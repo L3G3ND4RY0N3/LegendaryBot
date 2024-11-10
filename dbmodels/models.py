@@ -38,7 +38,7 @@ class Activity(Base, SerializerMixin):
     def __repr__(self) -> str:
         return f"Member:{self.member.user.name}, minutes: {self.minutes_in_voice}, messages: {self.message_count}, XP: {self.xp}"
     
-    def update_member_activity(self, minutes: int = None, messages: int = None, xp: int = None) -> None:
+    def update_member_activity(self, minutes: int | None = None, messages: int | None = None, xp: int | None = None) -> None:
         if minutes:
             self._add_minutes_in_voice(minutes)
         if messages:

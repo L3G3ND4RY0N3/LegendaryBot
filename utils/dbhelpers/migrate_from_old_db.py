@@ -2,7 +2,6 @@ from dbmodels import Activity, Guild, Member, User
 from dbmodels.base import SessionLocal
 from .dbservice import DatabaseService
 import discord
-from sqlalchemy.orm import Session
 from sqlite3 import Row
 from typing import Iterable
 from utils import settings
