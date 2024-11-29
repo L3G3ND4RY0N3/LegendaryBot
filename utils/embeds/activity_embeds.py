@@ -5,7 +5,7 @@ import utils.settings as settings
 logger=settings.logging.getLogger("discord")
 
 # TODO: fix hardcoded dict dependencies!
-def activity_stats_embed(stats: dict, member: discord.Member) -> discord.Embed:
+def activity_stats_embed(stats: dict[str, int], member: discord.Member) -> discord.Embed:
     emb = discord.Embed(color=discord.Color.blurple(),
                         title=f"Activity stats for {member.name}"
                         )

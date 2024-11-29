@@ -1,21 +1,22 @@
 from dotenv import load_dotenv
 import os
+import typing as T
 import discord
 import functools
 
 
-load_dotenv()
+_ = load_dotenv()
 
-OWNER = int(os.getenv('OWNER'))
+OWNER = int(os.getenv('OWNER', 0))
 
 #region GENERAL USE
 class CountFuncCalls:
-    def __init__(self, max_count=1):
-        self.max_count = max_count
-        self.call_count = {}
+    def __init__(self, max_count: int = 1):
+        self.max_count: int = max_count
+        self.call_count: dict[str, int] = {}
 
-    def __call__(self, func):
-        def wrapper(*args, **kwargs):
+    def __call__(self, func: T.Any):
+        def wrapper(*args: T.Any, **kwargs: T.Any):
             if func.__name__ not in self.call_count:
                 self.call_count[func.__name__] = 0
 
@@ -57,6 +58,6 @@ async def on_app_command_error(interaction: discord.Interaction, error: discord.
         if interaction.user.id == OWNER:
             await interaction.response.send_message(f"An error occurred: {error}", ephemeral=True)
         else:
-            await interaction.response.send_message(f"An error occurred, please try again later!", ephemeral=True)
+            await interaction.response.send_message("An error occurred, please try again later!", ephemeral=True)
 
 #endregion

@@ -1,4 +1,4 @@
-from typing import Any, Tuple
+from typing import Tuple
 import discord
 from dbmodels.base import SessionLocal
 from dbmodels import Activity, Guild, Member, User
@@ -14,7 +14,7 @@ logger=settings.logging.getLogger("discord")
 
 db_service = DatabaseService(SessionLocal)
 
-def handle_activity_update(dcuser: discord.Member, minutes: int = 0, messages: int = 0, xp: int = 0) -> None:
+def handle_activity_update(dcuser: discord.Member, minutes: int | None = None, messages: int| None = None, xp: int| None = None) -> None:
     """handles all activity database updates
 
     Args:

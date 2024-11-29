@@ -1,3 +1,4 @@
+import typing as T
 import discord
 from dbmodels.base import SessionLocal
 from dbmodels.models import User, WordleScore
@@ -6,7 +7,7 @@ from .dbservice import DatabaseService
 
 db_service = DatabaseService(SessionLocal)
 
-def handle_wordle_score(dcuser: discord.User, score_increment: int = 0, game_won: bool = None, guess_count: int = None, update: bool = False) -> dict | None:
+def handle_wordle_score(dcuser: discord.User, score_increment: int = 0, game_won: bool | None = None, guess_count: int = None, update: bool = False) -> dict[T.Any, T.Any] | None:
     """Handles the creation, getting and updating of a Wordle Score for a user
 
     Args:

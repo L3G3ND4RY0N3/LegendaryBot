@@ -32,9 +32,8 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
 
     def cog_unload(self):
         self.update_member_points.cancel()
-
-    def cog_unload(self):
         self.check_members_in_voice.cancel()
+        
 
 #region EVENTS
     @commands.Cog.listener() #ansatt bot.event!

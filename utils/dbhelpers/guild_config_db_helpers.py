@@ -1,4 +1,3 @@
-from typing import Any
 import discord
 from dbmodels.base import SessionLocal
 from dbmodels import Guild, GuildConfig
@@ -39,7 +38,7 @@ def get_all_activity_guilds() -> set[int]:
     with db_service.session_scope() as session:
         guild_query = (session.query(Guild.guild_dc_id)
                     .join(GuildConfig, full=True)
-                    .filter(GuildConfig.activity_status == True)
+                    .filter(GuildConfig.activity_status is True)
                     )
         guild_ids = set(guild_query.all())
         return guild_ids
