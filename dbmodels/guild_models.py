@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String
+from sqlalchemy import BigInteger, Boolean, Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, relationship
 from sqlalchemy.sql import func
 
@@ -10,7 +10,7 @@ class Guild(Base):
     __tablename__ = 'guilds'
 
     id = Column(Integer, primary_key=True)
-    guild_dc_id = Column(Integer, unique=True)
+    guild_dc_id = Column(BigInteger, unique=True)
     name = Column(String, nullable=False)
 
     members: Mapped["Member"] = relationship("Member", back_populates="guild")
@@ -96,8 +96,8 @@ class AutoDeleteChannel(Base):
 
     id = Column(Integer, primary_key=True)
     guild_id = Column(Integer, ForeignKey('guilds.id'))
-    channel_id = Column(Integer, nullable=False)
-    max_messages = Column(Integer, default=0)
+    channel_id = Column(BigInteger, nullable=False)
+    max_messages = Column(BigInteger, default=0)
     delay_in_minutes = Column(Integer, default=0)
 
     guild: Mapped["Guild"] = relationship("Guild", back_populates="autodelete_channels")
