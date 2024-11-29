@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Float, ForeignKey, Integer, String
+from sqlalchemy import BigInteger, Column, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, relationship
 
 from .base import Base
@@ -12,7 +12,7 @@ class User(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String, unique=True)
-    user_id = Column(Integer, unique=True)
+    user_id = Column(BigInteger, unique=True)
 
     members: Mapped["dbmodels.Member"] = relationship('Member', back_populates='user', uselist=True)
     wordle_scores: Mapped["WordleScore"] = relationship('WordleScore', back_populates='user')
