@@ -31,7 +31,7 @@ class Activity(Base, SerializerMixin):
     member_id = Column(Integer, ForeignKey('members.id'), unique=True) # member.id foreign key
     minutes_in_voice = Column(Integer, default=0)
     message_count = Column(Integer, default=0)
-    xp = Column(Integer, default=0)
+    xp = Column(BigInteger, default=0)
 
     member: Mapped["dbmodels.Member"] = relationship("Member", back_populates="activities")
 

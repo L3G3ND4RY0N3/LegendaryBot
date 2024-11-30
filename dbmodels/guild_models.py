@@ -22,7 +22,7 @@ class Member(Base):
     __tablename__ = 'members'
 
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey('users.id'), unique=True)
+    user_id = Column(Integer, ForeignKey('users.id'))
     guild_id = Column(Integer, ForeignKey('guilds.id'))
     server_name = Column(String, nullable=False)
 
@@ -37,10 +37,10 @@ class GuildConfig(Base):
 
     id = Column(Integer, primary_key=True)
     guild_id = Column(Integer, ForeignKey('guilds.id'), unique=True)
-    error_channel_id = Column(Integer, default=0)
-    welcome_channel_id = Column(Integer, default=0)
-    boost_channel_id = Column(Integer, default=0)
-    log_channel_id = Column(Integer, default=0)
+    error_channel_id = Column(BigInteger, default=0)
+    welcome_channel_id = Column(BigInteger, default=0)
+    boost_channel_id = Column(BigInteger, default=0)
+    log_channel_id = Column(BigInteger, default=0)
     activity_status = Column(Boolean, default=False)
 
     guild: Mapped["Guild"] = relationship("Guild", back_populates="guild_config")
@@ -97,7 +97,7 @@ class AutoDeleteChannel(Base):
     id = Column(Integer, primary_key=True)
     guild_id = Column(Integer, ForeignKey('guilds.id'))
     channel_id = Column(BigInteger, nullable=False)
-    max_messages = Column(BigInteger, default=0)
+    max_messages = Column(Integer, default=0)
     delay_in_minutes = Column(Integer, default=0)
 
     guild: Mapped["Guild"] = relationship("Guild", back_populates="autodelete_channels")
