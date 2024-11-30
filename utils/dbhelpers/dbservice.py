@@ -1,4 +1,5 @@
 from typing import Type, TypeVar
+from sqlalchemy import UniqueConstraint
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.inspection import inspect
 from sqlalchemy.orm import Session
@@ -34,20 +35,24 @@ class DatabaseService:
             if column.unique or column.primary_key:
                 unique_columns.append(column.name)
         
+        for constraint in model.__table__.constraints:
+            if isinstance(constraint, UniqueConstraint):
+                for column in constraint.columns:
+                    if column.name not in unique_columns:
+                        unique_columns.append(column.name)
+        
         # Try to query using unique fields in kwargs, in order
         instance = None
-        for unique_field in unique_columns:
-            if unique_field in kwargs:
-                query_kwargs = {unique_field: kwargs[unique_field]}
-                instance = session.query(model).filter_by(**query_kwargs).first()
-                if instance:
-                    break  # If a match is found, break out of the loop
+
+        unique_filters = {key: val for key, val in kwargs.items() if key in unique_columns}
+        instance = session.query(model).filter_by(**unique_filters).first()
         
         if instance:
             # If an instance is found, update its fields (if necessary)
             has_changes = False
             for field, value in kwargs.items():
-                if getattr(instance, field) != value:
+                old_val = getattr(instance, field)
+                if  old_val != value:
                     setattr(instance, field, value)
                     has_changes = True
             if has_changes:
@@ -63,9 +68,6 @@ class DatabaseService:
                 session.rollback()
                 # If an IntegrityError occurs, a duplicate unique key might have been inserted
                 # Retry fetching the instance based on unique fields
-                for unique_field in unique_columns:
-                    if unique_field in kwargs:
-                        query_kwargs = {unique_field: kwargs[unique_field]}
-                        instance = session.query(model).filter_by(**query_kwargs).first()
-                        if instance:
-                            return instance
+                instance = session.query(model).filter_by(**unique_filters).first()
+                if instance:
+                    return instance
