@@ -1,4 +1,4 @@
-from sqlalchemy import BigInteger, Boolean, Column, DateTime, ForeignKey, Integer, String
+from sqlalchemy import BigInteger, Boolean, Column, DateTime, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, relationship
 from sqlalchemy.sql import func
 
@@ -25,6 +25,10 @@ class Member(Base):
     user_id = Column(Integer, ForeignKey('users.id'))
     guild_id = Column(Integer, ForeignKey('guilds.id'))
     server_name = Column(String, nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint('user_id', 'guild_id', name='uix_userid_guild_id'),
+    )
 
     user: Mapped["dbmodels.User"] = relationship("User", back_populates="members")
     guild: Mapped["Guild"] = relationship("Guild", back_populates="members")
