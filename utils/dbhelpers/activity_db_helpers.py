@@ -1,4 +1,5 @@
 from typing import Tuple
+from constants.enums import ActivityStats
 import discord
 from dbmodels.base import SessionLocal
 from dbmodels import Activity, Guild, Member, User
@@ -31,7 +32,7 @@ def handle_activity_update(dcuser: discord.Member, minutes: int | None = None, m
 
 
 #region LEADERBOARD
-def handle_leaderboard_command(dcuser: discord.Member, sort_by: str = 'xp', limit: int = 10, guild_only: bool = True) -> str:
+def handle_leaderboard_command(dcuser: discord.Member, sort_by: str = ActivityStats.XP, limit: int = 10, guild_only: bool = True) -> str:
     """handles the leaderboard command"""
     try:
         if sort_by not in get_valid_attributes(Activity):
@@ -45,7 +46,7 @@ def handle_leaderboard_command(dcuser: discord.Member, sort_by: str = 'xp', limi
         return get_global_leaderboard(sort_by, limit)
 
 
-def get_guild_leaderboard(dcuser: discord.Member, sort_by: str = 'xp', limit: int = 10) -> str:
+def get_guild_leaderboard(dcuser: discord.Member, sort_by: str = ActivityStats.XP, limit: int = 10) -> str:
     """queries the guild for the top ten activities"""
     guild_id = dcuser.guild.id
     with db_service.session_scope() as session:
@@ -66,16 +67,27 @@ def get_guild_leaderboard(dcuser: discord.Member, sort_by: str = 'xp', limit: in
 def get_global_leaderboard(sort_by: str = 'xp', limit: int = 10) -> str:
     """queries all activities for the top ten users"""
     with db_service.session_scope() as session:
+        total_xp = func.sum(Activity.xp).label('total_xp')
+        total_messages = func.sum(Activity.message_count).label('total_messages')
+        total_voice_minutes = func.sum(Activity.minutes_in_voice).label('total_voice_minutes')
+
+        # Map the sort_by options to the corresponding aggregates
+        aggregates = {
+            'xp': total_xp,
+            'message_count': total_messages,
+            'minutes_in_voice': total_voice_minutes
+    }
         activity_query = (
         session.query(
-            Member,
-            func.sum(Activity.xp).label('total_xp'),
-            func.sum(Activity.message_count).label('total_messages'),
-            func.sum(Activity.minutes_in_voice).label('total_voice_minutes')
+            User,
+            total_xp,
+            total_messages,
+            total_voice_minutes
         )
-        .join(Activity)
-        .group_by(Member.user_id)
-        .order_by(desc(getattr(Activity, sort_by)))
+        .join(Member.user)
+        .join(Activity, full=True)
+        .group_by(User.id)
+        .order_by(desc(aggregates[sort_by]))
         .limit(limit)
         )
         activities = activity_query.all()
@@ -194,9 +206,9 @@ def format_leaderboard_table(activities: list[Activity] | list[Row[Tuple[Member,
     rows = []
     if isinstance(activities[0], Row):
         for idx, row in enumerate(activities, start=1):
-            member, total_xp, total_messages, total_voice_minutes = row
+            user, total_xp, total_messages, total_voice_minutes = row
             rows.append(
-                f"{idx:<4} | {member.user.name:>10} | {total_messages:>8} | {total_voice_minutes:>10}| {total_xp:>7} "
+                f"{idx:<4} | {user.name:>10} | {total_messages:>8} | {total_voice_minutes:>10}| {total_xp:>7} "
             )
     else:
         for idx, activity in enumerate(activities, start=1):

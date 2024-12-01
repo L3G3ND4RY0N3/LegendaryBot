@@ -1,3 +1,4 @@
+from constants.enums import ActivityStats
 import discord
 from discord.ext import commands, tasks
 from discord import app_commands
@@ -184,10 +185,9 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
     @app_commands.command(name="leaderboard", description="Look at the leaderborad!")
     @app_commands.describe(stat="the stat for which you want the leaderboard to be ordered by")
     @app_commands.choices(stat = [
-        Choice(name = "message count", value = "message_count"),
-        Choice(name = "minutes in voice", value = "minutes_in_voice")
+        Choice(name=stat.name.title(), value=stat.value) for stat in ActivityStats
     ])
-    async def leaderboard(self, interaction: discord.Interaction, stat: str = 'xp', guild_only: bool = False):
+    async def leaderboard(self, interaction: discord.Interaction, stat: str = ActivityStats.XP.value, guild_only: bool = True):
         table = handle_leaderboard_command(interaction.user, stat, guild_only=guild_only)
         if table == "":
             # TODO: create a better embed maybe!
