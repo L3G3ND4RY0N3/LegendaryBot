@@ -23,6 +23,11 @@ class VoiceChannelStatus(Enum):
     InOwnVoice = "InOwnVoice"
 #endregion
 
+class ActivityStats(Enum):
+    XP = "xp"
+    MESSAGES = "message_count"
+    VOICEMINUTES = "minutes_in_voice"
+
 #region LINKED Roles
 class LRRetCode(Enum):
     SUCCESS = 0
