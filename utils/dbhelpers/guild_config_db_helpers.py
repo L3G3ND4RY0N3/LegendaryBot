@@ -1,20 +1,20 @@
+import typing as T
 import discord
 from dbmodels.base import SessionLocal
 from dbmodels import Guild, GuildConfig
 from .dbservice import DatabaseService
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, Query
 from utils import settings
+
+from constants.enums import GuildChannelTypes
 
 
 logger=settings.logging.getLogger("discord")
 
 db_service = DatabaseService(SessionLocal)
 
-ACTIVITY_GUILDS = set()
-GUILDS_WITH_CONFIGS = set()
 
-
-def handle_guild_config_update(dcguild: discord.Guild,
+def _handle_guild_config_update(dcguild: discord.Guild,
                                 error_id: int | None = None,
                                 welcome_id: int | None = None,
                                 boost_id: int | None = None,
@@ -22,16 +22,33 @@ def handle_guild_config_update(dcguild: discord.Guild,
                                 activity: bool | None = None) -> None:
     with db_service.session_scope() as session:
         guild_config = get_or_create_for_guild_config(dcguild, session=session)
-
-        GUILDS_WITH_CONFIGS.add(dcguild.id)
         if activity is not None:
             guild_config.update_activity(activity=activity)
-            if activity:
-                ACTIVITY_GUILDS.add(dcguild.id)
-            else:
-                ACTIVITY_GUILDS.remove(dcguild.id)
         
         guild_config.update_channels(error_id=error_id, welcome_id=welcome_id, boost_id=boost_id, log_id=log_id)
+
+
+def update_channels_guild_config(guild: discord.Guild, channel_name: str, channel_id: int = 0, activity_status: bool = False) -> None:
+    """Function to update the channels using the embeds title"""
+    if channel_name == GuildChannelTypes.ERROR.value:
+        _handle_guild_config_update(guild, error_id=channel_id)
+    elif channel_name == GuildChannelTypes.LOG.value:
+        _handle_guild_config_update(guild, log_id=channel_id)
+    elif channel_name == GuildChannelTypes.WELCOME.value:
+        _handle_guild_config_update(guild, welcome_id=channel_id)
+    elif channel_name == GuildChannelTypes.BOOST.value:
+        _handle_guild_config_update(guild, boost_id=channel_id)
+    elif channel_name == GuildChannelTypes.ACTIVITY.value:
+        _handle_guild_config_update(guild, activity=activity_status)
+    else:
+        raise InvalidChannelName()
+    
+
+def get_channel_status(config: dict[str, int], channel: str) -> int:
+    for key, val in config.items():
+        if channel in key:
+            return val
+    raise InvalidChannelName()
 
 
 def get_all_activity_guilds() -> set[int]:
@@ -52,6 +69,18 @@ def get_all_guilds_with_configs() -> set[int]:
                     )
         guild_ids = set(guild_query.all())
         return guild_ids
+    
+
+def get_guild_config(guild_id: int) -> dict[T.Any] | None:
+    with db_service.session_scope() as session:
+        guild_query: Query = (session.query(GuildConfig)
+                    .join(Guild)
+                    .filter(Guild.guild_dc_id == guild_id)
+                    )
+        config = guild_query.first()
+        if config is not None:
+            config = config.to_dict()
+    return config
 
 
 def get_or_create_for_guild_config(dcguild: discord.Guild, session: Session) -> GuildConfig:
@@ -61,3 +90,6 @@ def get_or_create_for_guild_config(dcguild: discord.Guild, session: Session) -> 
     guild_config = db_service.get_or_create(GuildConfig, session=session, guild_id = guild.id)
     session.commit()
     return guild_config
+
+class InvalidChannelName(Exception):
+    pass
