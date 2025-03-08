@@ -9,6 +9,7 @@ class GuildChannelStatus(Enum):
 
 
 class GuildChannelTypes(Enum):
+    """Only add or remove entrys when updating the guild model for guild config!"""
     ERROR = "error"
     LOG = "log"
     WELCOME = "welcome"
