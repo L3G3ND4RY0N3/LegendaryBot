@@ -1,8 +1,7 @@
 import discord
 from discord.ext import commands, tasks
 from discord import app_commands
-from utils import settings, guildjsonfunctions 
-from utils.dbhelpers.guild_config_db_helpers import ACTIVITY_GUILDS, get_all_activity_guilds
+from utils import settings, guildjsonfunctions
 from utils.embeds import embedbuilder as emb
 from utils.embeds.guild_settings_embed import createSettingEmbed
 from utils.views import guildsetupview as gsv
@@ -21,7 +20,6 @@ class GuildSetup(commands.Cog, name="GuildSetup"):
     async def on_ready(self):
         logger.info(f"{self.__cog_name__}.py is ready!")
         fp.create_empty_json(fp.GUILD_LOG_JSON)
-        ACTIVITY_GUILDS = get_all_activity_guilds()
 
 
     @commands.Cog.listener()
