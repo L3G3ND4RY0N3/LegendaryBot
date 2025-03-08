@@ -1,4 +1,3 @@
-import typing as T
 import discord
 from dbmodels.base import SessionLocal
 from dbmodels import Guild, GuildConfig
@@ -44,7 +43,7 @@ def update_channels_guild_config(guild: discord.Guild, channel_name: str, channe
         raise InvalidChannelName()
     
 
-def get_channel_status(config: dict[str, int], channel: str) -> int:
+def get_config_channel_id(config: dict[str, int | bool], channel: str) -> int | bool:
     for key, val in config.items():
         if channel in key:
             return val
@@ -71,7 +70,7 @@ def get_all_guilds_with_configs() -> set[int]:
         return guild_ids
     
 
-def get_guild_config(guild_id: int) -> dict[T.Any] | None:
+def get_guild_config(guild_id: int) -> dict[str, int | bool] | None:
     with db_service.session_scope() as session:
         guild_query: Query = (session.query(GuildConfig)
                     .join(Guild)

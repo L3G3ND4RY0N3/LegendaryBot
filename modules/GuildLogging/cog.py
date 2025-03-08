@@ -4,7 +4,7 @@ from discord.ext import commands
 from utils import settings
 from utils.embeds.embedbuilder import EmbedFileTuple
 from utils.embeds.guild_logging_embeds import log_del_message_embed, log_edit_message_embed, log_member_join_embed, log_member_leave_embed
-from utils.dbhelpers.guild_config_db_helpers import get_channel_status, get_guild_config
+from utils.dbhelpers.guild_config_db_helpers import get_config_channel_id, get_guild_config
 
 
 logger=settings.logging.getLogger("discord")
@@ -61,7 +61,7 @@ class GuildLogging(commands.Cog, name="GuildLogging"):
 
     @classmethod
     async def log_event_from_member(cls, guild: discord.Guild, embed_file_tuple: EmbedFileTuple) -> None:
-        channel_id = get_channel_status(get_guild_config(guild.id), en.GuildChannelTypes.LOG.value)
+        channel_id = get_config_channel_id(get_guild_config(guild.id), en.GuildChannelTypes.LOG.value)
         if not channel_id:
             return
         channel = guild.get_channel(channel_id)
@@ -72,7 +72,7 @@ class GuildLogging(commands.Cog, name="GuildLogging"):
 
     @classmethod
     async def log_event_from_message(cls, guild: discord.Guild, embed_file_tuple: EmbedFileTuple) -> None:
-        channel_id = get_channel_status(get_guild_config(guild.id), en.GuildChannelTypes.LOG.value)
+        channel_id = get_config_channel_id(get_guild_config(guild.id), en.GuildChannelTypes.LOG.value)
         if not channel_id:
             return
         channel = guild.get_channel(channel_id)
