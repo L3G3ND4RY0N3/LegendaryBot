@@ -1,5 +1,6 @@
 [tool.poetry]
 name = "legendarybot"
+package-mode = false
 version = "0.1.0"
 description = "A small discord bot for better guild management"
 authors = ["L3G3ND <carl.max@hotmail.de>"]
