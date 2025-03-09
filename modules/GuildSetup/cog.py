@@ -6,6 +6,7 @@ from utils.embeds import embedbuilder as emb
 from utils.embeds.guild_settings_embed import createSettingEmbed
 from utils.views import guildsetupview as gsv
 from utils import filepaths as fp
+from utils.dbhelpers.guild_config_db_helpers import get_guild_config, _handle_guild_config_update
 
 logger=settings.logging.getLogger("discord")
 
@@ -76,6 +77,9 @@ class GuildSetup(commands.Cog, name="GuildSetup"):
             return
         
         currentPage = 0
+
+        if not get_guild_config(guild_id):
+            _handle_guild_config_update(ctx.guild)
         
         embed = createSettingEmbed(ctx.guild, pageNum=currentPage)
         channel = embed.fields[0].name.split(" ")[0].lower()
