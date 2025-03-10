@@ -56,13 +56,3 @@ def createSettingEmbed(guild: discord.Guild , pageNum=0, inline=False) -> discor
             embed.set_footer(text=f"Page {pageNum+1} of {maxPage}")
 
     return embed
-
-
-######### helper for the settings embed builder
-def get_channel_status(channel: str, data: dict) -> str:
-    status = data.get(channel, 0)
-    if status == 0:
-        return en.GuildChannelStatus.Inactive.name
-    return en.GuildChannelStatus.Active.name
-
-#endregion
