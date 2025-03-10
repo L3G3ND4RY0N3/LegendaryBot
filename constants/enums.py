@@ -15,6 +15,14 @@ class GuildChannelTypes(Enum):
     WELCOME = "welcome"
     BOOST = "boost"
     ACTIVITY = "activity"
+
+
+class GuildChannelDBColumns(Enum):
+    ERROR = "error_channel_id"
+    LOG = "log_channel_id"
+    WELCOME = "welcome_channel_id"
+    BOOST = "boost_channel_id"
+    ACTIVITY = "activity_status"
 #endregion
 
 #region VOICE
