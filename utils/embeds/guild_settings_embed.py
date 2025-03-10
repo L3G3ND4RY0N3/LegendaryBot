@@ -20,39 +20,28 @@ def createSettingEmbed(guild: discord.Guild , pageNum=0, inline=False) -> discor
     # if not looking at activity page, where no channel is set, get the channel to display in embed, else set channel to 'None'
     if pageTitle != en.GuildChannelTypes.ACTIVITY.value: 
         channel = guild.get_channel(channel_id)
+    else:
+        channel = None
 
-    match pageTitle: # will be prone to breaking if I fuck with the columns of the db model...
-        case en.GuildChannelTypes.ERROR.value:
-            embed.add_field(name=f"{pageTitle.title()} channel status: {en.GuildChannelStatus.Active.name if channel_id else en.GuildChannelStatus.Inactive.name}", value="", inline=inline)
-            if channel is not None:
-                embed.add_field(name="Current channel:", value=f"{channel.mention}")
-            embed.add_field(name="Info", value="Set a channel where the bot will show error messages to you. The default is none.", inline=inline)
-            embed.set_footer(text=f"Page {pageNum+1} of {maxPage}")
-
-        case en.GuildChannelTypes.LOG.value:
-            embed.add_field(name=f"{pageTitle.title()} channel status: {en.GuildChannelStatus.Active.name if channel_id else en.GuildChannelStatus.Inactive.name}", value="", inline=inline)
-            if channel is not None:
-                embed.add_field(name="Current channel:", value=f"{channel.mention}")
-            embed.add_field(name="Info", value="Set a channel where the bot will log events from the guild like edited/deleted messages. The default is none.", inline=inline)
-            embed.set_footer(text=f"Page {pageNum+1} of {maxPage}")
-
-        case en.GuildChannelTypes.WELCOME.value:
-            embed.add_field(name=f"{pageTitle.title()} channel status: {en.GuildChannelStatus.Active.name if channel_id else en.GuildChannelStatus.Inactive.name}", value="", inline=inline)
-            if channel is not None:
-                embed.add_field(name="Current channel:", value=f"{channel.mention}")
-            embed.add_field(name="Info", value="Set a channel where the bot will show welcome messages to new joining members. The default is none.", inline=inline)
-            embed.set_footer(text=f"Page {pageNum+1} of {maxPage}")
-
-        case en.GuildChannelTypes.BOOST.value:
-            embed.add_field(name=f"{pageTitle.title()} channel status: {en.GuildChannelStatus.Active.name if channel_id else en.GuildChannelStatus.Inactive.name}", value="", inline=inline)
-            if channel is not None:
-                embed.add_field(name="Current channel:", value=f"{channel.mention}")
-            embed.add_field(name="Info", value="Set a channel where the bot will send thank you messages to server booster. The default is none.", inline=inline)
-            embed.set_footer(text=f"Page {pageNum+1} of {maxPage}")
-
-        case en.GuildChannelTypes.ACTIVITY.value:
-            embed.add_field(name=f"{pageTitle.title()} tracker status: {en.GuildChannelStatus.Active.name if channel_id else en.GuildChannelStatus.Inactive.name}", value="", inline=inline)
-            embed.add_field(name="Info", value="Activate the activity tracker, tracking the times of members in voice and written messages. Deactivated by default.", inline=inline)
-            embed.set_footer(text=f"Page {pageNum+1} of {maxPage}")
+    embed.add_field(name=f"{pageTitle.title()} channel status: {en.GuildChannelStatus.Active.name if channel_id else en.GuildChannelStatus.Inactive.name}", value="", inline=inline)
+    if channel is not None:
+        embed.add_field(name="Current channel:", value=f"{channel.mention}")
+    embed.add_field(name="Info", value=_get_description(pageTitle), inline=inline)
+    embed.set_footer(text=f"Page {pageNum+1} of {maxPage}")
 
     return embed
+
+
+def _get_description(channel_name: str) -> str:
+    match channel_name: # will be prone to breaking if I fuck with the columns of the db model...
+        case en.GuildChannelTypes.ERROR.value:
+            return "Set a channel where the bot will show error messages to you. The default is none."
+        case en.GuildChannelTypes.LOG.value:
+            return "Set a channel where the bot will log events from the guild like edited/deleted messages. The default is none."
+        case en.GuildChannelTypes.WELCOME.value:
+            return "Set a channel where the bot will show welcome messages to new joining members. The default is none."
+        case en.GuildChannelTypes.BOOST.value:
+            return "Set a channel where the bot will send thank you messages to server booster. The default is none."
+        case en.GuildChannelTypes.ACTIVITY.value:
+            return "Activate the activity tracker, tracking the times of members in voice and written messages. Deactivated by default."
+    return
