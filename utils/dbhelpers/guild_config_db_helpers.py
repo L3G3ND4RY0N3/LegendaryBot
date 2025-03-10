@@ -44,6 +44,8 @@ def update_channels_guild_config(guild: discord.Guild, channel_name: str, channe
     
 
 def get_config_channel_id(config: dict[str, int | bool], channel: str) -> int | bool:
+    if not config: # if guild has no config yet
+        return 0
     for key, val in config.items():
         if channel in key:
             return val
@@ -70,15 +72,17 @@ def get_all_guilds_with_configs() -> set[int]:
         return guild_ids
     
 
-def get_guild_config(guild_id: int) -> dict[str, int | bool] | None:
+def get_guild_config(guild_id: int) -> dict[str, int | bool]:
     with db_service.session_scope() as session:
         guild_query: Query = (session.query(GuildConfig)
                     .join(Guild)
                     .filter(Guild.guild_dc_id == guild_id)
                     )
-        config = guild_query.first()
+        config: GuildConfig = guild_query.first()
         if config is not None:
             config = config.to_dict()
+        else:
+            config = {}
     return config
 
 

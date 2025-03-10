@@ -21,11 +21,11 @@ class GuildSetupChannelSelect(discord.ui.ChannelSelect):
         await interaction.response.defer(ephemeral=True)
         channel = self.values[0]
         channel_id = channel.id
-        guild_id = str(channel.guild.id)
+        guild_id = channel.guild.id
         returncode: int = 0
         try:
             update_channels_guild_config(interaction.guild, channel_name=self.channel_name, channel_id=channel_id)
-            returncode = gjf.update_guild_channel(guild_id, channel_id, self.channel_name)
+            returncode = gjf.update_guild_channel(str(guild_id), channel_id, self.channel_name)
         except Exception as e:
             logger.error(f"**Error setting the channel for the {self.channel_name} module in {channel.guild.name} with id {guild_id}**")
             logger.exception(f"{e}")
@@ -38,5 +38,5 @@ class GuildSetupChannelSelect(discord.ui.ChannelSelect):
 
         embed = emb.success_embed(f"**Successfully activated the {self.channel_name} module in {channel.mention} for this guild!**")
         settings_embed = createSettingEmbed(interaction.guild, pageNum=self.current_page)
-        await self.settings_interaction.edit_original_response(embed=settings_embed, view=gsv.GuildSetupView(interaction.client, self.current_page, self.channel_name))
+        await self.settings_interaction.edit_original_response(embed=settings_embed, view=gsv.GuildSetupView(interaction.client, self.current_page, self.channel_name, guild_id))
         await interaction.followup.send(embed=embed, ephemeral=True)

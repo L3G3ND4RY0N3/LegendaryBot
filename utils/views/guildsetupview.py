@@ -1,5 +1,5 @@
 import discord
-from utils.dbhelpers.guild_config_db_helpers import update_channels_guild_config
+from utils.dbhelpers.guild_config_db_helpers import get_config_channel_id, get_guild_config, update_channels_guild_config
 from utils.embeds import embedbuilder as emb
 from utils.embeds.guild_settings_embed import createSettingEmbed
 import utils.settings as settings
@@ -10,11 +10,34 @@ from constants import enums as en
 logger=settings.logging.getLogger("discord")
 
 class GuildSetupView(discord.ui.View):
-    def __init__(self, bot: discord.Client, currentPage: int, channel: str):
+    def __init__(self, bot: discord.Client, currentPage: int, channel: str, guild_id: int):
         self.bot = bot
         self.currentPage = currentPage
         self.channel_name = channel
+        self.guild_id = guild_id
         super().__init__(timeout=180)
+        self.guild_setup_activate.label = self._set_activate_button_label()
+        self.guild_setup_deactivate.disabled = self._set_deactivate_button_state()
+        self.guild_setup_activate.disabled = self._set_activate_button_state()
+
+    
+    def _set_activate_button_label(self) -> str:
+        channel_id = get_config_channel_id(get_guild_config(self.guild_id), self.channel_name)
+        if channel_id and self.channel_name != en.GuildChannelTypes.ACTIVITY.value:
+            return "Update"
+        return "Activate"
+    
+    def _set_deactivate_button_state(self) -> bool:
+        channel_id = get_config_channel_id(get_guild_config(self.guild_id), self.channel_name)
+        if channel_id:
+            return False
+        return True
+    
+    def _set_activate_button_state(self) -> bool:
+        channel_id = get_config_channel_id(get_guild_config(self.guild_id), self.channel_name)
+        if channel_id and self.channel_name == en.GuildChannelTypes.ACTIVITY.value:
+            return True
+        return False
 
 
     ######################## Buttons 
@@ -26,7 +49,7 @@ class GuildSetupView(discord.ui.View):
         embed = createSettingEmbed(interaction.guild, pageNum=self.currentPage)
         self.channel_name = embed.fields[0].name.split(" ")[0].lower()
 
-        await interaction.response.edit_message(embed=embed, view=GuildSetupView(self.bot, self.currentPage, self.channel_name))
+        await interaction.response.edit_message(embed=embed, view=GuildSetupView(self.bot, self.currentPage, self.channel_name, interaction.guild.id))
 
         return
 
@@ -38,7 +61,7 @@ class GuildSetupView(discord.ui.View):
         embed = createSettingEmbed(interaction.guild, pageNum=self.currentPage)
         self.channel_name = embed.fields[0].name.split(" ")[0].lower()
 
-        await interaction.response.edit_message(embed=embed, view=GuildSetupView(self.bot, self.currentPage, self.channel_name))
+        await interaction.response.edit_message(embed=embed, view=GuildSetupView(self.bot, self.currentPage, self.channel_name, interaction.guild.id))
 
         return
     
@@ -84,7 +107,7 @@ class GuildSetupView(discord.ui.View):
         button.disabled = True
         embed = emb.success_embed(f"Successfully deactivated the {self.channel_name} module for this guild!")
         settings_embed = createSettingEmbed(interaction.guild, pageNum=self.currentPage)
-        await interaction.response.edit_message(embed=settings_embed, view=self)
+        await interaction.response.edit_message(embed=settings_embed, view=GuildSetupView(self.bot, self.currentPage, self.channel_name, interaction.guild.id))
         await interaction.followup.send(embed=embed, ephemeral=True)
 
         return
@@ -108,7 +131,7 @@ class GuildSetupView(discord.ui.View):
             embed = emb.success_embed(f"Successfully activated the {self.channel_name} module for this guild!")
             button.label = "Update"
             settings_embed = createSettingEmbed(interaction.guild, pageNum=self.currentPage)
-            await interaction.response.edit_message(embed=settings_embed, view=self)
+            await interaction.response.edit_message(embed=settings_embed, view=GuildSetupView(self.bot, self.currentPage, self.channel_name, interaction.guild.id))
             await interaction.followup.send(embed=embed, ephemeral=True)
             
             return
