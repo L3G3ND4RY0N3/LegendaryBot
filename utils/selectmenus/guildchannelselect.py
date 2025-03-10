@@ -1,6 +1,5 @@
 import discord
 import utils.settings as settings
-import utils.guildjsonfunctions as gjf
 from utils.embeds import embedbuilder as emb
 from utils.embeds.guild_settings_embed import createSettingEmbed
 import utils.views.guildsetupview as gsv
@@ -25,10 +24,10 @@ class GuildSetupChannelSelect(discord.ui.ChannelSelect):
         returncode: int = 0
         try:
             update_channels_guild_config(interaction.guild, channel_name=self.channel_name, channel_id=channel_id)
-            returncode = gjf.update_guild_channel(str(guild_id), channel_id, self.channel_name)
         except Exception as e:
             logger.error(f"**Error setting the channel for the {self.channel_name} module in {channel.guild.name} with id {guild_id}**")
             logger.exception(f"{e}")
+            returncode = -1
             return
 
         if returncode < 0:

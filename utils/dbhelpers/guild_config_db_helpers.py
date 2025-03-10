@@ -52,23 +52,23 @@ def get_config_channel_id(config: dict[str, int | bool], channel: str) -> int | 
     raise InvalidChannelName()
 
 
-def get_all_activity_guilds() -> set[int]:
+def get_all_activity_guild_ids() -> set[int]:
     with db_service.session_scope() as session:
         guild_query = (session.query(Guild.guild_dc_id)
-                    .join(GuildConfig, full=True)
-                    .filter(GuildConfig.activity_status is True)
+                    .join(GuildConfig)
+                    .filter(GuildConfig.activity_status.is_(True))
                     )
-        guild_ids = set(guild_query.all())
+        guild_ids = set(session.scalars(guild_query))
         return guild_ids
     
 
-def get_all_guilds_with_configs() -> set[int]:
+def get_all_guild_ids_with_configs() -> set[int]:
     with db_service.session_scope() as session:
         guild_query = (session.query(Guild.guild_dc_id)
-                    .join(GuildConfig, full=True)
+                    .join(GuildConfig)
                     .filter(GuildConfig.guild_id == Guild.id)
                     )
-        guild_ids = set(guild_query.all())
+        guild_ids = set(session.scalars(guild_query))
         return guild_ids
     
 
