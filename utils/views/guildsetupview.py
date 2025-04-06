@@ -85,7 +85,6 @@ class GuildSetupView(discord.ui.View):
         except Exception as e:
             logger.exception(f"{e}")
             returncode = -1
-        # TODO: add error to error channel, if setup
         if returncode == -1:
             embed = emb.warn_embed(f"There was an error deactivating the {self.channel_name} feature.")
             await interaction.response.send_message(embed=embed, ephemeral=True)
