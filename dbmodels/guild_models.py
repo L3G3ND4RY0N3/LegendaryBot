@@ -4,6 +4,7 @@ from sqlalchemy.sql import func
 
 from .base import Base
 import dbmodels
+from utils.dbhelpers.mixin import SerializerMixin
 
 
 class Guild(Base):
@@ -36,7 +37,7 @@ class Member(Base):
     warnings: Mapped["ModWarning"] = relationship("ModWarning", back_populates="member")
 
 
-class GuildConfig(Base):
+class GuildConfig(Base, SerializerMixin):
     __tablename__ = 'guildconfigs'
 
     id = Column(Integer, primary_key=True)
@@ -54,13 +55,13 @@ class GuildConfig(Base):
                         welcome_id: int | None = None,
                         boost_id: int | None = None,
                         log_id: int | None = None) -> None:
-        if error_id:
+        if error_id is not None:
             self._update_error_channel(error_id)
-        if welcome_id:
+        if welcome_id is not None:
             self._update_weclome_channel(welcome_id)
-        if boost_id:
+        if boost_id is not None:
             self._update_boost_channel(boost_id)
-        if log_id:
+        if log_id is not None:
             self._update_log_channel(log_id)
 
 

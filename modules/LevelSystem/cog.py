@@ -7,7 +7,7 @@ import random
 import math
 import aiosqlite
 import datetime
-from utils import settings, guildjsonfunctions
+from utils import settings
 from utils.Activity.activity_helpers import update_all_members_in_voice
 from utils.customwrappers import is_owner
 from utils.dbhelpers.activity_db_helpers import display_test, get_user_stats_with_position, handle_activity_update, handle_leaderboard_command, handle_stats_command
@@ -15,6 +15,7 @@ from utils.dbhelpers.migrate_from_old_db import migrate_db_data
 from utils.embeds.activity_embeds import activity_stats_embed, guild_leaderboard_embed
 from utils.embeds.embedbuilder import forbidden_embed, success_embed, warn_embed
 from utils.structs.activity_times_data import SessionManager
+from utils.dbhelpers.guild_config_db_helpers import get_all_activity_guild_ids
 
 
 logger=settings.logging.getLogger("discord")
@@ -45,7 +46,8 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild):
         """checks on guild join all members in a vc"""
-        if guild.id not in guildjsonfunctions.ACTIVITY_IDS:
+        activity_guilds = get_all_activity_guild_ids()
+        if guild.id not in activity_guilds:
             return
         vc_count = len(guild.voice_channels)
         self.guild_count += 1
@@ -68,8 +70,9 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
         """runs after the bot starts to add all members currently in a voice channel to the SessionManager so that they get points"""
         guilds = self.bot.guilds
         vc_channels: list[discord.VoiceChannel] = []
+        activity_guilds = get_all_activity_guild_ids()
         for guild in guilds: #TODO: here and in on_message, on_voice_state_update guild_id match against activity_ids, then the starttime dict should only hold members in guilds with active tracking
-            if guild.id not in guildjsonfunctions.ACTIVITY_IDS:
+            if guild.id not in activity_guilds:
                 continue
             vc_channels.extend(guild.voice_channels)
         vc_channels_count = len(vc_channels)
@@ -139,7 +142,7 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        if message.author.bot or message.guild.id not in guildjsonfunctions.ACTIVITY_IDS:
+        if message.author.bot or message.guild.id not in get_all_activity_guild_ids():
             return
 
         xp = random.randint(5,15)
@@ -149,7 +152,7 @@ class LevelSystem(commands.Cog, name="LevelSystem"):
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
-        if  member.bot or member.guild.id not in guildjsonfunctions.ACTIVITY_IDS:
+        if  member.bot or member.guild.id not in get_all_activity_guild_ids():
             return
         if before.channel is None and after.channel is not None:
             self.users_in_voice.add_session(member.id, member.guild.id)
