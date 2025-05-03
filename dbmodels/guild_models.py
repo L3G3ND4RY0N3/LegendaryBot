@@ -106,3 +106,21 @@ class AutoDeleteChannel(Base):
     delay_in_minutes = Column(Integer, default=0)
 
     guild: Mapped["Guild"] = relationship("Guild", back_populates="autodelete_channels")
+
+
+class YouTubeNotification(Base):
+    __tablename__ = 'youtube_notifications'
+
+    id = Column(Integer, primary_key=True)
+    
+    discord_channel_id = Column(BigInteger, nullable=False)
+    youtube_channel_id = Column(String, nullable=False)      # e.g. 'UC_x5XG1OV2P6uZZ5FSM9Ttw'
+    enabled = Column(Boolean, default=True)
+    custom_message = Column(String, nullable=True)
+    role_id = Column(BigInteger, nullable=True) # Role to ping
+
+    last_video_id = Column(String, nullable=True)
+
+    __table_args__ = (
+        UniqueConstraint('discord_channel_id', 'youtube_channel_id', name='uix_discord_channel_youtube_channel'),
+    )

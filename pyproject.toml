@@ -17,6 +17,7 @@ alembic = "^1.13.2"
 pytest-sqlalchemy = "^0.2.1"
 psycopg2-binary = { version = "^2.9.10", markers = "platform_system == 'Linux'" }
 psycopg2 = { version = "^2.9.6", markers = "platform_system == 'Windows'" }
+feedparser = "^6.0.11"
 
 
 [build-system]
