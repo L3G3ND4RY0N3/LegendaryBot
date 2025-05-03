@@ -26,7 +26,7 @@ class YoutubeNotification(commands.Cog, name="YoutubeNotification"):
         logger.info(f"{self.__cog_name__}.py is ready!")
 
 #region TASKS
-    @tasks.loop(minutes=1)
+    @tasks.loop(minutes=10)
     async def check_youtube(self):
 
         yt_configs = get_all_Youtube_Notifications(only_enabled=True)
