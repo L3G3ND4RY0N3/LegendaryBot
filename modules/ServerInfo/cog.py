@@ -77,7 +77,7 @@ class serverinfob(discord.ui.View):
         super().__init__(timeout=None)
 
     @discord.ui.button(label="🏠 Home", style=discord.ButtonStyle.red)
-    async def serverinfo2(self, ctx, button:discord.ui.Button):
+    async def serverinfo2(self, ctx: discord.Interaction, button: discord.ui.Button):
         name = str(ctx.guild.name)
         description = str(ctx.guild.description)
         guild = ctx.guild
@@ -145,7 +145,7 @@ class serverinfob(discord.ui.View):
         await ctx.response.edit_message(embed=embed)
 
     @discord.ui.button(label="Server Profile", style=discord.ButtonStyle.green)
-    async def icon(self, ctx, button:discord.ui.Button):
+    async def icon(self, ctx: discord.Interaction, button:discord.ui.Button):
         embed = discord.Embed(title=f"Server Icon of {ctx.guild}")
         embed.set_image(url=ctx.guild.icon)
         await ctx.response.edit_message(embed=embed)
@@ -162,13 +162,13 @@ class serverinfob(discord.ui.View):
             logger.warning(f"{e}")
 
     @discord.ui.button(label="Server Roles", style=discord.ButtonStyle.blurple)
-    async def serverrollen(self, ctx, button:discord.ui.Button):
+    async def serverrollen(self, ctx: discord.Interaction, button:discord.ui.Button):
         embed = discord.Embed(title=f"{ctx.guild}`s Server Roles",
                             description=("".join([str(r.mention) for r in ctx.guild.roles])), color=discord.Color.blue())
         await ctx.response.edit_message(embed=embed)
 
     @discord.ui.button(label="Serverbanner", style=discord.ButtonStyle.green)
-    async def serverbanner(self, ctx, button:discord.ui.Button):
+    async def serverbanner(self, ctx: discord.Interaction, button:discord.ui.Button):
         if ctx.guild.banner is None:
             embed = discord.Embed(title=f"{ctx.guild}`s Banner", description="No Banner set for server")
             await ctx.response.edit_message(embed=embed)
