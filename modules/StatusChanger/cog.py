@@ -4,7 +4,7 @@ from discord import app_commands
 from itertools import cycle
 from utils import settings
 from utils.customwrappers import is_owner
-from utils.embeds.embedbuilder import success_embed, warn_embed
+from utils.embeds.embedbuilder import success_embed
 
 logger=settings.logging.getLogger("discord")
 

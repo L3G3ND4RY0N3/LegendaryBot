@@ -78,11 +78,11 @@ def validity_of_guess_embed(guess: str, game: Wordle) -> discord.Embed:
         validity: WordValidity = game.guess_is_valid(guess)
         match validity:
             case WordValidity.TOOLONG:
-                emb = warn_embed(f"Your guess was too long!")
+                emb = warn_embed("Your guess was too long!")
             case WordValidity.TOOSHORT:
-                emb = warn_embed(f"Your guess was too short!")
+                emb = warn_embed("Your guess was too short!")
             case WordValidity.INVALID:
-                emb = warn_embed(f"Your guess was not a valid word!")
+                emb = warn_embed("Your guess was not a valid word!")
             case WordValidity.VALID:
                 emb = None
         return emb

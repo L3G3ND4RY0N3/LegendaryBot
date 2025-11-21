@@ -15,25 +15,21 @@ class Moderation(commands.Cog, name="Moderation"):
     @commands.Cog.listener() #ansatt bot.event!
     async def on_ready(self):
         logger.info(f"{self.__cog_name__}.py is ready!")
-
-
-    @commands.Cog.listener()
-    async def on_ready(self):
         async with aiosqlite.connect(self.DB) as db:
-            await db.executescript(
-                """
-                CREATE TABLE IF NOT EXISTS WarnList (
-                warn_id INTEGER PRIMARY KEY,
-                mod_id INTEGER,
-                guild_id INTEGER,
-                user_id INTEGER,
-                warns INTEGER DEFAULT 0,
-                warn_reason TEXT,
-                warn_time TEXT
-                )
-                """
-            )
-
+                    await db.executescript(
+                        """
+                        CREATE TABLE IF NOT EXISTS WarnList (
+                        warn_id INTEGER PRIMARY KEY,
+                        mod_id INTEGER,
+                        guild_id INTEGER,
+                        user_id INTEGER,
+                        warns INTEGER DEFAULT 0,
+                        warn_reason TEXT,
+                        warn_time TEXT
+                        )
+                        """
+                    )
+        
     
     ####################################################################################################################################
     ######################################################## Commands ##################################################################
@@ -67,7 +63,7 @@ class Moderation(commands.Cog, name="Moderation"):
 
         except discord.Forbidden:
             conf_embed = discord.Embed(color=discord.Color.yellow())
-            conf_embed.add_field(name="`❌` **Failure!**", value=f"I am missing the permissions to delete messages ('manage messages').")
+            conf_embed.add_field(name="`❌` **Failure!**", value="I am missing the permissions to delete messages ('manage messages').")
             conf_embed.set_footer(text=f"Action attempted by {interaction.user}.")
             await interaction.response.send_message(embed=conf_embed, ephemeral=True)
             return
@@ -273,7 +269,7 @@ class Moderation(commands.Cog, name="Moderation"):
         unwarnUser_embed.set_footer(text=f"{self.bot.user.name}#{self.bot.user.discriminator}", icon_url=self.bot.user.avatar)
         
         unwarn_embed = discord.Embed(
-            title=f"`✅` Unwarn",
+            title="`✅` Unwarn",
             description=f"You have removed a warning for {member.mention} in **{interaction.guild.name}**.",
             color=discord.Color.green(),
             timestamp=datetime.datetime.utcnow()
@@ -292,7 +288,7 @@ class Moderation(commands.Cog, name="Moderation"):
                 (member.id, interaction.guild.id, warn_id)
             )
             await db.commit()
- 
+
         await member.send(embed=unwarnUser_embed)
         await interaction.response.send_message(embed=unwarn_embed, ephemeral=False)
 
@@ -324,7 +320,7 @@ class Moderation(commands.Cog, name="Moderation"):
         unwarnUser_embed.set_footer(text=f"{self.bot.user.name}#{self.bot.user.discriminator}", icon_url=self.bot.user.avatar)
         
         unwarn_embed = discord.Embed(
-            title=f"`✅` Unwarn",
+            title="`✅` Unwarn",
             description=f"You have removed all warnings for {member.mention} in **{interaction.guild.name}**.",
             color=discord.Color.green(),
             timestamp=datetime.datetime.utcnow()
@@ -342,7 +338,7 @@ class Moderation(commands.Cog, name="Moderation"):
                 (member.id, interaction.guild.id)
             )
             await db.commit()
- 
+
         await member.send(embed=unwarnUser_embed)
         await interaction.response.send_message(embed=unwarn_embed, ephemeral=False)
 
@@ -378,7 +374,7 @@ class Moderation(commands.Cog, name="Moderation"):
         else:
             warnings_embed = discord.Embed(
                 title=f"`⚠️` Warning List for {member.name}#{member.discriminator}",
-                description=f"__**List of Warnings**__",
+                description="__**List of Warnings**__",
                 color=discord.Color.green(),
                 timestamp=datetime.datetime.utcnow()
             )

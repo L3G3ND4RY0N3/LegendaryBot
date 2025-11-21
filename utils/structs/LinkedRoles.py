@@ -3,7 +3,7 @@ from constants.enums import LRRetCode
 
 class LinkedRoles():
     def __init__(self, linked_roles_dict: None | dict[int, list[int]] = None) -> None:
-        if linked_roles_dict == None:
+        if linked_roles_dict is None:
             linked_roles_dict = {}
         self._linked_roles: dict[int, set[int]] = {
             int(target): set(int(r) for r in req) for target, req in linked_roles_dict.items()

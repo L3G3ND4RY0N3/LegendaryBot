@@ -193,7 +193,7 @@ class Autoroles(commands.Cog, name="Autoroles"):
 
             if str(interaction.guild.id) not in auto_role or list(auto_role[str(interaction.guild.id)].keys()) == []:
                 conf_embed = discord.Embed(color=discord.Color.red())
-                conf_embed.add_field(name="`⚠️`**No Autroles!**", value=f"This server has yet to add autoroles!")
+                conf_embed.add_field(name="`⚠️`**No Autroles!**", value="This server has yet to add autoroles!")
                 conf_embed.set_footer(text=f"Action taken by {interaction.user}.")
 
                 await interaction.response.send_message(embed=conf_embed)

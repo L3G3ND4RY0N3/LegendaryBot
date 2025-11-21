@@ -52,8 +52,8 @@ class serverinfo(commands.Cog):
         embed.add_field(name='✨ Boosts', value=f'{str(ctx.guild.premium_subscription_count)}')
         embed.add_field(name='🥇 Boostlevel', value=f'{ctx.guild.premium_tier}')
         embed.add_field(name="```Status```", value=f"**🟢Online:** {statuses[0]}\n**🟠Idle:** {statuses[1]}"
-                                                   f"\n**🔴Do not disturb:** {statuses[2]}\n**⚪Offline:** "
-                                                   f"{statuses[3]}", inline=True)
+                                                    f"\n**🔴Do not disturb:** {statuses[2]}\n**⚪Offline:** "
+                                                    f"{statuses[3]}", inline=True)
         embed.add_field(name='Emojis', value=str(emoji_count), inline=True)
         embed.add_field(name='Rule Channel',
                         value=ctx.guild.rules_channel.mention if ctx.guild.rules_channel else '~~not set~~')
@@ -164,8 +164,7 @@ class serverinfob(discord.ui.View):
     @discord.ui.button(label="Server Roles", style=discord.ButtonStyle.blurple)
     async def serverrollen(self, ctx, button:discord.ui.Button):
         embed = discord.Embed(title=f"{ctx.guild}`s Server Roles",
-                                      description=("".join([str(r.mention) for r in ctx.guild.roles])))
-        color=discord.Color.blue()
+                            description=("".join([str(r.mention) for r in ctx.guild.roles])), color=discord.Color.blue())
         await ctx.response.edit_message(embed=embed)
 
     @discord.ui.button(label="Serverbanner", style=discord.ButtonStyle.green)

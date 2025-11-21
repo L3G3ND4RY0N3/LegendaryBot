@@ -1,8 +1,7 @@
 import pytest
 from sqlalchemy import create_engine, Engine
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker
 from dbmodels.base import Base
-from dbmodels.models import User, Activity, WordleScore
 
 @pytest.fixture(scope='function')
 def engine() -> Engine:

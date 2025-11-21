@@ -172,7 +172,7 @@ class TempVoiceCustomView(discord.ui.View):
 
         overwrites = usr_channel.overwrites_for(everyone)
 
-        if overwrites.connect == False:
+        if overwrites.connect is False:
             conf_embed = emb.warn_embed(f"{interaction.user.mention}, your channel is already locked!")
             await interaction.response.send_message(embed=conf_embed, ephemeral=True)
             return
@@ -214,7 +214,7 @@ class TempVoiceCustomView(discord.ui.View):
 
         overwrites = usr_channel.overwrites_for(everyone)
 
-        if overwrites.connect == None:
+        if overwrites.connect is None:
             conf_embed = emb.warn_embed(f"{interaction.user.mention}, your channel is already unlocked!")
             await interaction.response.send_message(embed=conf_embed, ephemeral=True)
             return

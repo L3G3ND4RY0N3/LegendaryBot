@@ -1,11 +1,9 @@
 from asyncio import sleep
-from dataclasses import dataclass
 import discord
 from discord.ext import commands
 from discord import app_commands
 
 from utils.dbhelpers.wordle_db_helpers import handle_wordle_score
-from dbmodels.models import WordleScore
 from utils import settings
 from utils.Wordle.wordle import Wordle, Difficulty, GameState
 from utils.embeds.embedbuilder import warn_embed, forbidden_embed, success_embed

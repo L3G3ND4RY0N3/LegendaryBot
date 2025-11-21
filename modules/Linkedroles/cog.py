@@ -258,7 +258,7 @@ class LinkedRolesBot(commands.Cog, name="LinkedRoles"):
         guild_id, role_id, required_role_id = role.guild.id, role.id, required_role.id
 
         if guild_id not in self.guild_linked_roles or not self.guild_linked_roles[guild_id]:
-            await interaction.response.send_message(embed=emb.warn_embed(f"This server has no linked roles yet, no link to remove!"))
+            await interaction.response.send_message(embed=emb.warn_embed("This server has no linked roles yet, no link to remove!"))
             return
         
         if role_id not in self.guild_linked_roles[guild_id]:
@@ -290,7 +290,7 @@ class LinkedRolesBot(commands.Cog, name="LinkedRoles"):
         guild_id, role_id = role.guild.id, role.id
 
         if guild_id not in self.guild_linked_roles or not self.guild_linked_roles[guild_id]:
-            await interaction.response.send_message(embed=emb.warn_embed(f"This server has no linked roles yet, no link to remove!"))
+            await interaction.response.send_message(embed=emb.warn_embed("This server has no linked roles yet, no link to remove!"))
             return
         
         if role_id not in self.guild_linked_roles[guild_id]:
@@ -314,7 +314,7 @@ class LinkedRolesBot(commands.Cog, name="LinkedRoles"):
     async def list_linked_roles(self, interaction: discord.Interaction):
         guild_id = interaction.guild.id
         if guild_id not in self.guild_linked_roles or not self.guild_linked_roles[guild_id]:
-            await interaction.response.send_message(embed=emb.warn_embed(f"Server has no linked roles yet!"))
+            await interaction.response.send_message(embed=emb.warn_embed("Server has no linked roles yet!"))
             return
 
         linked_roles = self.guild_linked_roles[guild_id]
@@ -360,7 +360,7 @@ class LinkedRolesBot(commands.Cog, name="LinkedRoles"):
             await interaction.response.send_message(embed=conf_embed, ephemeral=True)
 
     @remove_all_links_from_role.error
-    async def remove_linked_role_error(self,interaction: discord.Interaction, error: app_commands.AppCommandError):
+    async def remove_all_linked_roles_error(self,interaction: discord.Interaction, error: app_commands.AppCommandError):
         if isinstance(error, app_commands.MissingPermissions):
             conf_embed = discord.Embed(color=discord.Color.red())
             conf_embed.add_field(name="`❌`**Failure!**", value=f"{interaction.user.name}, you do not have the permissions to remove linked roles! You need administrator permissions!")

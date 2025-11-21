@@ -25,9 +25,6 @@ class TemporaryVoice(commands.GroupCog, name="temporaryvoice"):
 
     def cog_unload(self):
         self.check_temp_creation_vc.cancel()
-
-
-    def cog_unload(self):
         self.check_temp_vc.cancel()
 
 
@@ -212,7 +209,7 @@ class TemporaryVoice(commands.GroupCog, name="temporaryvoice"):
 
     @check_temp_creation_vc.after_loop
     async def after_check_temp_creation_vc_task(self):
-        logger.info(f"Finished check temp_creation_vc loop!")
+        logger.info("Finished check temp_creation_vc loop!")
         logger.info("Ending check temporary voice channel creation loop!")
 
 
@@ -274,7 +271,7 @@ class TemporaryVoice(commands.GroupCog, name="temporaryvoice"):
 
     @check_temp_vc.after_loop
     async def after_check_temp_vc_task(self):
-        logger.info(f"Finished check temp_vc loop!")
+        logger.info("Finished check temp_vc loop!")
         logger.info("Ending check temporary voice channel loop!")
 
 
@@ -373,7 +370,7 @@ class TemporaryVoice(commands.GroupCog, name="temporaryvoice"):
 
         if str(interaction.guild.id) not in data or list(data[str(interaction.guild.id)].keys()) == []:
             conf_embed = discord.Embed(color=discord.Color.red())
-            conf_embed.add_field(name="`⚠️`**No Temporary Voice Creation Channels!**", value=f"This server has yet to add a temporary voice creation channel!")
+            conf_embed.add_field(name="`⚠️`**No Temporary Voice Creation Channels!**", value="This server has yet to add a temporary voice creation channel!")
             conf_embed.set_footer(text=f"Action taken by {interaction.user}.")
 
             await interaction.response.send_message(embed=conf_embed)
@@ -409,14 +406,14 @@ class TemporaryVoice(commands.GroupCog, name="temporaryvoice"):
 
         if str(interaction.guild.id) not in data or list(data[str(interaction.guild.id)].keys()) == []: #TODO: use embed builder!
                 conf_embed = discord.Embed(color=discord.Color.red())
-                conf_embed.add_field(name="`⚠️`**No Temporary Voice Creation Channels!**", value=f"This server has yet to add a temporary voice creation channel!")
+                conf_embed.add_field(name="`⚠️`**No Temporary Voice Creation Channels!**", value="This server has yet to add a temporary voice creation channel!")
                 conf_embed.set_footer(text=f"Action taken by {interaction.user}.")
 
                 await interaction.response.send_message(embed=conf_embed)
                 return
         
         conf_embed= discord.Embed(color=discord.Color.blue())
-        conf_embed.add_field(name="`🔊`**Manage Temporary Voice Channels**", value=f"Configure your own temporary voice channel with the buttons below.")
+        conf_embed.add_field(name="`🔊`**Manage Temporary Voice Channels**", value="Configure your own temporary voice channel with the buttons below.")
         await interaction.response.send_message(embed=conf_embed, view=tvv.TempVoiceCustomView(interaction, self.bot))
 
         return

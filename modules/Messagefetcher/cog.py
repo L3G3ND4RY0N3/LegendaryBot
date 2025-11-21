@@ -35,7 +35,7 @@ class MessageCog(commands.Cog):
                 if message.content.startswith(f'{msg_filter}'):
                     try:
                         title=message.embeds[0].title
-                    except:
+                    except Exception:
                         title = ""
                     messages.append({
                         'Datum': f"{message.created_at.day}.{message.created_at.month}.{message.created_at.year}",

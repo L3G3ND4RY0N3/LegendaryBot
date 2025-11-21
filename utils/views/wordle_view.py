@@ -1,4 +1,3 @@
-from constants import enums as en
 import discord
 from utils.embeds import embedbuilder as emb
 import utils.settings as settings
@@ -33,7 +32,7 @@ class WordleView(discord.ui.View):
         thread = data.thread
         self.wordle_data.update_games_dictionary(self.user.id)
 
-        await interaction.response.edit_message(embed=emb.success_embed(f"Successfully aborted game!"), view=self)
+        await interaction.response.edit_message(embed=emb.success_embed("Successfully aborted game!"), view=self)
         await thread.delete(reason="Game aborted")
         return
     

@@ -31,7 +31,7 @@ class Autodelete(commands.Cog):
             if message.channel.id != channel_id:
                 continue
             
-            if max_msg_count != None:
+            if max_msg_count is not None:
                 messages = [message async for message in message.channel.history(limit=100)]
                 channel_msg_count = len(messages)
 
@@ -105,8 +105,8 @@ class Autodelete(commands.Cog):
     @app_commands.command(name="add_autodelete_channel", description="Add autodelete mode to a channel")
     @app_commands.checks.has_permissions(administrator=True)
     @app_commands.describe(time = "Set the time **(in seconds!)** after which messages in the channel will be deleted!", 
-                           channel="Select the channel to delete messages in", 
-                           max_msg_count="Select the max amount of messages in the channel before deleting")
+                            channel="Select the channel to delete messages in", 
+                            max_msg_count="Select the max amount of messages in the channel before deleting")
     async def autodelset(self, ctx:discord.Interaction, time: int, channel: discord.TextChannel, max_msg_count: int = None):
         if channel in self.get_autodelete_channels():
             embed = discord.Embed(
@@ -114,19 +114,19 @@ class Autodelete(commands.Cog):
                 description=f"{channel.mention} is already an autodelete channel!",
                 color=discord.Color.red()
             )
-            file = discord.File(f"img/Trash-Can.png", filename="Trash-Can.png")
+            file = discord.File("img/Trash-Can.png", filename="Trash-Can.png")
             embed.set_thumbnail(url="attachment://Trash-Can.png")
             embed.set_footer(text=f"{ctx.guild.name} | Action taken by {ctx.user}", icon_url=self.bot.user.avatar)
 
             await ctx.response.send_message(embed=embed, file=file)
             return
-        if max_msg_count != None:
+        if max_msg_count is not None:
             self.autodelete_channels.append((channel.id, time, max_msg_count, ctx.guild.id))
         else:
             self.autodelete_channels.append((channel.id, time, None, ctx.guild.id))
         self.save_settings()
 
-        if max_msg_count != None:
+        if max_msg_count is not None:
             embed = discord.Embed(
             title="`💣` | Autodelete Settings",
             description=f"Added autodelete to {channel.mention}, deleting messages after {time} seconds and {max_msg_count} messages are reached!.",
@@ -139,7 +139,7 @@ class Autodelete(commands.Cog):
                 description=f"Added autodelete to {channel.mention}, deleting messages after {time} seconds.",
                 color=discord.Color.red()
             )
-        file = discord.File(f"img/Trash-Can.png", filename="Trash-Can.png")
+        file = discord.File("img/Trash-Can.png", filename="Trash-Can.png")
         embed.set_thumbnail(url="attachment://Trash-Can.png")
         embed.set_footer(text=f"{ctx.guild.name} | Action taken by {ctx.user}", icon_url=self.bot.user.avatar)
 
@@ -160,7 +160,7 @@ class Autodelete(commands.Cog):
                 description=f"{channel.mention} did not have autodelete enabled!",
                 color=discord.Color.red()
             )
-            file = discord.File(f"img/Trash-Can.png", filename="Trash-Can.png")
+            file = discord.File("img/Trash-Can.png", filename="Trash-Can.png")
             embed.set_thumbnail(url="attachment://Trash-Can.png")
             embed.set_footer(text=f"{ctx.guild.name} | Action taken by {ctx.user}", icon_url=self.bot.user.avatar)
 
@@ -182,7 +182,7 @@ class Autodelete(commands.Cog):
                 description=f"Autodelete function was removed for {channel.mention}.",
                 color=discord.Color.red()
             )
-            file = discord.File(f"img/Trash-Can.png", filename="Trash-Can.png")
+            file = discord.File("img/Trash-Can.png", filename="Trash-Can.png")
             embed.set_thumbnail(url="attachment://Trash-Can.png")
             embed.set_footer(text=f"{ctx.guild.name} | Action taken by {ctx.user}", icon_url=self.bot.user.avatar)
 
@@ -195,7 +195,7 @@ class Autodelete(commands.Cog):
                 description=f"{channel.mention} did not have autodelete enabled!",
                 color=discord.Color.red()
             )
-            file = discord.File(f"img/Trash-Can.png", filename="Trash-Can.png")
+            file = discord.File("img/Trash-Can.png", filename="Trash-Can.png")
             embed.set_thumbnail(url="attachment://Trash-Can.png")
             embed.set_footer(text=f"{ctx.guild.name} | Action taken by {ctx.user}", icon_url=self.bot.user.avatar)
 
@@ -216,7 +216,7 @@ class Autodelete(commands.Cog):
                 description=f"{ctx.guild.name} did not have channels with autodelete enabled!",
                 color=discord.Color.red()
             )
-            file = discord.File(f"img/Trash-Can.png", filename="Trash-Can.png")
+            file = discord.File("img/Trash-Can.png", filename="Trash-Can.png")
             embed.set_thumbnail(url="attachment://Trash-Can.png")
             embed.set_footer(text=f"{ctx.guild.name} | Action taken by {ctx.user}", icon_url=self.bot.user.avatar)
 
@@ -236,7 +236,7 @@ class Autodelete(commands.Cog):
                 description=f"Autodelete function was removed for all channels in {ctx.guild.name}.",
                 color=discord.Color.red()
             )
-            file = discord.File(f"img/Trash-Can.png", filename="Trash-Can.png")
+            file = discord.File("img/Trash-Can.png", filename="Trash-Can.png")
             embed.set_thumbnail(url="attachment://Trash-Can.png")
             embed.set_footer(text=f"{ctx.guild.name} | Action taken by {ctx.user}", icon_url=self.bot.user.avatar)
 
@@ -250,14 +250,14 @@ class Autodelete(commands.Cog):
     @app_commands.command(name="list_autodelete_channel", description="Show all channels with the autodelete function enabled")
     @app_commands.checks.has_permissions(administrator=True)
     async def autodelcheck(self, ctx:discord.Interaction):
-        autodelete_channels = self.get_autodelete_channels()
+        self.get_autodelete_channels()
         if ctx.guild.id in [guild_id for _, _, _, guild_id in self.autodelete_channels]:
             embed = discord.Embed(
                 title="`💣` | Autodelete Settings",
                 description="Active autodelete channels:",
                 color=discord.Color.red()
             )
-            file = discord.File(f"img/Trash-Can.png", filename="Trash-Can.png")
+            file = discord.File("img/Trash-Can.png", filename="Trash-Can.png")
             embed.set_thumbnail(url="attachment://Trash-Can.png")
             embed.set_footer(text=f"{ctx.guild.name} | Action taken by {ctx.user}", icon_url=self.bot.user.avatar)
 
@@ -265,7 +265,7 @@ class Autodelete(commands.Cog):
                 channel = self.bot.get_channel(channel_id)
                 if channel is not None and guild_id == ctx.guild.id:
                     embed.add_field(name="Channel / Time / Max Messages", value=f"{channel.mention} / {time} sec. / {max_msg_count}", inline=True)
-                    file = discord.File(f"img/Trash-Can.png", filename="Trash-Can.png")
+                    file = discord.File("img/Trash-Can.png", filename="Trash-Can.png")
                     embed.set_thumbnail(url="attachment://Trash-Can.png")
                     embed.set_footer(text=f"{ctx.guild.name} | Action taken by {ctx.user}", icon_url=self.bot.user.avatar)
             await ctx.response.send_message(embed=embed, file=file)
@@ -275,7 +275,7 @@ class Autodelete(commands.Cog):
                 description=f"No channels with autodelete function registered for **{ctx.guild.name}**!",
                 color=discord.Color.red()
             )
-            file = discord.File(f"img/Trash-Can.png", filename="Trash-Can.png")
+            file = discord.File("img/Trash-Can.png", filename="Trash-Can.png")
             embed.set_thumbnail(url="attachment://Trash-Can.png")
             embed.set_footer(text=f"{ctx.guild.name} | Action taken by {ctx.user}", icon_url=self.bot.user.avatar)
 
