@@ -17,6 +17,7 @@ class Guild(Base):
     members: Mapped["Member"] = relationship("Member", back_populates="guild")
     guild_config: Mapped["GuildConfig"] = relationship("GuildConfig", back_populates="guild")
     autodelete_channels: Mapped["AutoDeleteChannel"] = relationship("AutoDeleteChannel", back_populates="guild")
+    welcome_message: Mapped["WelcomeMessage"] = relationship("WelcomeMessage", back_populates="guild")
 
 
 class Member(Base):
@@ -123,4 +124,18 @@ class YouTubeNotification(Base):
 
     __table_args__ = (
         UniqueConstraint('discord_channel_id', 'youtube_channel_id', name='uix_discord_channel_youtube_channel'),
+    )
+
+class WelcomeMessage(Base):
+    __tablename__ = 'welcome_messages'
+
+    id = Column(Integer, primary_key=True)
+
+    guild_id: Mapped[int] = Column(Integer, ForeignKey('guilds.id'), unique=True)
+    message: Mapped[str] = Column(String, nullable=False)
+
+    guild: Mapped["Guild"] = relationship("Guild", back_populates="welcome_message")
+
+    __table_args__ = (
+        UniqueConstraint('guild_id', name='uix_guild_welcome_message'),
     )
