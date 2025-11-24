@@ -34,8 +34,8 @@ class GuildWelcome(commands.Cog, name="GuildWelcome"):
 
     #region Commands
     ################################ commands #######################################################################################
-    @app_commands.command(name="set_welcome_message", description="set a custom welcome message for new members. You can ping members and the guild name and mention channels.")
-    @app_commands.describe(new_message="Use \'{member}\' to mention the new member and \'{guild}\' to mention the guild name. Mention channels using regular Discord channel mentions (\'#channel\').")
+    @app_commands.command(name="set_welcome_message", description="set a custom welcome message for new members.")
+    @app_commands.describe(new_message="Use \'{member}\' to mention the new member and \'{guild}\' to mention the guild name.")
     @app_commands.checks.has_permissions(administrator=True)
     async def set_welcome_message(self, ctx: discord.Interaction, new_message: str) -> None:
         welcome_message = set_welcome_message(ctx.guild, new_message, ctx.user.id)
