@@ -16,7 +16,7 @@ def set_welcome_message(guild: discord.Guild, message: str, member_id: int) -> s
     """Sets or updates the welcome message for a guild."""
     with db_service.session_scope() as session:
         try:
-            welcome_message = get_or_create_for_guild_config(guild, session, message)
+            welcome_message = get_or_create_for_welcome_message(guild, session, message)
         except Exception as e:
             logger.exception(f"Error setting welcome message for guild {guild.id}: {e}")
             return None
@@ -38,7 +38,7 @@ def get_welcome_message(guild: discord.Guild, member: discord.Member) -> str:
             return f"Welcome to {guild.name}, <@{member.id}>!"
 
 
-def get_or_create_for_guild_config(dcguild: discord.Guild, session: Session, message: str) -> WelcomeMessage:
+def get_or_create_for_welcome_message(dcguild: discord.Guild, session: Session, message: str) -> WelcomeMessage:
     """creates all relevant models for the activity updates"""
     guild = db_service.get_or_create(Guild, session=session, guild_dc_id=dcguild.id, name=dcguild.name)
     session.flush()
