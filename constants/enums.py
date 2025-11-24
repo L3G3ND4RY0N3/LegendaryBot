@@ -8,6 +8,10 @@ class GuildChannelStatus(Enum):
     GuildNotSet = -1
 
 
+class SuccessStatus(Enum):
+    Success = 0
+    Fail = 1
+
 class GuildChannelTypes(Enum):
     """Only add or remove entrys when updating the guild model for guild config!"""
     ERROR = "error"
