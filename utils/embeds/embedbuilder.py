@@ -20,6 +20,12 @@ def forbidden_embed(val: str) -> discord.Embed:
     return conf_embed
 
 
+def aborted_embed(val: str) -> discord.Embed:
+    conf_embed = discord.Embed(color=discord.Color.red())
+    conf_embed.add_field(name="`❌` **Aborted!**", value=val)
+    return conf_embed
+
+
 def warn_embed(val: str) -> discord.Embed:
     conf_embed = discord.Embed(color=discord.Color.red())
     conf_embed.add_field(name="`⚠️` **Failure!**", value=val)

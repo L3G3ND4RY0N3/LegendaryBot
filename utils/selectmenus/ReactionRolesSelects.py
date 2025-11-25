@@ -7,16 +7,12 @@ if typing.TYPE_CHECKING:
 
 
 class EmojiSelect(Select):
-    def __init__(self):
+    def __init__(self, options: list[discord.SelectOption]):
         self.view : ReactionRoleSetupSetupView
         super().__init__(
             placeholder="Choose an emoji...",
             #TODO: Dynamically load emojis from the guild and remove duplicates
-            options=[
-                discord.SelectOption(label="😀", value="😀"),
-                discord.SelectOption(label="🔥", value="🔥"),
-                discord.SelectOption(label="💎", value="💎"),
-            ]
+            options=options
         )
 
     async def callback(self, interaction: discord.Interaction):
@@ -28,12 +24,12 @@ class EmojiSelect(Select):
 
 
 class RoleSelect(Select):
-    def __init__(self, roles: list[discord.Role]):
+    def __init__(self, options: list[discord.SelectOption]):
         self.view : ReactionRoleSetupSetupView
         #TODO: Filter out @everyone role and remove duplicates
         super().__init__(
             placeholder="Choose a role...",
-            options=[discord.SelectOption(label=r.name, value=str(r.id)) for r in roles]
+            options=options
         )
 
     async def callback(self, interaction: discord.Interaction):
