@@ -7,7 +7,7 @@ from utils import settings
 
 logger=settings.logging.getLogger("discord")
 
-class ReactionRoles(commands.Cog, name="RactionRoles"):
+class ReactionRoles(commands.Cog, name="ReactionRoles"):
     def __init__(self, bot: discord.Client):
         self.bot = bot
 
