@@ -1,6 +1,6 @@
 import discord
 
-def server_stat_embed(ctx: discord.Interaction)->discord.Embed:
+def create_server_stat_embed(ctx: discord.Interaction)->discord.Embed:
     """Creates an embed for server statistics
 
     Returns:

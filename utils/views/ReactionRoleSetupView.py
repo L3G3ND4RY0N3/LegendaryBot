@@ -1,10 +1,11 @@
 import discord
 import emoji
-from utils.embeds import aborted_embed, success_embed, reaction_role_embed
+from utils.embeds import aborted_embed, forbidden_embed, success_embed, create_reaction_role_setup_embed, create_reaction_role_embed
 import utils.settings as settings
 from utils.selectmenus.ReactionRolesSelects import EmojiSelect, RoleSelect
-from utils.structs.ReactionRoles import ReactionRolesData
+from utils.structs.ReactionRoles import ReactionRolesData, ReactionRolesConfig
 from utils.dbhelpers.reaction_roles_db_helpers import set_reaction_role
+from constants.enums import SuccessStatus
 
 logger=settings.logging.getLogger("discord")
 
@@ -19,6 +20,7 @@ class ReactionRoleSetupSetupView(discord.ui.View):
         self.channel: discord.TextChannel = channel
         super().__init__(timeout=180)
         self.set_reaction_roles.disabled = self.disable_save_button()
+        self.delete_pair_reaction_roles_setup.disabled = self.disable_delete_button()
         self.emoji_select = EmojiSelect(self.get_emoji_options())
         self.role_select = RoleSelect(self.get_role_options())
 
@@ -34,27 +36,43 @@ class ReactionRoleSetupSetupView(discord.ui.View):
         if len(self.reaction_role_embed_data) == 0:
             return True
         return False
+    
+    def disable_delete_button(self) -> bool:
+        if len(self.reaction_role_embed_data) == 0:
+            return True
+        return False
 
 
     # Set Roles button
-    @discord.ui.button(label="Set Roles", style=discord.ButtonStyle.green, custom_id='Set_Roles_Reaction_Roles_Setup', emoji="✅")
+    @discord.ui.button(label="Save", style=discord.ButtonStyle.green, custom_id='Save_Roles_Reaction_Roles_Setup', emoji="✅")
     async def set_reaction_roles(self, interaction: discord.Interaction, button: discord.ui.Button):
-        embed = success_embed("Reaction roles have been set up successfully!")
-        await interaction.response.edit_message(embed=embed, view=None)
-        message = await self.channel.send("Reaction roles have been set up!")
+        rr_embed = create_reaction_role_embed(interaction.guild, self.reaction_role_embed_data)
+        message = await self.channel.send(embed=rr_embed)
+        config = ReactionRolesConfig(guild_id=self.guild_id, guild_name=interaction.guild.name, message_id=message.id, role_id=None, emoji=None)
         for data in self.reaction_role_embed_data:
             if data.emoji and data.role_id:
+                config.role_id = data.role_id
+                config.emoji = data.emoji
+                status = set_reaction_role(config)
+                if status != SuccessStatus.Success:
+                    embed = forbidden_embed("An error occurred while setting reaction roles. Please try again later.")
+                    await interaction.response.edit_message(embed=embed, view=None)
+                    return
                 await message.add_reaction(data.emoji)
-                set_reaction_role(dcguild=interaction.guild, message_id=message.id, role_id=data.role_id, emoji=data.emoji)
-        return
-
-
-    # Quit menu button
-    @discord.ui.button(label="Quit", style=discord.ButtonStyle.red, custom_id='Quit_Reaction_Roles_Setup', emoji="❌")
-    async def quit_reaction_roles_setup(self, interaction: discord.Interaction, button: discord.ui.Button):
-        embed = aborted_embed("Aborted setting reaction roles!")
+        embed = success_embed("Reaction roles have been set up successfully!")
         await interaction.response.edit_message(embed=embed, view=None)
-        return
+
+
+    # Delete pair button
+    @discord.ui.button(label="Delete pair", style=discord.ButtonStyle.red, custom_id='Delete_Pair_Reaction_Roles_Setup', emoji="🗑")
+    async def delete_pair_reaction_roles_setup(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if self.reaction_role_embed_data:
+            self.reaction_role_embed_data.pop()
+        self.set_reaction_roles.disabled = self.disable_save_button()
+        self.delete_pair_reaction_roles_setup.disabled = self.disable_delete_button()
+        self.update_select_menus()
+        embed = create_reaction_role_setup_embed(interaction.guild, self.reaction_role_embed_data)
+        await interaction.response.edit_message(embed=embed, view=self)    
     
 
     # Add emoji-role pair button
@@ -65,18 +83,26 @@ class ReactionRoleSetupSetupView(discord.ui.View):
         self.add_item(self.role_select)
         if self.disable_add_button():
             button.disabled = True
-        embed = reaction_role_embed(interaction.guild)
+        embed = create_reaction_role_setup_embed(interaction.guild)
         await interaction.response.edit_message(embed=embed, view=self)
+
+    
+    # Quit menu button
+    @discord.ui.button(label="Quit", style=discord.ButtonStyle.grey, custom_id='Quit_Reaction_Roles_Setup', emoji="❌")
+    async def quit_reaction_roles_setup(self, interaction: discord.Interaction, button: discord.ui.Button):
+        embed = aborted_embed("Aborted setting reaction roles!")
+        await interaction.response.edit_message(embed=embed, view=None)
 
 
     async def check_if_pair_is_ready(self, interaction: discord.Interaction) -> bool:
         if self.temp_role and self.temp_emoji:
             self.reaction_role_embed_data.append(ReactionRolesData(emoji=self.temp_emoji, role_id=self.temp_role))
-            embed = reaction_role_embed(interaction.guild, self.reaction_role_embed_data)
+            embed = create_reaction_role_setup_embed(interaction.guild, self.reaction_role_embed_data)
             self.temp_emoji = None
             self.temp_role = None
             self.set_reaction_roles.disabled = self.disable_save_button()
             self.update_select_menus()
+            self.delete_pair_reaction_roles_setup.disabled = self.disable_delete_button()
             await interaction.response.edit_message(embed=embed, view=self)
             return True
         return False
@@ -85,6 +111,8 @@ class ReactionRoleSetupSetupView(discord.ui.View):
     def update_select_menus(self):
         self.remove_item(self.emoji_select)
         self.remove_item(self.role_select)
+        if len(self.reaction_role_embed_data) >= 10:
+            return
         self.emoji_select = EmojiSelect(self.get_emoji_options())
         self.role_select = RoleSelect(self.get_role_options())
         self.add_item(self.emoji_select)
@@ -116,6 +144,8 @@ class ReactionRoleSetupSetupView(discord.ui.View):
             if len(options) >= 25:
                 break
             if emj in [data.emoji for data in self.reaction_role_embed_data]:
+                continue
+            if "\u200d" in emj or "\ufe0f" in emj:
                 continue
             options.append(discord.SelectOption(label=emj, value=emj))
         return options

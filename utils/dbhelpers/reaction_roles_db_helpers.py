@@ -7,6 +7,7 @@ from .dbservice import DatabaseService
 from sqlalchemy.orm import Session
 from constants.enums import SuccessStatus
 from utils import settings
+from utils.structs.ReactionRoles import ReactionRolesConfig
 
 
 logger=settings.logging.getLogger("discord")
@@ -14,17 +15,14 @@ logger=settings.logging.getLogger("discord")
 db_service = DatabaseService(SessionLocal)
 
 
-def set_reaction_role(dcguild: discord.Guild,
-                        message_id: int,
-                        role_id: int,
-                        emoji: str
+def set_reaction_role(config: ReactionRolesConfig
                         ) -> SuccessStatus:
     """Sets or updates the reaction role for a guild."""
     with db_service.session_scope() as session:
         try:
-            reaction_role = get_or_create_for_guild_config(dcguild.id, dcguild.name, session, message_id, role_id, emoji)
+            reaction_role = get_or_create_for_guild_config(config.guild_id, config.guild_name, session, config.message_id, config.role_id, config.emoji)
         except Exception as e:
-            logger.exception(f"Error setting reaction role for guild {dcguild.id}: {e}")
+            logger.exception(f"Error setting reaction role for guild {config.guild_name}: {e}")
             return SuccessStatus.Fail
         if reaction_role:
             return SuccessStatus.Success

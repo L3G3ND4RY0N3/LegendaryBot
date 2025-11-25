@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
-from utils.embeds import reaction_role_embed
+from utils.embeds import create_reaction_role_setup_embed
 from utils.views.ReactionRoleSetupView import ReactionRoleSetupSetupView
 from utils import settings
 
@@ -24,7 +24,7 @@ class ReactionRoles(commands.Cog, name="RactionRoles"):
     @app_commands.describe(channel="The channel where the reaction roles message will be sent.")
     @app_commands.checks.has_permissions(administrator=True)
     async def reaction_roples_setup(self, interaction: discord.Interaction, channel: discord.TextChannel):
-        embed = reaction_role_embed(interaction.guild)
+        embed = create_reaction_role_setup_embed(interaction.guild)
         interaction.guild.emojis
         await interaction.response.send_message(embed=embed, view=ReactionRoleSetupSetupView(self.bot, interaction.guild.id, interaction.guild.roles, channel))
 

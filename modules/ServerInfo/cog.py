@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 from utils import settings
-from utils.embeds.server_stat_embed import server_stat_embed
+from utils.embeds.server_stat_embed import create_server_stat_embed
 
 logger=settings.logging.getLogger("discord")
 
@@ -18,7 +18,7 @@ class serverinfo(commands.Cog):
 
     @app_commands.command(description="Show info about the server")
     async def serverinfo(self, ctx: discord.Interaction):
-        embed = server_stat_embed(ctx)
+        embed = create_server_stat_embed(ctx)
         await ctx.response.send_message(embed=embed, view=serverinfob(ctx))
 
 
@@ -34,7 +34,7 @@ class serverinfob(discord.ui.View):
     @discord.ui.button(label="🏠 Home", style=discord.ButtonStyle.red)
     async def serverinfo2(self, ctx: discord.Interaction, button: discord.ui.Button):
         """Home button to go back to main embed"""
-        embed = server_stat_embed(ctx)
+        embed = create_server_stat_embed(ctx)
         await ctx.response.edit_message(embed=embed)
 
     @discord.ui.button(label="Server Profile", style=discord.ButtonStyle.green)
