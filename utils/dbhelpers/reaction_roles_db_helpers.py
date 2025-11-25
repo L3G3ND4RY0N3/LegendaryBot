@@ -29,7 +29,7 @@ def set_reaction_role(config: ReactionRolesConfig
     return SuccessStatus.Fail
 
 
-def get_reaction_roles_for_message(dcguild: discord.Guild, message_id: int) -> T.List[ReactionRole]:
+def get_reaction_roles_for_message(dcguild: discord.Guild, message_id: int) -> T.List[ReactionRolesConfig] | None:
     """Retrieves the reaction roles for a guild and message."""
     with db_service.session_scope() as session:
         reaction_roles = (session.query(ReactionRole)
@@ -38,10 +38,22 @@ def get_reaction_roles_for_message(dcguild: discord.Guild, message_id: int) -> T
                     ).all()
 
         reaction_roles = T.cast(T.List[ReactionRole], reaction_roles)
-        return reaction_roles
+        if not reaction_roles:
+            return None
+        
+        config: list[ReactionRolesConfig] = []
+        for rr in reaction_roles:
+            config.append(ReactionRolesConfig(
+                guild_id=dcguild.id,
+                guild_name=dcguild.name,
+                message_id=rr.message_id,
+                role_id=rr.role_id,
+                emoji=rr.emoji
+            ))
+        return config
     
 
-def get_reaction_role_by_emoji(dcguild: discord.Guild, message_id: int, emoji: str) -> T.Optional[ReactionRole]:
+def get_reaction_role_by_emoji(dcguild: discord.Guild, message_id: int, emoji: str) -> ReactionRolesConfig | None:
     """Retrieves a specific reaction role for a guild, message and emoji."""
     with db_service.session_scope() as session:
         reaction_role = (session.query(ReactionRole)
@@ -50,7 +62,14 @@ def get_reaction_role_by_emoji(dcguild: discord.Guild, message_id: int, emoji: s
                     ).first()
 
         reaction_role = T.cast(T.Optional[ReactionRole], reaction_role)
-        return reaction_role
+        config = ReactionRolesConfig(
+            guild_id=dcguild.id,
+            guild_name=dcguild.name,
+            message_id=reaction_role.message_id,
+            role_id=reaction_role.role_id,
+            emoji=reaction_role.emoji
+        ) if reaction_role else None
+        return config
 
 
 def get_or_create_for_guild_config(dcguild_id: int,
