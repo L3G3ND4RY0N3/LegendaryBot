@@ -11,7 +11,6 @@ class EmojiSelect(Select):
         self.view : ReactionRoleSetupSetupView
         super().__init__(
             placeholder="Choose an emoji...",
-            #TODO: Dynamically load emojis from the guild and remove duplicates
             options=options
         )
 
@@ -26,7 +25,6 @@ class EmojiSelect(Select):
 class RoleSelect(Select):
     def __init__(self, options: list[discord.SelectOption]):
         self.view : ReactionRoleSetupSetupView
-        #TODO: Filter out @everyone role and remove duplicates
         super().__init__(
             placeholder="Choose a role...",
             options=options
