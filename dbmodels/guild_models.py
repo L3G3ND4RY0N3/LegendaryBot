@@ -1,4 +1,4 @@
-from sqlalchemy import BigInteger, Boolean, Column, DateTime, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import BigInteger, Boolean, Column, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, relationship
 from sqlalchemy.sql import func
 
@@ -18,6 +18,7 @@ class Guild(Base):
     guild_config: Mapped["GuildConfig"] = relationship("GuildConfig", back_populates="guild")
     autodelete_channels: Mapped["AutoDeleteChannel"] = relationship("AutoDeleteChannel", back_populates="guild")
     welcome_message: Mapped["WelcomeMessage"] = relationship("WelcomeMessage", back_populates="guild")
+    reaction_roles: Mapped["ReactionRole"] = relationship("ReactionRole", back_populates="guild")
 
 
 class Member(Base):
@@ -132,10 +133,26 @@ class WelcomeMessage(Base):
     id = Column(Integer, primary_key=True)
 
     guild_id: Mapped[int] = Column(Integer, ForeignKey('guilds.id'), unique=True)
-    message: Mapped[str] = Column(String, nullable=False)
+    message: Mapped[str] = Column(Text, nullable=False)
 
     guild: Mapped["Guild"] = relationship("Guild", back_populates="welcome_message")
 
     __table_args__ = (
         UniqueConstraint('guild_id', name='uix_guild_welcome_message'),
+    )
+
+class ReactionRole(Base):
+    __tablename__ = 'reaction_roles'
+
+    id = Column(Integer, primary_key=True)
+
+    guild_id: Mapped[int] = Column(Integer, ForeignKey('guilds.id'))
+    message_id: Mapped[int] = Column(BigInteger, nullable=False)
+    emoji: Mapped[str] = Column(String, nullable=False)
+    role_id: Mapped[int] = Column(BigInteger, nullable=False)
+
+    guild: Mapped["Guild"] = relationship("Guild", back_populates="reaction_roles")
+
+    __table_args__ = (
+        UniqueConstraint('guild_id', 'message_id', 'emoji', name='uix_guild_message_emoji'),
     )
